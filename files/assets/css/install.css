@@ -1,4 +1,4 @@
-/* Install page styles */
+/* Welcome page */
 
 h1 {
 	text-align: center;
@@ -34,7 +34,7 @@ h2 {
 	height: 500px;
 }
 
-form[name='install'] input {
+form[name='install'] input[type=text] {
 	border: 5px solid white; 
     -webkit-box-shadow: 
       inset 0 0 8px  rgba(0,0,0,0.1),
@@ -52,6 +52,19 @@ form[name='install'] input {
 	text-align: center;
 	font-family: 'Courier New', monospace;
 }
+
+/* Modules page */
+
+input[type=checkbox] {
+	width: 100px;
+}
+
+form[name='install'] input[type=submit] {
+	width: 200px;
+	font-size: 24px;
+}
+
+/* Footer */
 
 #footer {
 	background-color: #5B865B;
