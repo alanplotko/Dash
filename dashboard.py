@@ -1,11 +1,12 @@
 from vendor.bottle import *
 from vendor.beaker import middleware
+import lib.install
 import os.path
-import re
+import sys
 
-# Set up bottle
-TEMPLATE_PATH.insert(0, 'files')
-TEMPLATE_PATH.insert(0, 'files/install')
+""" Set up bottle """
+TEMPLATE_PATH.insert(0, 'files')            # templates for dashboard
+TEMPLATE_PATH.insert(0, 'files/install')    # templates for installation
 session_opts = {
     'session.type': 'file',
     'session.data_dir': './session/',
@@ -13,17 +14,18 @@ session_opts = {
 }
 dash = middleware.SessionMiddleware(app(), session_opts)
 
-# Session variables can be found at request.session
-@hook('before_request')
+""" Call once before each request """
+@hook('before_request') # Session variables can be found at request.session
 def setup_request():
     request.session = request.environ['beaker.session']
-    
+
+""" Redirect to error page if page not found """
 @error(404)
 def error404(error):
     return 'Nothing here, sorry'
-    #return template('404') # make 404 template
+    # return template('404') # make 404 template
 
-# Static routes for serving files in the assets directory    
+""" Static routes for serving files in the assets directory """
 @get('/<filename:re:.*\.js>')
 def scripts(filename):
     return static_file(filename, root='files/assets/js')
@@ -39,44 +41,44 @@ def favicons(filename):
 @get('/<filename:re:.*\.(eot|ttf|woff|svg)>')
 def fonts(filename):
     return static_file(filename, root='files/assets/fonts')
-    
+
+""" Check if Dash needs to be installed """
 @route('/')
 def isNewInstall():
-    if os.path.exists('files/install') or not os.path.exists('files/install/.lock'):
-        redirect('/install', code=302)
+    if os.path.exists('files/install') and not os.path.exists('files/install/.lock'):
+        redirect('/install', code=302)  
     else:
         return 'Welcome back.'
+        # return template('dashboard') # make dashboard template
 
 @route('/install', method='GET')
 def install():
-    status = request.session.get('status', None)
-    if status == 1:
-        return template('modules', fname=request.session['fname'])
+    if 'stage' in request.session:
+        page = lib.install.getTemplate(request.session['stage'])
     else:
-        return template('welcome')
-        
+        page = lib.install.getTemplate(0)
+    return template(page, **request.session) # Send session variables to template for parsing
+
 @route('/install', method='POST')
 def install():
-    status = request.session.get('status', None)
-    if status is None:
-        name = request.forms.get('full-name')
-        if name is not None:
-            request.session['full-name'] = re.sub(' +',' ',name)
-            request.session['fname'] = name.split(" ")[0]
-            request.session['lname'] = name.split(" ")[1]
-            request.session['status'] = 1
-            return template('modules', fname=request.session['fname'])
-        else:
-            return template('welcome')
-    elif status == 1:
-        standard = request.forms.get('standard')
-        if standard == 1:
-            request.session['status'] = 2
-            return template('install')
-        else:
-            return template('modules', fname=request.session['fname'])
+    parameters = lib.install.doStep(request.forms)
+    
+    # Create session variables if dictionary isn't empty
+    if len(parameters['session_vars']) != 0:
+        for key, item in parameters['session_vars'].items():
+            request.session[key] = item
+            
+    # Update the stage, which is the user's current step in the installation process
+    if 'stage' in request.session:
+        page = lib.install.getTemplate(request.session['stage'])
     else:
-        pass
+        page = lib.install.getTemplate(0)
+    
+    # Check for errors
+    if 'installation_error' in request.session:
+        error = request.session.pop('installation_error') # Error cleanup        
+        return template(page, error=error, **request.session)
+    return template(page, **request.session)
 
 if __name__ == "__main__":
     run(app=dash, host='localhost', port=8080, server='cherrypy', debug=True, reloader=True)

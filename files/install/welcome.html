@@ -26,8 +26,11 @@
       <div class="row install">
         <div class="col-md-5 dash"></div>
         <div class="col-md-7 steps">
-			<h1>Hi there! I'm Dash.<br />
-			And who might you be?</h1>
+			% if defined('error'):
+				<h1>{{get('error')['message']}}</h1>
+			% else:				
+				<h1>Hi there! I'm Dash.<br />And who might you be?</h1>
+			% end
 			<br />
 			<form name="install" action="/install" method="POST">
 				<input name="full-name" type="text" placeholder="Full Name" />

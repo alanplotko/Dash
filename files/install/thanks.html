@@ -26,19 +26,11 @@
       <div class="row install">
         <div class="col-md-5 dash"></div>
         <div class="col-md-7 steps">
-			<h1>Hey there, {{fname}}!<br />
-			How may I be of service?</h1>
+			<h1>Great news, {{fname}}!<br /><br />
+			All modules have been successfully installed!</h1>
 			<br />
-			<form name="install" action="/install" method="POST">
-				<input id="standard" name="standard" type="checkbox" checked="checked" disabled="disabled" />
-				<label for="standard">Standard Install</label><br />
-				% if defined('modules'):
-					% for file in get('modules'):
-						<input id="{{file}}" name="{{file}}" type="checkbox" />
-						<label for="{{file}}">{{file}}</label><br />
-				% end
-				<div style="clear:both;"></div>
-				<input type="submit" class="btn btn-default btn-primary" />
+			<form name="thanks" action="/install" method="POST">
+				<input type="submit" class="btn btn-default btn-primary" value="Continue to your dashboard" />
 			</form>
         </div>
 	  </div>
