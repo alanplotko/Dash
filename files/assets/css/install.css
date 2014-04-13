@@ -53,19 +53,43 @@ form[name='install'] input[type=text] {
 	font-family: 'Courier New', monospace;
 }
 
-/* Modules page */
+/* Modules, Thanks, Restart pages */
 
 input[type=checkbox] {
 	width: 100px;
 }
 
-form[name='install'] input[type=submit] {
-	width: 200px;
-	font-size: 24px;
+
+form[name='restart'] {
+	display: inline-block;
 }
 
-form[name='thanks'] input[type=submit] {
+form[name='install'] input[type=submit],
+form[name='thanks'] input[type=submit],
+form[name='restart'] input[type=submit],
+form[name='add-module'] input[type=submit],
+.return_btn {
+	width: auto;
 	font-size: 24px;
+	display: inline-block;
+	margin: 10px;
+}
+
+form[name='install'] input[type=checkbox],
+form[name='install'] label {
+	float: left;
+}
+
+#modules {
+	overflow-y: scroll;
+	height: 180px;
+	border: 2px dashed #fff;
+	padding: 10px;
+}
+
+h3.instruction {
+	float: left;
+	margin: 0;
 }
 
 /* Footer */

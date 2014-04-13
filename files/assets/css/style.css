@@ -45,3 +45,35 @@ h1 {
 h1, p {
 	color: #fff;
 }
+
+/* Dash Add Module page
+-------------------------------------------------- */
+
+form[name='add-module'] {
+  display: inline;
+}
+
+h4.note {
+  display: block;
+}
+
+.add-module-page {
+  font-family: Acme, Garamond, serif;
+  padding-top: 75px;
+}
+
+/* Dash Navbar
+-------------------------------------------------- */
+.dash-nav {
+  padding: 5px 100px;
+  font-family: Roboto, Arial, sans-serif;
+}
+
+.dash-nav button {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.navbar-brand {
+  font-size: 24px;
+}

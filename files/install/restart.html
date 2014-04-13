@@ -26,33 +26,14 @@
       <div class="row install">
         <div class="col-md-5 dash"></div>
         <div class="col-md-7 steps">
-        	% if defined('error'):
-				<h1>{{ get('error')['message'] }}</h1>
-			% else:				
-				<h1>Hey there, {{ fname }}!<br />How may I be of service?</h1>
-			% end
+			<h1>You're already set up, {{fname}}.</h1>
+			<h3>Do you want to rerun the installation?</h3>
 			<br />
-			<form name="install" action="/install" method="POST">
-				<div id="modules">
-					<input id="standard" name="standard" type="checkbox" checked="checked" disabled="disabled" />
-					<label for="standard">Standard Install</label><br /><br />
-					<h3 class="instruction">Select the modules you'd like to install:</h3>
-					<br /><br />
-					% if defined('modules'):
-						% for name, properties in get('modules').items():
-							% if 'Module' in properties:
-								<input id="{{properties['Module']}}" name="module" type="checkbox" value="{{properties['Module']}}" /><label for="{{properties['Module']}}">{{properties['Module']}}
-							% end
-							% if 'Author' in properties:
-								(by {{properties['Author']}})
-							% end
-							</label><br /><br />
-            			% end
-					% end
-				</div>
-				<div style="clear:both;"></div><br />	
-				<input type="submit" class="btn btn-default btn-primary" value="Installed selected modules" />
+			<form name="restart" action="/install" method="POST">
+        <input id="confirmation" name="confirmation" type="hidden" value="1" />
+				<input type="submit" class="btn btn-default btn-primary" value="Reinstall" />
 			</form>
+        <button class="btn btn-default btn-primary return_btn" onclick="location.href='/dashboard'">Return to the dashboard</button>
         </div>
 	  </div>
     </div>

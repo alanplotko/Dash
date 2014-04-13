@@ -2,7 +2,6 @@ from vendor.bottle import *
 from vendor.beaker import middleware
 import lib.install
 import os.path
-import sys
 
 """ Set up bottle """
 TEMPLATE_PATH.insert(0, 'files')            # templates for dashboard
@@ -19,7 +18,7 @@ dash = middleware.SessionMiddleware(app(), session_opts)
 def setup_request():
     request.session = request.environ['beaker.session']
 
-""" Redirect to error page if page not found """
+""" Return 404 template if page not found """
 @error(404)
 def error404(error):
     return 'Nothing here, sorry'
@@ -46,39 +45,87 @@ def fonts(filename):
 @route('/')
 def isNewInstall():
     if os.path.exists('files/install') and not os.path.exists('files/install/.lock'):
-        redirect('/install', code=302)  
+        redirect('/install')  
     else:
-        return 'Welcome back.'
-        # return template('dashboard') # make dashboard template
+        redirect('/dashboard')
 
+# GET: Returning to an installation or refreshing the page
 @route('/install', method='GET')
 def install():
     if 'stage' in request.session:
         page = lib.install.getTemplate(request.session['stage'])
+        if page == 1:
+            modules = lib.install.checkModules()
+            request.session['modules'] = modules
     else:
         page = lib.install.getTemplate(0)
     return template(page, **request.session) # Send session variables to template for parsing
 
+# POST: Running an installation
 @route('/install', method='POST')
 def install():
-    parameters = lib.install.doStep(request.forms)
+    parameters = lib.install.doStep(request)
     
     # Create session variables if dictionary isn't empty
-    if len(parameters['session_vars']) != 0:
+    if parameters['session_vars'] is not None and len(parameters['session_vars']) > 0:
         for key, item in parameters['session_vars'].items():
             request.session[key] = item
             
     # Update the stage, which is the user's current step in the installation process
-    if 'stage' in request.session:
-        page = lib.install.getTemplate(request.session['stage'])
-    else:
-        page = lib.install.getTemplate(0)
+    if request.session is not None:
+        if 'stage' in request.session:
+            # Redirect to dashboard if installation is complete
+            if request.session['stage'] == 3:
+                redirect('/dashboard')
+            else:
+                page = lib.install.getTemplate(request.session['stage'])
+        else:
+            page = lib.install.getTemplate(0)
+
+        # Check for errors
+        if 'installation_error' in request.session:
+            error = request.session.pop('installation_error') # Error cleanup        
+            return template(page, error=error, **request.session)
+        else:
+            return template(page, **request.session)
+
+# GET: Show dashboard
+@route('/dashboard', method='GET')
+def showDashboard():
+    return template('dashboard', **request.session)
+
+# GET: Add new module
+@route('/add-module', method='GET')
+def addModuleScreen():
+    request.session['modules'] = lib.install.checkModules() # Get all modules again
+    return template('add-module', **request.session)
+
+@route('/add-module', method='POST')
+def addModules():
     
-    # Check for errors
-    if 'installation_error' in request.session:
-        error = request.session.pop('installation_error') # Error cleanup        
-        return template(page, error=error, **request.session)
-    return template(page, **request.session)
+    request.session['modules'] = lib.install.checkModules() # Get all modules again
+    all_modules = request.session['modules']
+
+    widgets = request.session['widgets']
+    wanted_modules = request.forms.getall('module')
+
+    if len(wanted_modules) == 0:
+        return template('add-module', error='Please select at least one module.', **request.session)
+    else:
+        for name, properties in all_modules.items():
+            if name in wanted_modules:
+                if subprocess.call('start /wait python ' + 'files/modules/' + properties['Directory'] + '/' + properties['Directory'] + '.py', shell=True) == 0:
+                    with open("files/modules/" + properties['Directory'] + "/report.txt", 'r') as f:
+                        widgets[properties['Module']] = f.readlines()
+                else:
+                    widgets[properties['Module']] = 'An error occured during setup for this module.'
+        request.session['widgets'] = widgets
+        return template('add-module', success=1, **request.session)
+
+# GET: Show reset page
+@route('/reset', method='GET')
+def reset():
+    return template('reset', **request.session)
 
 if __name__ == "__main__":
     run(app=dash, host='localhost', port=8080, server='cherrypy', debug=True, reloader=True)

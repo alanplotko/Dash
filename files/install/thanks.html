@@ -11,7 +11,7 @@
     <link href="main.css" rel="stylesheet" type="text/css">
     <link href="style.css" rel="stylesheet" type="text/css">
     <link href="install.css" rel="stylesheet" type="text/css">
-	<link href="http://fonts.googleapis.com/css?family=Acme" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Acme" rel="stylesheet" type="text/css">
 	
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -26,12 +26,13 @@
       <div class="row install">
         <div class="col-md-5 dash"></div>
         <div class="col-md-7 steps">
-			<h1>Great news, {{fname}}!<br /><br />
-			All modules have been successfully installed!</h1>
-			<br />
-			<form name="thanks" action="/install" method="POST">
-				<input type="submit" class="btn btn-default btn-primary" value="Continue to your dashboard" />
-			</form>
+    			<h1>Great news, {{fname}}!</h1>
+    			<h3>All selected modules have been successfully installed!</h3>
+    			<br />
+          <form name="thanks" action="/install" method="POST">
+            <input id="dashboard" name="dashboard" type="hidden" value="1" />
+            <input type="submit" class="btn btn-default btn-primary" value="Continue to the dashboard" />
+          </form>
         </div>
 	  </div>
     </div>
