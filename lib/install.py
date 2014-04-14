@@ -53,7 +53,7 @@ def checkModules():
         for dirpath, dirnames, filenames in os.walk(root):
             for filename in filenames:
                 dirname = dirpath.split(os.path.sep)[-1]
-                if filename == dirname + '.py':
+                if filename == 'install.py':
                     path = root + '/' + dirname + '/' + filename
                 
                     # Locate metadata
@@ -80,12 +80,13 @@ def doInstall(request):
         widgets = {}
         for name, properties in all_modules.items():
             if name in wanted_modules:
-                if subprocess.call('start /wait python ' + 'files/modules/' + properties['Directory'] + '/' + properties['Directory'] + '.py', shell=True) == 0:
-                    with open("files/modules/" + properties['Directory'] + "/report.txt", 'r') as f:
-                        widgets[properties['Module']] = f.readlines()
+                if subprocess.call('start /wait python ' + 'files/modules/' + properties['Directory'] + '/install.py', shell=True) == 0:
+                    if subprocess.call(['python', 'files/modules/' + properties['Directory'] + '/' + properties['Directory'] + '.py'], shell=False) == 0:
+                        with open("files/modules/" + properties['Directory'] + "/report.txt", 'r') as file:
+                            widgets[properties['Module']] = file.readlines()
                 else:
                     widgets[properties['Module']] = 'An error occured during setup for this module.'
-                with open("files/install/.lock", "w") as f:
+                with open("files/install/.lock", "w") as file:
                     pass
         return {'stage' : 2, 'widgets' : widgets}
 

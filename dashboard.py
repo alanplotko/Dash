@@ -92,7 +92,22 @@ def install():
 # GET: Show dashboard
 @route('/dashboard', method='GET')
 def showDashboard():
-    return template('dashboard', **request.session)
+    if os.path.exists('files/install') and not os.path.exists('files/install/.lock'):
+        redirect('/install')  
+    else:
+        return template('dashboard', **request.session)
+
+def updateDashboard():
+    all_modules = request.session['modules']
+    widgets = request.session['widgets']
+    for name, properties in all_modules.items():
+        if name in widgets.keys():
+            if subprocess.call(['python', 'files/modules/' + properties['Directory'] + '/' + properties['Directory'] + '.py'], shell=False) == 0:
+                with open("files/modules/" + properties['Directory'] + "/report.txt", 'r') as f:
+                    widgets[properties['Module']] = f.readlines()
+            else:
+                widgets[properties['Module']] = 'An error occured during setup for this module.'
+    request.session['widgets'] = widgets
 
 # GET: Add new module
 @route('/add-module', method='GET')
@@ -102,7 +117,6 @@ def addModuleScreen():
 
 @route('/add-module', method='POST')
 def addModules():
-    
     request.session['modules'] = lib.install.checkModules() # Get all modules again
     all_modules = request.session['modules']
 
@@ -114,9 +128,10 @@ def addModules():
     else:
         for name, properties in all_modules.items():
             if name in wanted_modules:
-                if subprocess.call('start /wait python ' + 'files/modules/' + properties['Directory'] + '/' + properties['Directory'] + '.py', shell=True) == 0:
-                    with open("files/modules/" + properties['Directory'] + "/report.txt", 'r') as f:
-                        widgets[properties['Module']] = f.readlines()
+                if subprocess.call('start /wait python ' + 'files/modules/' + properties['Directory'] + '/install.py', shell=True) == 0:
+                    if subprocess.call(['python', 'files/modules/' + properties['Directory'] + '/' + properties['Directory'] + '.py'], shell=False) == 0:
+                        with open("files/modules/" + properties['Directory'] + "/report.txt", 'r') as f:
+                            widgets[properties['Module']] = f.readlines()
                 else:
                     widgets[properties['Module']] = 'An error occured during setup for this module.'
         request.session['widgets'] = widgets
@@ -126,6 +141,26 @@ def addModules():
 @route('/reset', method='GET')
 def reset():
     return template('reset', **request.session)
+
+@route('/refresh/<widget>')
+def refreshWidget(widget):
+    all_modules = request.session['modules']
+    widgets = request.session['widgets']
+    for name, properties in all_modules.items():
+        if name == widget:
+            if subprocess.call(['python', 'files/modules/' + properties['Directory'] + '/' + properties['Directory'] + '.py'], shell=False) == 0:
+                with open("files/modules/" + properties['Directory'] + "/report.txt", 'r') as f:
+                    widgets[properties['Module']] = f.readlines()
+            else:
+                widgets[properties['Module']] = 'An error occured during setup for this module.'
+    request.session['widgets'] = widgets
+    redirect('/dashboard')
+
+@route('/uninstall/<widget>')
+def uninstallWidget(widget):
+    request.session['widgets'].pop(widget, None)
+    # Add uninstall confirmation later on (announcement bar or entire template, former preferred over latter)
+    redirect('/dashboard')
 
 if __name__ == "__main__":
     run(app=dash, host='localhost', port=8080, server='cherrypy', debug=True, reloader=True)

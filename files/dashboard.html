@@ -12,6 +12,7 @@
     <link href="style.css" rel="stylesheet" type="text/css">
     <link href="install.css" rel="stylesheet" type="text/css">
     <link href="cards.css" rel="stylesheet" type="text/css">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet" type="text/css">
   	<link href="http://fonts.googleapis.com/css?family=Acme" rel="stylesheet" type="text/css">
     <link href="http://fonts.googleapis.com/css?family=Roboto:400,300" rel="stylesheet" type="text/css">
 	
@@ -44,10 +45,14 @@
 
     <div class="container">
       <div class="row">
-        <div class="col-md-12 widgets js-masonry" data-masonry-options='{ "columnWidth": 150, "itemSelector": ".card" }'>
+        <div class="col-md-12 widgets js-masonry" data-masonry-options='{ "columnWidth": 100, "itemSelector": ".card" }'>
           % for name, properties in get('widgets').items():
           <div class="card">
-            <h3 class="card-heading simple">{{ name.strip() }}</h3>
+            <h3 class="card-heading simple"><i class="fa fa-refresh pull-right" onclick="location.href='/refresh/{{ name.strip() }}'"></i>
+              % if len(get('widgets').items()) > 1:
+                <i class="fa fa-times pull-right" onclick="location.href='/uninstall/{{ name.strip() }}'"></i>
+              % end
+              {{ name.strip() }}</h3>
               <div class="card-body">
                 % for item in properties:
                   {{ item.strip() }}
@@ -57,7 +62,7 @@
                 % end
               </div>
           </div>
-          % end    
+          % end
 				</div>
 				<div style="clear:both;"></div><br />
         </div>
@@ -76,5 +81,11 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="main.js"></script>
     <script src="masonry.js"></script>
+    <script>
+      $(".card i").click(function() {
+        $(this).css('color', '#83c183');
+        $(this).addClass("fa-spin");
+      });
+    </script>
   </body>
 </html>

@@ -1,3 +1,12 @@
+.card-heading.simple i {
+  line-height: inherit;
+  cursor: pointer;
+}
+
+.card-heading.simple i:hover {
+  color: #83c183;
+}
+
 .card {
   display: inline-block;
   font-family: Roboto, Arial, sans-serif;
