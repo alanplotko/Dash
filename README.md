@@ -13,6 +13,10 @@ Upon executing the program, the dashboard will open up and provide access to a v
   - Allow automatic updates at set intervals of time
   - Change mascot image
 
+- Modify installation process
+  - Collect information via forms instead of command prompt
+  - Expand compatability to beyond Windows
+
 #Changelog
 
 ####v1.0.0 - 4/13/2014
