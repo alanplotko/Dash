@@ -17,6 +17,9 @@ Upon executing the program, the dashboard will open up and provide access to a v
   - Collect information via forms instead of command prompt
   - Expand compatability to beyond Windows
 
+- Refreshing Modules
+  - If files are missing (e.g. try-catch for missing settings.json file, etc.), report back module as broken, remove broken module from widgets dictionary, nd create unique link to re-nstall that modulefrom the dashboard instead of clicking the 'install new module' button.
+
 #Changelog
 
 ####v1.0.0 - 4/13/2014
