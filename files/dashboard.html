@@ -37,6 +37,7 @@
         </div>
         <div class="collapse navbar-collapse" id="dash-nav">
           <button type="button" class="btn btn-default navbar-btn btn-info" onclick="location.href='/add-module'">Install New Module</button>
+          <button id="refreshModules" type="button" class="btn btn-default navbar-btn btn-success" onclick="location.href='/update'">Refresh All Modules</button>
           <button type="button" class="btn btn-default navbar-btn btn-warning" onclick="location.href='/reset'">Reset</button>
           <p class="navbar-text navbar-right">Signed in as {{ fname }} {{ lname }}</p>
         </div>
@@ -82,9 +83,14 @@
     <script src="main.js"></script>
     <script src="masonry.js"></script>
     <script>
-      $(".card i").click(function() {
+      $(".card i.fa-refresh").click(function() {
         $(this).css('color', '#83c183');
         $(this).addClass("fa-spin");
+      });
+
+      $("#refreshModules").click(function() {
+        $(".card i.fa-refresh").css('color', '#83c183');
+        $(".card i.fa-refresh").addClass("fa-spin");
       });
     </script>
   </body>

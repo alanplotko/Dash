@@ -97,7 +97,9 @@ def showDashboard():
     else:
         return template('dashboard', **request.session)
 
-def updateDashboard():
+# GET: Update all modules
+@route('/update', method='GET')
+def updateAllModules():
     all_modules = request.session['modules']
     widgets = request.session['widgets']
     for name, properties in all_modules.items():
@@ -108,6 +110,7 @@ def updateDashboard():
             else:
                 widgets[properties['Module']] = 'An error occured during setup for this module.'
     request.session['widgets'] = widgets
+    redirect('/dashboard')
 
 # GET: Add new module
 @route('/add-module', method='GET')
