@@ -20,8 +20,9 @@ Upon executing the program, the dashboard will open up and provide access to a v
 - Refreshing Modules
   - If files are missing (e.g. try-catch for missing settings.json file, etc.), report back the module as broken, remove the broken module from the widgets dictionary, and create a unique link to reinstall that module from the dashboard instead of having to click the 'install new module' button
 
-- Widget Ideas (to create a foundation of widgets users can install
-  - Technology news widget: grabs recent posts from websites you choose. The user can opt for other news topics.
+- Widget Ideas (to form a foundation of widgets users can install)
+  - Technology news widget.
+    - Grabs recent posts from websites you choose. The user can opt for other news topics.
 
 #Changelog
 
