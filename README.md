@@ -16,13 +16,25 @@ Upon executing the program, the dashboard will open up and provide access to a v
 - Modify installation process
   - Collect information via forms instead of command prompt
   - Expand compatability to beyond Windows
+  - Switch out module installation screen for a selection between two options. The default option is the standard installation, which will install all default modules that will be included with future versions of Dash (news, time, weather, and so on). The other option is a custom installation that will allow the user to choose what modules to install (including the modules that will come with Dash) and change the default user settings.
 
-- Refreshing Modules
-  - If files are missing (e.g. try-catch for missing settings.json file, etc.), report back the module as broken, remove the broken module from the widgets dictionary, and create a unique link to reinstall that module from the dashboard instead of having to click the 'install new module' button
+- Refreshing modules
+  - If files are missing (e.g. try-catch for missing settings.json file, etc.), report back the module as broken, remove the broken module from the dictionary, and create a unique link to reinstall that module from the dashboard instead of having to click the 'install new module' button.
 
-- Widget Ideas (to form a foundation of widgets users can install)
-  - Technology news widget.
-    - Grabs recent posts from websites you choose. The user can opt for other news topics.
+
+- Module repository
+  - Create an online repository of modules that developers can submit to (perhaps a folder on GitHub under Dash that developers will send a pull request to). Dash will go to this repository for module installation. The user can search or select a module to install. Alternatively, the user can elect to install a custom module that he or she has written or downloaded manually.
+    - Module verification
+      - If a module is not in the repository, mark the module as unverified. One user setting will be to enable developer mode and allow custom modules.
+  - Treat modules as individual or as bundles. For instance, modules for Binghamton University can be put in a Binghamton University Bundle or Pack that will allow installation of all modules in that pack. Bundles or packs can be "advertised" to users during the installation process to give them a foundation of modules to install.
+
+- Default modules
+  - News
+    - Grabs recent posts from websites you choose. The user can opt for certain news topics.
+  - Time
+    - Detects the user's time zone and reports the current time.
+  - Weather
+    - Detects the user's location and reports the current weather. The user can opt for a particular city, state, zip code, etc.
 
 #Changelog
 
