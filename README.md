@@ -26,7 +26,7 @@ Upon executing the program, the dashboard will open up and provide access to a v
   - Create an online repository of modules that developers can submit to (perhaps a folder on GitHub under Dash that developers will send a pull request to). Dash will go to this repository for module installation. The user can search or select a module to install. Alternatively, the user can elect to install a custom module that he or she has written or downloaded manually.
     - Module verification
       - If a module is not in the repository, mark the module as unverified. One user setting will be to enable developer mode and allow custom modules.
-  - Treat modules as individual or as bundles. For instance, modules for Binghamton University can be put in a Binghamton University Bundle or Pack that will allow installation of all modules in that pack. Bundles or packs can be "advertised" to users during the installation process to give them a foundation of modules to install.
+  - Treat modules as individual or as bundles. For instance, modules that would be useful for Binghamton University students can be put in a Binghamton University bundle or pack that will allow installation of all modules in that pack. Bundles or packs can be suggested to users during the installation process to give them a foundation of modules to install.
 
 - Default modules
   - News
