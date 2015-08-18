@@ -6,6 +6,7 @@
   - Move to SVGs
   - Font changes (setup process)
   - Consider moving to Local Storage
+  - Move to different server framework
 
 - User Settings Page
   - Change name
