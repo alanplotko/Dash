@@ -4,6 +4,10 @@ Dash keeps you updated with what's happening. Dash is the name of the mascot cha
 
 Upon executing the app, the dashboard will open up and provide access to a variety of information retrieved through the modules that the user opts in to use.
 
+## Upcoming Changes
+
+Dash relies on Python modules which load HTML onto the screen. I plan on moving Dash to Node.js and using JavaScript Web APIs to gather information. Users can opt to highlight particular Facebook pages, Facebook group posts, subreddits, Twitter users, etc. They can also choose to sort sources into custom catagories. The interface design will be minimal and will potentially follow material design standards.
+
 ## Screenshots
 
 ### Installation Front Page
