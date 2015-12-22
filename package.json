@@ -1,0 +1,25 @@
+{
+  "name": "dash",
+  "version": "0.1.0",
+  "description": "Dash is a central dashboard for keeping you updated with the information you care about.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alanplotko/Dash.git"
+  },
+  "author": "Alan Plotko <alan.plotko@gmail.com>",
+  "license": "SEE LICENSE IN <LICENSE>",
+  "bugs": {
+    "url": "https://github.com/alanplotko/Dash/issues"
+  },
+  "homepage": "https://github.com/alanplotko/Dash#readme",
+  "dependencies": {
+    "express": "^4.13.3",
+    "jade": "^1.11.0",
+    "jquery": "^2.1.4",
+    "materialize-css": "^0.97.5"
+  }
+}
