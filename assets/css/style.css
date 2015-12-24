@@ -1,12 +1,19 @@
+/*================
+ *  Body
+==================*/
+
+body {
+    background-color: #fafafa;
+}
+
+/*================
+ *  Navigation
+==================*/
+
 nav a.brand-logo {
     padding-left: 30px;
 }
 
 ul#nav-mobile li a {
     font-size: 18px;
-}
-
-body {
-    background: #e5e5e5 url("/static/img/dash.png") no-repeat 0 100px;
-    background-size: 40%;
 }
