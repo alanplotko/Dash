@@ -20,6 +20,8 @@
     "express": "^4.13.3",
     "jade": "^1.11.0",
     "jquery": "^2.1.4",
-    "materialize-css": "^0.97.5"
+    "kerberos": "0.0.17",
+    "materialize-css": "^0.97.5",
+    "mongodb": "^2.1.2"
   }
 }

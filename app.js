@@ -3,8 +3,6 @@ var express = require('express');
 var app = express();
 var path = require('path');
 
-// Requirements
-
 // Assets and Views
 app.use('/static', express.static(path.join(__dirname, '/assets')));
 app.use('/font', express.static(path.join(__dirname, '/node_modules/materialize-css/dist/font')));

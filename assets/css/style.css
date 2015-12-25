@@ -17,3 +17,31 @@ nav a.brand-logo {
 ul#nav-mobile li a {
     font-size: 18px;
 }
+
+/*================
+ *  Buttons
+==================*/
+
+.btn-login {
+    text-transform: inherit;
+    font-size: 16px;
+    height: 40px;
+    line-height: 42px;
+}
+
+/*================
+ *  Front page
+==================*/
+
+h1#welcome {
+    padding: 100px;
+}
+
+div#login {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin-top: -20px;
+    margin-left: -111.164px;
+    /*transform: translate(-50%, -50%);*/
+}

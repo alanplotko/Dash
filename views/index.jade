@@ -4,10 +4,17 @@ html.no-js
     meta(charset='utf-8')
     meta(http-equiv='X-UA-Compatible', content='IE=edge')
     title Dash
-    meta(name='description', content='')
+    meta(name='description', content='Dash brings all the information you care about into one central location.')
     meta(name='viewport', content='width=device-width, initial-scale=1')
+
+    <!-- Stylesheets -->
     link(rel='stylesheet', href='/materialize/materialize.css')
     link(rel='stylesheet', href='/static/css/style.css')
+    
+    <!-- Fonts -->
+    link(rel='stylesheet', href='https://fonts.googleapis.com/icon?family=Material+Icons')
+
+    <!-- Favicon -->
     <!--[if lt IE 9]><link rel='shortcut icon' href='/static/ico/favicon.ico'><![endif]-->
     link(rel='icon', href='/static/ico/favicon.ico')
   
@@ -23,6 +30,12 @@ html.no-js
       div.nav-wrapper
         a.brand-logo(href='#') Dash
         ul#nav-mobile.right.hide-on-med-and-down
+
+    h1#welcome.center.thin Organize your social media with Dash
+    
+    div#login
+      a.waves-effect.waves-dark.btn.btn-login.blue.darken-3 Sign in with Dash
+        i.material-icons.left lock
 
     script(src='/jquery/jquery.js')
     script(src='/materialize/materialize.js')
