@@ -34,7 +34,7 @@ html.no-js
         ul#nav-mobile.right.hide-on-med-and-down
 
     div#login
-      a.waves-effect.waves-dark.btn.btn-login.blue.darken-3 Sign in with Dash
+      button.waves-effect.waves-dark.btn.btn-login.blue.darken-3 Sign in with Dash
         i.material-icons.left lock
 
     div.row
@@ -42,16 +42,24 @@ html.no-js
         h1#welcome.center.thin Organize your social media with Dash
 
     div.row
-      form#loginForm.col.s12
+      form#loginForm.col.s12(action='/login', method='POST')
         div.row
-          div.input-field.col.s4.offset-s4.blue-text.text-darken-3
-            i.material-icons.prefix.grey-text.text-darken-2 account_circle
+          div.input-field.col.s4.offset-s4
+            i.material-icons.prefix account_circle
             input#username.validate.border-blue(placeholder='Username', type='text')
-            label(for='username')
-          div.input-field.col.s4.offset-s4.blue-text.text-darken-3
-            i.material-icons.prefix.grey-text.text-darken-2 lock
+            label(for='username') Username
+        div.row
+          div.input-field.col.s4.offset-s4
+            i.material-icons.prefix lock
             input#password.validate.border-blue(placeholder='Password', type='password')
-            label(for='password')
+            label(for='password') Password
+        div.row
+          div#controls.input-field.col.s4.offset-s4.blue-text.text-darken-3
+            button#return.waves-effect.waves-dark.btn.btn-login.grey.darken-1 Return
+              i.material-icons.right clear
+            button#submit.waves-effect.waves-dark.btn.btn-login.blue.darken-3(type='submit') Sign In
+              i.material-icons.right send
+
 
     script(src='/jquery/jquery.js')
     script(src='/materialize/materialize.js')

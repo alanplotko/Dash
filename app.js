@@ -2,15 +2,22 @@
 var express = require('express');
 var app = express();
 var path = require('path');
+var bodyParser = require('body-parser');
 
 // Assets and Views
 app.use('/static', express.static(path.join(__dirname, '/assets')));
 app.use('/font', express.static(path.join(__dirname, '/node_modules/materialize-css/dist/font')));
 app.set('view engine', 'jade');
+app.use(bodyParser.json()); // Support json encoded bodies
+app.use(bodyParser.urlencoded({ extended: true })); // Support encoded bodies
 
 // Routes for App Pages
 app.get('/', function (req, res) {
 	res.render('index');
+});
+
+app.post('/login', function(req, res) {
+    var username = req.body.username;
 });
 
 // Routes for App Assets

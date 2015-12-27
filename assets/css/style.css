@@ -37,7 +37,7 @@ h1#welcome {
     padding: 100px;
 }
 
-div#login {
+#login {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -54,6 +54,33 @@ div#login {
     display: none;
 }
 
-.border-blue:focus {
-    border-bottom-color: #1565c0!important; /* blue darken-3 */
+input.border-blue {
+    font-size: 18px;
 }
+
+.input-field input[type=text]:focus,
+.input-field input[type=password]:focus {
+    border-bottom: 1px solid #1565c0; /* blue darken-3 */
+    box-shadow: 0 1px 0 0 #1565c0; /* blue darken-3 */
+}
+
+.input-field input[type=text]:focus + label,
+.input-field input[type=password]:focus + label {
+    color: #1565c0; /* blue darken-3 */
+}
+
+.input-field .prefix {
+    padding-top: 10px;
+    color: #424242; /* grey darken-3 */
+}
+
+.input-field .prefix.active {
+    color: #1565c0; /* blue darken-3 */
+}
+
+#controls {
+    padding-top: 10px;
+}
+
+button#return { float: left; }
+button#submit { float: right; }
