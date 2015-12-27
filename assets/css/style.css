@@ -45,3 +45,15 @@ div#login {
     margin-left: -111.164px;
     /*transform: translate(-50%, -50%);*/
 }
+
+/*================
+ *  Login Form
+==================*/
+
+#loginForm {
+    display: none;
+}
+
+.border-blue:focus {
+    border-bottom-color: #1565c0!important; /* blue darken-3 */
+}
