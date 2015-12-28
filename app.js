@@ -1,6 +1,8 @@
 // Express Setup
 var express = require('express');
 var app = express();
+
+// Requirements Setup
 var path = require('path');
 var bodyParser = require('body-parser');
 
@@ -8,10 +10,25 @@ var bodyParser = require('body-parser');
 app.use('/static', express.static(path.join(__dirname, '/assets')));
 app.use('/font', express.static(path.join(__dirname, '/node_modules/materialize-css/dist/font')));
 app.set('view engine', 'jade');
-app.use(bodyParser.json()); // Support json encoded bodies
-app.use(bodyParser.urlencoded({ extended: true })); // Support encoded bodies
 
-// Routes for App Pages
+// Support json encoded bodies
+app.use(bodyParser.json());
+
+// Support encoded bodies
+app.use(bodyParser.urlencoded({ extended: true }));
+
+/*===============================
+ *  MongoDB & Mongoose Setup
+=================================*/
+
+var mongoose = require('mongoose');
+mongoose.connect(process.env.DASH_MONGODB_URL);
+var Schema = mongoose.Schema;
+
+/*===========================
+ *  Routes for App Pages
+=============================*/
+
 app.get('/', function (req, res) {
 	res.render('index');
 });
@@ -24,7 +41,10 @@ app.post('/register', function(req, res) {
     var username = req.body.username;
 });
 
-// Routes for App Assets
+/*===========================
+ *  Routes for App Assets
+=============================*/
+
 app.get('/jquery/jquery.js', function(req, res) {
     res.sendFile(path.join(__dirname, '/node_modules/jquery/dist/jquery.min.js'));
 });
