@@ -22,7 +22,7 @@ ul#nav-mobile li a {
  *  Buttons
 ==================*/
 
-.btn-login {
+.btn-front {
     text-transform: inherit;
     font-size: 16px;
     height: 40px;
@@ -37,20 +37,22 @@ h1#welcome {
     padding: 100px;
 }
 
-#login {
+#formArea {
     position: fixed;
     top: 50%;
     left: 50%;
     margin-top: -20px;
-    margin-left: -111.164px;
+    margin-left: -95.5px;
     /*transform: translate(-50%, -50%);*/
 }
 
-/*================
- *  Login Form
-==================*/
+/*=========================
+ *  Register/Login Form
+===========================*/
 
-#loginForm {
+#loginForm,
+#verifySection,
+button#return {
     display: none;
 }
 
@@ -82,5 +84,20 @@ input.border-blue {
     padding-top: 10px;
 }
 
-button#return { float: left; }
-button#submit { float: right; }
+button#register,
+button#return {
+    float: left;
+}
+
+button#login {
+    float: right;
+}
+
+label.invalid {
+    color: red;
+    font-size: 0.8rem;
+    left: 0;
+    position: relative;
+    top: -15px;
+    transform: none!important;
+}

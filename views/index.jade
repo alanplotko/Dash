@@ -33,8 +33,8 @@ html.no-js
         a.brand-logo(href='#') Dash
         ul#nav-mobile.right.hide-on-med-and-down
 
-    div#login
-      button.waves-effect.waves-dark.btn.btn-login.blue.darken-3 Sign in with Dash
+    div#formArea
+      button#authenticate.waves-effect.waves-dark.btn.btn-front.blue.darken-3 Authenticate
         i.material-icons.left lock
 
     div.row
@@ -46,21 +46,29 @@ html.no-js
         div.row
           div.input-field.col.s4.offset-s4
             i.material-icons.prefix account_circle
-            input#username.validate.border-blue(placeholder='Username', type='text')
+            input#username.border-blue(placeholder='Username', type='text', name='username')
             label(for='username') Username
         div.row
           div.input-field.col.s4.offset-s4
             i.material-icons.prefix lock
-            input#password.validate.border-blue(placeholder='Password', type='password')
+            input#password.border-blue(placeholder='Password', type='password', name='password')
             label(for='password') Password
+        div#verifySection.row
+          div.input-field.col.s4.offset-s4
+            i.verifyIcon.material-icons.prefix check_box_outline_blank
+            input#passwordVerify.border-blue(placeholder='Confirm Password', type='password', name='passwordVerify')
+            label(for='passwordVerify') Confirm Password
         div.row
           div#controls.input-field.col.s4.offset-s4.blue-text.text-darken-3
-            button#return.waves-effect.waves-dark.btn.btn-login.grey.darken-1 Return
-              i.material-icons.right clear
-            button#submit.waves-effect.waves-dark.btn.btn-login.blue.darken-3(type='submit') Sign In
+            button#register.waves-effect.waves-dark.btn.btn-front.red.darken-3 I'm New Here
+              i.material-icons.left assignment_ind
+            button#return.waves-effect.waves-dark.btn.btn-front.grey Return
+              i.material-icons.left clear
+            button#login.waves-effect.waves-dark.btn.btn-front.blue.darken-3 Sign In
               i.material-icons.right send
 
-
     script(src='/jquery/jquery.js')
+    script(src='/jquery/jquery.validate.js')
+    script(src='/jquery/additional-methods.js')
     script(src='/materialize/materialize.js')
     script(src='/static/js/login.js')
