@@ -95,9 +95,10 @@ button#login {
 
 label.invalid {
     color: red;
+    display: block;
     font-size: 0.8rem;
     left: 0;
     position: relative;
-    top: -15px;
+    top: -10px;
     transform: none!important;
 }

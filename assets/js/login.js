@@ -13,7 +13,7 @@ $(document).ready(function() {
     // Regex validations
     $.validator.addMethod('regex', function(value, element, regexpr) {          
         return regexpr.test(value);
-    }, 'Please enter a valid password.');
+    }, 'Must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number');
 
     // Form validation setup
     $('#loginForm').validate({
@@ -25,11 +25,21 @@ $(document).ready(function() {
             password: {
                 minlength: 8,
                 required: true,
-                regex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/
+                regex: {
+                    param: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%\^&*)(+=._-]{8,}$/,
+                    depends: function(e) {
+                        return $('#register').css('display') == 'none';
+                    }
+                }
             },
             passwordVerify: {
+                required: {
+                    depends: function(e) {
+                        return $('#register').css('display') == 'none';
+                    }
+                },
                 minlength: 8,
-                regex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/,
+                regex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%\^&*)(+=._-]{8,}$/,
                 equalTo: '#password'
             }
         },
@@ -40,17 +50,17 @@ $(document).ready(function() {
             },
             password: {
                 minlength: 'Must be at least 8 characters',
-                regex: 'Must contain 1 upper, 1 lower, and 1 number',
+                regex: 'Must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number',
                 required: 'Required input'
             },
             passwordVerify: {
                 minlength: 'Must be at least 8 characters',
-                regex: 'Must contain 1 upper, 1 lower, and 1 number',
+                regex: 'Must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number',
                 equalTo: 'Must match password'
             }
         },
         submitHandler: function(form) {
-            $('#login').prop('disabled', true);
+            $('#login, #return, #register').prop('disabled', true);
             form.submit();
         }
     });
@@ -69,13 +79,15 @@ $(document).ready(function() {
         e.preventDefault();
         // Switch to register mode
         $('#loginForm').prop('action', '/register');
-        // Require re-entering password for verification
-        $('#passwordVerify').prop('required', true);
         // Update submit button text
-        $('#submit').html('Register <i class="material-icons right">send</i>');
+        $('#login').html('Register <i class="material-icons right">send</i>');
         // Show new options to return and register
-        $(this).fadeOut(function() {
-            $('#return, #verifySection').fadeIn();
+        $.when(
+            $(this).fadeOut(function() {
+                $('#return, #verifySection').fadeIn();
+            })
+        ).then(function() {
+            $('#loginForm').valid();
         });
     });
 
@@ -84,29 +96,19 @@ $(document).ready(function() {
         e.preventDefault();
         // Switch to login mode
         $('#loginForm').prop('action', '/login');
-        // Disable re-entering password; clear and hide second password prompt
-        $('#passwordVerify').prop('required', false);
+        // Clear and hide second password prompt
         $('#verifySection').fadeOut();
         $("#passwordVerify").val("").removeClass('valid').removeClass('invalid');
-        $(".verifyIcon").text("check_box_outline_blank");
         // Update submit button text
-        $('#submit').html('Sign In <i class="material-icons right">send</i>');
+        $('#login').html('Sign In <i class="material-icons right">send</i>');
         // Show old options to register or sign in
-        $(this).fadeOut(function() {
-            $('#register').fadeIn();
+        $.when(
+            $(this).fadeOut(function() {
+                $('#register').fadeIn();
+            })
+        ).then(function() {
+            $('#loginForm').valid();
         });
-    });
-
-    // Update indicator for passwords matching in registration mode
-    $('#passwordVerify').on('blur', function() {
-        if($('#passwordVerify').prop('required') && $('#passwordVerify').hasClass('valid'))
-        {
-            $('.verifyIcon').text('check_box');
-        }
-        else
-        {
-            $(".verifyIcon").text("check_box_outline_blank");
-        }
     });
 
 });
