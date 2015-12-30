@@ -12,6 +12,8 @@ Dash highlights the information and news you care about. Rather than opening up 
 
 4) Run the app with `node app.js dev`. Passing in 'dev' will use the defined database in config.js for the development environment. You will need to set up MongoDB on your computer, create a database, and overwrite the database URI.
 
+Optional: If you plan on making changes to your files, I recommend installing nodemon globally. Nodemon restarts your app when it detects changes. If you have nodemon installed, run `nodemon app.js dev` to run the app.
+
 # Plans
 
 There are various sites Dash could potentially connect with, such as Google+, Facebook, Twitter, and Reddit. There needs to be a central account in the database that is connected with all of these sites. For instance, the user logs into Dash. They have no connected accounts. I can have options for displaying the weather, time, and so on. I can use the GitHub API to pull in latest commits or updates, so that users can "subscribe" to latest developments in Dash. These "basic modules" are defaults that the user can opt in to see aside from their content.
