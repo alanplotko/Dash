@@ -10,7 +10,7 @@ Dash highlights the information and news you care about. Rather than opening up 
 
 3) Now you can cd into the directory that Dash is located in and run `npm install` to set up dependencies.
 
-4) Run the app with `node app.js`.
+4) Run the app with `node app.js dev`. Passing in 'dev' will use the defined database in config.js for the development environment. You will need to set up MongoDB on your computer, create a database, and overwrite the database URI.
 
 # Plans
 
