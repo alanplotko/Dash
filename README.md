@@ -12,7 +12,7 @@ Dash highlights the information and news you care about. Rather than opening up 
 
 4) Run the app with `node app.js dev`. Passing in 'dev' will use the defined database in config.js for the development environment. You will need to set up MongoDB on your computer, create a database, and overwrite the database URI.
 
-Optional: If you plan on making changes to your files, I recommend installing nodemon globally. Nodemon restarts your app when it detects changes. If you have nodemon installed, run `nodemon app.js dev` to run the app.
+Optional: If you plan on making changes to the files, consider using nodemon. Nodemon restarts your app whenever it detects changes. To use nodemon, run the app with `nodemon app.js dev` instead.
 
 # Plans
 
