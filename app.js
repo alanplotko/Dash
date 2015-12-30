@@ -1,29 +1,88 @@
-// Express Setup
+/*===============================
+ *  Dependencies & App Setup
+=================================*/
+
+// --------- Dependencies ---------
+process.env.NODE_ENV = process.argv[2] || 'prod';
+var config = require('./config.js').config[process.env.NODE_ENV]
 var express = require('express');
 var app = express();
-
-// Requirements Setup
 var path = require('path');
 var bodyParser = require('body-parser');
+var expressSession = require('express-session');
+var cookieParser = require('cookie-parser');
+var passport = require('passport');
+var LocalStrategy = require('passport-local').Strategy;
+var flash = require('connect-flash');
 
-// Assets and Views
+// --------- Authentication Setup ---------
+app.use(cookieParser());
+app.use(expressSession({ 
+    secret: '#ofi!af8_1b_edlif6h=o8b)f&)hc!8kx=w*$f2pi%hm)(@yx8',
+    resave: true,
+    saveUninitialized: true
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
+// --------- App Setup ---------
 app.use('/static', express.static(path.join(__dirname, '/assets')));
 app.use('/font', express.static(path.join(__dirname, '/node_modules/materialize-css/dist/font')));
 app.set('view engine', 'jade');
 
-// Support json encoded bodies
+// Support json-encoded/encoded bodies
 app.use(bodyParser.json());
-
-// Support encoded bodies
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// Support displaying messages that are saved in the session
+app.use(flash());
 
 /*===============================
  *  MongoDB & Mongoose Setup
 =================================*/
 
+// Set uo Mongoose; connect to MongoDB database
 var mongoose = require('mongoose');
-mongoose.connect(process.env.DASH_MONGODB_URL);
+mongoose.connect(config.MONGO_URI);
 var Schema = mongoose.Schema;
+
+// Create user schema
+var userSchema = new Schema({
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    admin: Boolean,
+    created_at: Date,
+    updated_at: Date
+});
+
+var User = mongoose.model('User', userSchema);
+module.exports = User;
+
+passport.use('login', new LocalStrategy({
+    passReqToCallback : true
+}, function(req, username, password, done) { 
+    // check in mongo if a user with username exists or not
+    User.findOne({ 'username' :  username }, function(err, user) {
+        // In case of any error, return using the done method
+        if (err)
+            return done(err);
+        // Username does not exist, log error & redirect back
+        if (!user){
+            console.log('User Not Found with username '+username);
+            return done(null, false, 
+                req.flash('message', 'User Not found.'));                 
+        }
+        // User exists but wrong password, log the error 
+        if (!isValidPassword(user, password)){
+            console.log('Invalid Password');
+            return done(null, false, 
+                req.flash('message', 'Invalid Password'));
+        }
+        // User and password both match, return user from 
+        // done method which will be treated like success
+        return done(null, user);
+    });
+}));
 
 /*===========================
  *  Routes for App Pages
