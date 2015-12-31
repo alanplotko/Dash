@@ -52,7 +52,7 @@ h1#welcome {
 
 #loginForm,
 #verifySection,
-button#return {
+#return {
     display: none;
 }
 
@@ -84,12 +84,12 @@ input.border-blue {
     padding-top: 10px;
 }
 
-button#register,
-button#return {
+#register,
+#return {
     float: left;
 }
 
-button#login {
+#login {
     float: right;
 }
 
