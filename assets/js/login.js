@@ -11,7 +11,11 @@ $(document).ready(function() {
     });
 
     // Regex validations
-    $.validator.addMethod('regex', function(value, element, regexpr) {          
+    $.validator.addMethod('usernameRegex', function(value, element, regexpr) {          
+        return regexpr.test(value);
+    }, 'Must contain only alphanumeric characters, dashes, and underscores');
+
+    $.validator.addMethod('passwordRegex', function(value, element, regexpr) {          
         return regexpr.test(value);
     }, 'Must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number');
 
@@ -20,12 +24,18 @@ $(document).ready(function() {
         rules: {
             username: {
                 minlength: 3,
-                required: true
+                required: true,
+                usernameRegex: /^([A-Za-z0-9\-\_]+)$/,
             },
             password: {
-                minlength: 8,
+                minlength: {
+                    param: 8,
+                    depends: function(e) {
+                        return $('#register').css('display') == 'none';
+                    }
+                },
                 required: true,
-                regex: {
+                passwordRegex: {
                     param: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%\^&*)(+=._-]{8,}$/,
                     depends: function(e) {
                         return $('#register').css('display') == 'none';
@@ -39,23 +49,19 @@ $(document).ready(function() {
                     }
                 },
                 minlength: 8,
-                regex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%\^&*)(+=._-]{8,}$/,
+                passwordRegex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%\^&*)(+=._-]{8,}$/,
                 equalTo: '#password'
             }
         },
         message: {
             username: {
-                minlength: 'Must be at least 3 characters',
-                required: 'Required input'
+                minlength: 'Must be at least 3 characters'
             },
             password: {
-                minlength: 'Must be at least 8 characters',
-                regex: 'Must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number',
-                required: 'Required input'
+                minlength: 'Must be at least 8 characters'
             },
             passwordVerify: {
                 minlength: 'Must be at least 8 characters',
-                regex: 'Must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number',
                 equalTo: 'Must match password'
             }
         },
