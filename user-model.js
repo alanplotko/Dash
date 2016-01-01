@@ -21,6 +21,12 @@ UserSchema.virtual('isLocked').get(function() {
 UserSchema.pre('save', function(next) {
     var user = this;
 
+    mongoose.models['User'].findOne({ username: user.username }, function (err, user) {
+        if (user) {
+            return next(new Error('Username unavailable.'));
+        }
+    });
+
     // only hash the password if it has been modified (or is new)
     if (!user.isModified('password')) return next();
 
