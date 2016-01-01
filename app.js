@@ -14,6 +14,9 @@ var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var flash = require('connect-flash');
 
+// --------- Default Variables Setup ---------
+app.locals.defaultHeading = 'Organize your social media with Dash';
+
 // --------- Authentication Setup ---------
 app.use(cookieParser());
 app.use(expressSession({ 
@@ -37,7 +40,7 @@ app.use('/font', express.static(path.join(__dirname, '/node_modules/materialize-
 app.set('view engine', 'jade');
 
 // Set up app routes
-var routes = require('./routes')(app);
+var routes = require('./routes')(app, debug);
 
 // --------- MongoDB & Mongoose Setup ---------
 var mongoose = require('mongoose');
