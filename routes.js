@@ -10,7 +10,7 @@ module.exports = function(app, debug) {
     });
 
     validator.extend('isValidPassword', function (str) {
-        return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%\^&*\"\>\<\ \')(+=._-]{8,}$/.test(str);
+        return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%\^&*\"\>\<\ \'\~\`\:\;\?\/\\\\{\}\[\]\|\,\.)(+=._-]{8,}$/.test(str);
     });
 
     /*===========================

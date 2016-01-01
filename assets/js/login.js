@@ -25,18 +25,18 @@ $(document).ready(function() {
             username: {
                 minlength: 3,
                 required: true,
-                usernameRegex: /^([A-Za-z0-9\-\_]+)$/,
+                usernameRegex: /^([A-Za-z0-9\-\_]){3,}$/
             },
             password: {
+                required: true,
                 minlength: {
                     param: 8,
                     depends: function(e) {
                         return $('#register').css('display') == 'none';
                     }
                 },
-                required: true,
                 passwordRegex: {
-                    param: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%\^&*)(+=._-]{8,}$/,
+                    param: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%\^&*\"\>\<\ \'\~\`\:\;\?\/\\\\{\}\[\]\|\,\.)(+=._-]{8,}$/,
                     depends: function(e) {
                         return $('#register').css('display') == 'none';
                     }
@@ -49,7 +49,6 @@ $(document).ready(function() {
                     }
                 },
                 minlength: 8,
-                passwordRegex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%\^&*)(+=._-]{8,}$/,
                 equalTo: '#password'
             }
         },
@@ -64,10 +63,6 @@ $(document).ready(function() {
                 minlength: 'Must be at least 8 characters',
                 equalTo: 'Must match password'
             }
-        },
-        submitHandler: function(form) {
-            $('#login, #return, #register').prop('disabled', true);
-            form.submit();
         }
     });
 
@@ -78,6 +73,46 @@ $(document).ready(function() {
             $('.prefix.active').removeClass('active');  // Default color override
             $('#loginForm').fadeIn();                   // Show login form
         });
+    });
+
+    // Handle form submission
+    $('#login').click(function(e) {
+        e.preventDefault();
+        $('#login, #return, #register').prop('disabled', true);
+        if ($('#loginForm').valid())
+        {
+            $.ajax({
+                url: $('#loginForm').attr('action'),
+                type: 'post',
+                dataType: 'json',
+                data: $('#loginForm').serialize(),
+                success: function(data) {
+                    $.when($('#formMessage').fadeOut()).then(function() {
+                        $('#formMessage p').html('');
+                        if (!data.isError)
+                        {
+                            $('#loginForm')[0].reset();
+                            if ($('#return').css('display') != 'none') $('#return').click();
+                            $.when($('#welcome').fadeOut()).then(function() {
+                                $.when($('#welcome').html('Welcome to Dash, ' + data.username)).then(function() {
+                                    $('#welcome').fadeIn();
+                                });
+                            });
+                        }
+                        else {
+                            $.when($('#formMessage p').html(data.message)).then(function() {
+                                $('#formMessage').fadeIn();
+                            });
+                        }
+                        $('#login, #return, #register').prop('disabled', false);
+                    });
+                }
+            });
+        }
+        else
+        {
+            $('#login, #return, #register').prop('disabled', false);
+        }
     });
 
     // Handle switching into registration mode
@@ -104,7 +139,7 @@ $(document).ready(function() {
         $('#loginForm').prop('action', '/login');
         // Clear and hide second password prompt
         $('#verifySection').fadeOut();
-        $("#passwordVerify").val("").removeClass('valid').removeClass('invalid');
+        $("#passwordVerify").val('').removeClass('valid').removeClass('invalid');
         // Update submit button text
         $('#login').html('Sign In <i class="material-icons right">send</i>');
         // Show old options to register or sign in
