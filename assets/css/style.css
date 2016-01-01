@@ -52,8 +52,17 @@ h1#welcome {
 
 #loginForm,
 #verifySection,
-#return {
+#return,
+#formMessage {
     display: none;
+}
+
+#formMessage {
+    margin: 20px auto;
+    font-size: 14px;
+    width: 500px;
+    background-color: #fff59d; /* yellow lighten-3 */
+    border: 2px solid #f9a825; /* yellow darken-3 */
 }
 
 input.border-blue {
