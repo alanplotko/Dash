@@ -1,8 +1,18 @@
-module.exports = function(app) {
+module.exports = function(app, debug) {
 
     var path = require('path');
     var User = require('./user-model');
-    
+    var validator = require('validator');
+    var xss = require('xss');
+
+    validator.extend('isValidUsername', function (str) {
+        return /^([A-Za-z0-9\-\_]){3,}$/.test(str);
+    });
+
+    validator.extend('isValidPassword', function (str) {
+        return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%\^&*\"\>\<\ \')(+=._-]{8,}$/.test(str);
+    });
+
     /*===========================
      *  Routes for App Assets
     =============================*/
@@ -31,48 +41,87 @@ module.exports = function(app) {
     =============================*/
 
     app.get('/', function (req, res) {
-        res.render('index');
+        res.render('index', {
+            message: app.locals.defaultHeading
+        });
     });
 
     app.post('/login', function(req, res) {
-        console.log(req.body);
-        // attempt to authenticate user
+        // Attempt to authenticate user
         User.getAuthenticated(req.body.username, req.body.password, function(err, user, reason) {
             if (err) throw err;
 
-            // login was successful if we have a user
+            // Login succeeded
             if (user) {
-                // handle login success
-                console.log('login success');
+                res.send({ 
+                    isError: false,
+                    message: 'Logging in...'
+                });
                 return;
             }
 
-            // otherwise we can determine why we failed
+            // Login failed
             var reasons = User.failedLogin;
+
+            if (debug) var logFlag = false;
             switch (reason) {
                 case reasons.NOT_FOUND:
-                    console.log('DEBUG: NOT_FOUND');
-                    break;
+                    if (debug) { console.log('DEBUG: NOT_FOUND'); logFlag = true; }
                 case reasons.PASSWORD_INCORRECT:
-                    // note: these cases are usually treated the same - don't tell
-                    // the user *why* the login failed, only that it did
-                    console.log('DEBUG: PASSWORD_INCORRECT');
+                    if (debug && !logFlag) console.log('DEBUG: PASSWORD_INCORRECT');
+                    res.send({ 
+                        isError: true,
+                        message: 'Error: The username or password is incorrect.'
+                    });
                     break;
                 case reasons.MAX_ATTEMPTS:
-                    // send email or otherwise notify user that account is
-                    // temporarily locked
-                    console.log('DEBUG: MAX_ATTEMPTS');
+                    if (debug) console.log('DEBUG: MAX_ATTEMPTS');
+                    res.send({ 
+                        isError: true,
+                        message: 'Error: The account is temporarily locked.'
+                    });
+                    // To Do: Send email about account being locked
                     break;
             }
         });
     });
 
     app.post('/register', function(req, res) {
-        // create a user a new user
-        var newUser = new User({
-            username: req.body.username,
-            password: req.body.password
-        });
+        // Clean and verify form input
+        var uname = validator.trim(validator.escape(req.body.username));
+        var pass = req.body.password;
+
+        if (validator.isValidUsername(uname) && validator.isValidPassword(pass))
+        {
+            var newUser = new User({
+                username: uname,
+                password: pass
+            });
+
+            newUser.save(function(err) {
+                if (err)
+                {
+                    res.send({ 
+                        isError: true,
+                        message: err.toString()
+                    });
+                }
+                else
+                {
+                    res.send({ 
+                        isError: false,
+                        username: xss(uname)
+                    });
+                }
+            });
+        }
+        else
+        {
+            res.send({ 
+                isError: true,
+                message: 'Username or password did not meet criteria. Please refresh the page and try again.'
+            });
+        }
     });
 
 }
