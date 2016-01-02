@@ -7,7 +7,8 @@ MAX_LOGIN_ATTEMPTS = 5,
 LOCK_TIME = 2 * 60 * 60 * 1000; // 2 hour lock
 
 var UserSchema = new Schema({
-    username: { type: String, required: true, index: { unique: true } },
+    email: { type: String, required: true, index: { unique: true } },
+    displayName: {type: String, required: true },
     password: { type: String, required: true },
     loginAttempts: { type: Number, required: true, default: 0 },
     lockUntil: { type: Number }
@@ -21,9 +22,9 @@ UserSchema.virtual('isLocked').get(function() {
 UserSchema.pre('save', function(next) {
     var user = this;
 
-    mongoose.models['User'].findOne({ username: user.username }, function (err, user) {
+    mongoose.models['User'].findOne({ email: user.email }, function (err, user) {
         if (user) {
-            return next(new Error('Username unavailable.'));
+            return next(new Error('Registration failed. Do you perhaps already have an account?'));
         }
     });
 
@@ -76,8 +77,8 @@ var reasons = UserSchema.statics.failedLogin = {
     MAX_ATTEMPTS: 2
 };
 
-UserSchema.statics.getAuthenticated = function(username, password, cb) {
-    this.findOne({ username: username }, function(err, user) {
+UserSchema.statics.getAuthenticated = function(email, password, cb) {
+    this.findOne({ email: email }, function(err, user) {
         if (err) return cb(err);
 
         // make sure the user exists
