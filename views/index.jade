@@ -39,16 +39,16 @@ html.no-js
 
     div.row
       div.col.s12
-        h1#welcome.center.thin #{message}
+        h1#welcome.center.thin #{heading}
 
     div.row
       div#formMessage.center: p
       form#loginForm.col.s12(action='/login', method='POST')
         div.row
           div.input-field.col.s4.offset-s4
-            i.material-icons.prefix account_circle
-            input#username.border-blue(placeholder='Username', type='text', name='username')
-            label(for='username') Username
+            i.material-icons.prefix email
+            input#email.border-blue(placeholder='Email Address', type='text', name='email')
+            label(for='email') Email Address
         div.row
           div.input-field.col.s4.offset-s4
             i.material-icons.prefix lock

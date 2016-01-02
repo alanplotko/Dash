@@ -11,10 +11,6 @@ $(document).ready(function() {
     });
 
     // Regex validations
-    $.validator.addMethod('usernameRegex', function(value, element, regexpr) {          
-        return regexpr.test(value);
-    }, 'Must contain only alphanumeric characters, dashes, and underscores');
-
     $.validator.addMethod('passwordRegex', function(value, element, regexpr) {          
         return regexpr.test(value);
     }, 'Must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number');
@@ -22,10 +18,9 @@ $(document).ready(function() {
     // Form validation setup
     $('#loginForm').validate({
         rules: {
-            username: {
-                minlength: 3,
+            email: {
                 required: true,
-                usernameRegex: /^([A-Za-z0-9\-\_]){3,}$/
+                email: true
             },
             password: {
                 required: true,
@@ -53,9 +48,6 @@ $(document).ready(function() {
             }
         },
         message: {
-            username: {
-                minlength: 'Must be at least 3 characters'
-            },
             password: {
                 minlength: 'Must be at least 8 characters'
             },
@@ -89,12 +81,20 @@ $(document).ready(function() {
                 success: function(data) {
                     $.when($('#formMessage').fadeOut()).then(function() {
                         $('#formMessage p').html('');
-                        if (!data.isError)
+                        if (data.location !== undefined)
+                        {
+                            $.when($('#formMessage p').html(data.message)).then(function() {
+                                $('#formMessage').fadeIn(function() {
+                                    window.location.href = data.location;
+                                });
+                            });
+                        }
+                        else if (!data.isError)
                         {
                             $('#loginForm')[0].reset();
                             if ($('#return').css('display') != 'none') $('#return').click();
                             $.when($('#welcome').fadeOut()).then(function() {
-                                $.when($('#welcome').html('Welcome to Dash, ' + data.username)).then(function() {
+                                $.when($('#welcome').html('Welcome to Dash, ' + data.displayName)).then(function() {
                                     $('#welcome').fadeIn();
                                 });
                             });

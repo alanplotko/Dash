@@ -5,10 +5,6 @@ module.exports = function(app, debug) {
     var validator = require('validator');
     var xss = require('xss');
 
-    validator.extend('isValidUsername', function (str) {
-        return /^([A-Za-z0-9\-\_]){3,}$/.test(str);
-    });
-
     validator.extend('isValidPassword', function (str) {
         return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%\^&*\"\>\<\ \'\~\`\:\;\?\/\\\\{\}\[\]\|\,\.)(+=._-]{8,}$/.test(str);
     });
@@ -42,22 +38,32 @@ module.exports = function(app, debug) {
 
     app.get('/', function (req, res) {
         res.render('index', {
-            message: app.locals.defaultHeading
+            heading: app.locals.defaultHeading
+        });
+    });
+
+    app.get('/dashboard', function (req, res) {
+        // To Do: protect pages requiring login
+        res.render('index', {
+            heading: 'Welcome back!'
         });
     });
 
     app.post('/login', function(req, res) {
         // Attempt to authenticate user
-        User.getAuthenticated(req.body.username, req.body.password, function(err, user, reason) {
+        var email = validator.trim(req.body.email);
+        var pass = req.body.password;
+
+        User.getAuthenticated(email, pass, function(err, user, reason) {
             if (err) throw err;
 
             // Login succeeded
             if (user) {
-                res.send({ 
+                res.send({
                     isError: false,
-                    message: 'Logging in...'
+                    message: 'Logging you in, ' + xss(user.displayName) + '...',
+                    location: '/dashboard'
                 });
-                return;
             }
 
             // Login failed
@@ -71,7 +77,7 @@ module.exports = function(app, debug) {
                     if (debug && !logFlag) console.log('DEBUG: PASSWORD_INCORRECT');
                     res.send({ 
                         isError: true,
-                        message: 'Error: The username or password is incorrect.'
+                        message: 'Error: The email address or password is incorrect.'
                     });
                     break;
                 case reasons.MAX_ATTEMPTS:
@@ -88,13 +94,15 @@ module.exports = function(app, debug) {
 
     app.post('/register', function(req, res) {
         // Clean and verify form input
-        var uname = validator.trim(validator.escape(req.body.username));
+        var email = validator.trim(req.body.email);
+        var displayName = email.split('@')[0];
         var pass = req.body.password;
 
-        if (validator.isValidUsername(uname) && validator.isValidPassword(pass))
+        if (validator.isEmail(email) && validator.isValidPassword(pass))
         {
             var newUser = new User({
-                username: uname,
+                email: email,
+                displayName: displayName,
                 password: pass
             });
 
@@ -110,7 +118,7 @@ module.exports = function(app, debug) {
                 {
                     res.send({ 
                         isError: false,
-                        username: xss(uname)
+                        displayName: xss(displayName)
                     });
                 }
             });
@@ -119,7 +127,7 @@ module.exports = function(app, debug) {
         {
             res.send({ 
                 isError: true,
-                message: 'Username or password did not meet criteria. Please refresh the page and try again.'
+                message: 'Email address or password did not meet criteria. Please refresh the page and try again.'
             });
         }
     });
