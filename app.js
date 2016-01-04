@@ -1,37 +1,43 @@
 // --------- Environment Setup ---------
 process.env.NODE_ENV = (process.argv[2] == 'dev' || process.argv[2] == 'development') ? 'dev' : 'prod';
 var debug = (process.env.NODE_ENV == 'dev');
-var config = require('./config.js').config[process.env.NODE_ENV]
+var config = require('./config/settings').settings[process.env.NODE_ENV]
 
 // --------- Dependencies ---------
 var express = require('express');
 var app = express();
 var path = require('path');
 var bodyParser = require('body-parser');
-var expressSession = require('express-session');
+const session = require('express-session');
+const MongoStore = require('connect-mongo')(session);
 var cookieParser = require('cookie-parser');
 var passport = require('passport');
-var LocalStrategy = require('passport-local').Strategy;
 var flash = require('connect-flash');
 
-// --------- Default Variables Setup ---------
-app.locals.defaultHeading = 'Organize your social media with Dash';
+// --------- Support bodies ---------
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// --------- MongoDB & Mongoose Setup ---------
+var mongoose = require('mongoose');
+var User = require('./models/user');
+
+mongoose.connect(config.MONGO_URI, function(err) {
+    if (err) throw err;
+    if (debug) console.log('Successfully connected to MongoDB');
+});
 
 // --------- Authentication Setup ---------
+require('./config/passport')(passport);
 app.use(cookieParser());
-app.use(expressSession({ 
+app.use(session({ 
     secret: '#ofi!af8_1b_edlif6h=o8b)f&)hc!8kx=w*$f2pi%hm)(@yx8',
+    store: new MongoStore({ mongooseConnection: mongoose.connection }),
     resave: true,
     saveUninitialized: true
 }));
 app.use(passport.initialize());
 app.use(passport.session());
-
-// Support json-encoded/encoded bodies
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-// Support displaying messages to user
 app.use(flash());
 
 // --------- Assets Setup ---------
@@ -40,15 +46,40 @@ app.use('/font', express.static(path.join(__dirname, '/node_modules/materialize-
 app.set('view engine', 'jade');
 
 // Set up app routes
-var routes = require('./routes')(app, debug);
+var routes = require('./routes')(app, passport);
 
-// --------- MongoDB & Mongoose Setup ---------
-var mongoose = require('mongoose');
-var User = require('./user-model');
+// --------- Error handling ---------
+app.use(function(err, req, res, next) {
+    // If no status is predefined, then label as internal server error
+    if (err.status == undefined)
+    {
+        err.status = 500;
+        err.message = 'Internal Server Error';
+        err.description = 'An error occurred! Click the button below to return to the front page.<br /><br />If you were in the middle of trying to do something, then try again after a few minutes.<br /><br />If you\'re still experiencing problems, then let the team know!';
+    }
 
-mongoose.connect(config.MONGO_URI, function(err) {
-    if (err) throw err;
-    if (debug) console.log('Successfully connected to MongoDB');
+    res.status(err.status);
+
+    // If in dev env, pass all information on error
+    if (debug)
+    {
+        res.render('error', {
+            title: 'Error ' + err.status,
+            message: err.message, 
+            fullError: err,
+            description: err.description,
+            stack: err.stack
+        });
+    }
+    // If in prod env, pass a user-friendly message
+    else
+    {
+        res.render('error', {
+            title: 'Error ' + err.status,
+            message: err.message,
+            description: err.description
+        });
+    }
 });
 
 // Run App
