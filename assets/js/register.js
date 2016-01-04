@@ -16,7 +16,7 @@ $(document).ready(function() {
     }, 'Must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number');
 
     // Form validation setup
-    $('#loginForm').validate({
+    $('#registerForm').validate({
         rules: {
             email: {
                 required: true,
@@ -26,11 +26,18 @@ $(document).ready(function() {
                 required: true,
                 minlength: 8,
                 passwordRegex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%\^&*\"\>\<\ \'\~\`\:\;\?\/\\\\{\}\[\]\|\,\.)(+=._-]{8,}$/
+            },
+            passwordVerify: {
+                required: true,
+                equalTo: '#password'
             }
         },
         message: {
             password: {
                 minlength: 'Must be at least 8 characters'
+            },
+            passwordVerify: {
+                equalTo: 'Must match password'
             }
         }
     });
