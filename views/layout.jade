@@ -1,0 +1,18 @@
+doctype
+html.no-js
+  include ../includes/head.jade
+  body
+    <!--[if lt IE 9]>
+    p.browsehappy
+      | You are using an <strong>outdated</strong> browser.
+      | Please <a href='http://browsehappy.com/'>upgrade your browser</a>
+      | to improve your experience.
+    <![endif]-->
+
+    include ../includes/nav.jade
+    
+    block content
+
+    script(src='/jquery/jquery.js')
+    script(src='/materialize/materialize.js')
+    block additionalScripts

@@ -1,63 +1,31 @@
-doctype
-html.no-js
-  head
-    meta(charset='utf-8')
-    meta(http-equiv='X-UA-Compatible', content='IE=edge')
-    title Dash | #{title}
-    meta(name='description', content='Dash brings all the information you care about into one central location.')
-    meta(name='viewport', content='width=device-width, initial-scale=1')
+extends ./layout.jade
 
-    <!-- Stylesheets -->
-    link(rel='stylesheet', href='/materialize/materialize.css')
-    link(rel='stylesheet', href='/static/css/style.css')
-    
-    <!-- Fonts -->
-    link(rel='stylesheet', href='https://fonts.googleapis.com/icon?family=Material+Icons')
+block title
+  title Dash | #{title}
 
-    <!-- Favicon -->
-    <!--[if lt IE 9]>
-    <link rel='shortcut icon' href='/static/ico/favicon.ico'>
-    <![endif]-->
-    link(rel='icon', href='/static/ico/favicon.ico')
-  
-  body
-    <!--[if lt IE 9]>
-    p.browsehappy
-      | You are using an <strong>outdated</strong> browser.
-      | Please <a href='http://browsehappy.com/'>upgrade your browser</a>
-      | to improve your experience.
-    <![endif]-->
+block content
+  div.row
+    div.col.s12
+      h1#errorHeading.center.thin #{title}: #{message}
+    if (message.length > 0)
+      if (process.env.NODE_ENV == 'dev')
+        div.row
+          div#errorBox.col.s12
+            div#errorMessage.center
+              p.italic: strong Note: You are currently in the development environment. A full report on this error is made available below.
+              p.border: strong Full Error:
+              p.hyphenate !{fullError}
+              p.border: strong User-friendly Description:
+              p.hyphenate !{description}
+              p.border: strong Stack Trace:
+              p.hyphenate #{stack}
+      else
+        div.row
+          div#errorBox.col.s12
+            div#errorMessage.center
+              p.hyphenate !{description}
 
-    nav.blue.darken-3
-      div.nav-wrapper
-        a.brand-logo(href='/') Dash
-        ul#nav-mobile.right.hide-on-med-and-down
-
-    div.row
-      div.col.s12
-        h1#errorHeading.center.thin #{title}: #{message}
-    - if (message.length > 0)
-        - if (process.env.NODE_ENV == 'dev')
-            div.row
-              div#errorBox.col.s12
-                div#errorMessage.center
-                  p.italic: strong Note: You are currently in the development environment. A full report on this error is made available below.
-                  p.border: strong Full Error:
-                  p.hyphenate !{fullError}
-                  p.border: strong User-friendly Description:
-                  p.hyphenate !{description}
-                  p.border: strong Stack Trace:
-                  p.hyphenate #{stack}
-        - else
-            div.row
-              div#errorBox.col.s12
-                div#errorMessage.center
-                  p.hyphenate !{description}
-
-    div.row
-      div#errorActions.col.s12
-        a.waves-effect.waves-dark.btn.btn-front.blue.darken-3(href='/') Return
-          i.material-icons.left arrow_back
-
-    script(src='/jquery/jquery.js')
-    script(src='/materialize/materialize.js')
+  div.row
+    div#errorActions.col.s12
+      a.waves-effect.waves-dark.btn.btn-front.blue.darken-3(href='/') Return
+        i.material-icons.left arrow_back

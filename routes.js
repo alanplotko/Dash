@@ -61,7 +61,7 @@ module.exports = function(app, passport) {
         });
     });
 
-    // --------- Dash Login ---------
+    // --------- Dash Login/Logout ---------
 
     app.get('/login', function(req, res) {
         if (req.isAuthenticated())
@@ -81,6 +81,14 @@ module.exports = function(app, passport) {
         failureRedirect : '/login',
         failureFlash : true
     }));
+
+    // Clear credentials and destroy session upon logout
+    app.get('/logout', function(req, res) {
+        req.logout();
+        req.session.destroy(function (err) {
+            res.redirect('/');
+        });
+    });
 
     // --------- Dash Registration ---------
 
@@ -105,14 +113,6 @@ module.exports = function(app, passport) {
         // Otherwise, redirect to front page
         res.redirect('/');
     }
-
-    // Clear credentials and destroy session upon logout
-    app.get('/logout', function(req, res) {
-        req.logout();
-        req.session.destroy(function (err) {
-            res.redirect('/');
-        });
-    });
 
     /*================================================================
      *  If the route does not exist (error 404), go to the error 

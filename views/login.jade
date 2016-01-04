@@ -1,68 +1,38 @@
-doctype
-html.no-js
-  head
-    meta(charset='utf-8')
-    meta(http-equiv='X-UA-Compatible', content='IE=edge')
-    title Dash | Login
-    meta(name='description', content='Dash brings all the information you care about into one central location.')
-    meta(name='viewport', content='width=device-width, initial-scale=1')
+extends ./layout.jade
 
-    <!-- Stylesheets -->
-    link(rel='stylesheet', href='/materialize/materialize.css')
-    link(rel='stylesheet', href='/static/css/style.css')
-    
-    <!-- Fonts -->
-    link(rel='stylesheet', href='https://fonts.googleapis.com/icon?family=Material+Icons')
+block title
+  title Dash | Login
 
-    <!-- Favicon -->
-    <!--[if lt IE 9]>
-    <link rel='shortcut icon' href='/static/ico/favicon.ico'>
-    <![endif]-->
-    link(rel='icon', href='/static/ico/favicon.ico')
-  
-  body
-    <!--[if lt IE 9]>
-    p.browsehappy
-      | You are using an <strong>outdated</strong> browser.
-      | Please <a href='http://browsehappy.com/'>upgrade your browser</a>
-      | to improve your experience.
-    <![endif]-->
+block content
+  div.row
+    div.col.s12
+      h1#heading.center.thin Welcome back!
 
-    nav.blue.darken-3
-      div.nav-wrapper
-        a.brand-logo(href='/') Dash
-        ul#nav-mobile.right.hide-on-med-and-down
+  div.row
 
-    div.row
-      div.col.s12
-        h1#heading.center.thin Welcome back!
+    if (message.length > 0)
+      div#formMessage.center: p #{message}
 
-    div.row
+    form#loginForm.col.s12(action='/login', method='POST')
+      div.row
+        div.input-field.col.s4.offset-s4
+          i.material-icons.prefix email
+          input#email.border-blue(placeholder='Email Address', type='text', name='email')
+          label(for='email') Email Address
+      div.row
+        div.input-field.col.s4.offset-s4
+          i.material-icons.prefix lock
+          input#password.border-blue(placeholder='Password', type='password', name='password')
+          label(for='password') Password
+      div#verifySection.row
+      div.row
+        div#controls.input-field.col.s4.offset-s4.blue-text.text-darken-3
+          button#login.waves-effect.waves-dark.btn.btn-front.blue.darken-3.right(type='submit') Sign In
+            i.material-icons.right send
+          a#register.waves-effect.waves-dark.btn.btn-front.red.darken-3.left(href='/register') I'm New Here
+            i.material-icons.left assignment_ind
 
-      - if (message.length > 0)
-        div#formMessage.center: p #{message}
-
-      form#loginForm.col.s12(action='/login', method='POST')
-        div.row
-          div.input-field.col.s4.offset-s4
-            i.material-icons.prefix email
-            input#email.border-blue(placeholder='Email Address', type='text', name='email')
-            label(for='email') Email Address
-        div.row
-          div.input-field.col.s4.offset-s4
-            i.material-icons.prefix lock
-            input#password.border-blue(placeholder='Password', type='password', name='password')
-            label(for='password') Password
-        div#verifySection.row
-        div.row
-          div#controls.input-field.col.s4.offset-s4.blue-text.text-darken-3
-            button#login.waves-effect.waves-dark.btn.btn-front.blue.darken-3.right(type='submit') Sign In
-              i.material-icons.right send
-            a#register.waves-effect.waves-dark.btn.btn-front.red.darken-3.left(href='/register') I'm New Here
-              i.material-icons.left assignment_ind
-
-    script(src='/jquery/jquery.js')
-    script(src='/jquery/jquery.validate.js')
-    script(src='/jquery/additional-methods.js')
-    script(src='/materialize/materialize.js')
-    script(src='/static/js/login.js')
+block additionalScripts
+  script(src='/jquery/jquery.validate.js')
+  script(src='/jquery/additional-methods.js')
+  script(src='/static/js/login.js')

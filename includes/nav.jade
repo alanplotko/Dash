@@ -1,0 +1,6 @@
+nav.blue.darken-3
+  div.nav-wrapper
+    a.brand-logo(href='/') Dash
+    ul#nav-mobile.right.hide-on-med-and-down
+      if (locals.login)
+        li: a(href='/logout') Logout

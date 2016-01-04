@@ -45,6 +45,12 @@ app.use('/static', express.static(path.join(__dirname, '/assets')));
 app.use('/font', express.static(path.join(__dirname, '/node_modules/materialize-css/dist/font')));
 app.set('view engine', 'jade');
 
+// Pass login status for use in views
+app.use(function (req, res, next) {
+    res.locals.login = req.isAuthenticated();
+    next();
+});
+
 // Set up app routes
 var routes = require('./routes')(app, passport);
 
