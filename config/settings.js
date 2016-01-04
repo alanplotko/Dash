@@ -1,4 +1,5 @@
-module.exports.config = {
+// Define variables for development and production environments
+module.exports.settings = {
     'dev': {
         'MONGO_URI': 'mongodb://dashbot:dash@127.0.0.1:27017/dash'
     },
