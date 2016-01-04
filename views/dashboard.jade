@@ -32,16 +32,11 @@ html.no-js
       div.nav-wrapper
         a.brand-logo(href='/') Dash
         ul#nav-mobile.right.hide-on-med-and-down
+          li: a(href='/logout') Logout
 
     div.row
       div.col.s12
-        h1#heading.center.thin Organize your social media with Dash
-        
-    div#actions
-      a#register.waves-effect.waves-dark.btn.btn-front.red.darken-3.left(href='/register') I'm New Here
-        i.material-icons.left assignment_ind
-      a#login.waves-effect.waves-dark.btn.btn-front.blue.darken-3.right(href='/login') Login
-        i.material-icons.left lock
+        h1#heading.center.thin Welcome back, #{username}!
 
     script(src='/jquery/jquery.js')
     script(src='/materialize/materialize.js')
