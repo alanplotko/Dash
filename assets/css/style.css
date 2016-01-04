@@ -10,8 +10,8 @@ body {
  *  Navigation
 ==================*/
 
-nav a.brand-logo {
-    padding-left: 30px;
+nav {
+    padding: 0 30px;
 }
 
 ul#nav-mobile li a {
@@ -30,39 +30,112 @@ ul#nav-mobile li a {
 }
 
 /*================
+ *  Error page
+==================*/
+
+h1#errorHeading {
+    margin: 0;
+    padding-top: 100px;
+    padding-bottom: 10px;
+}
+
+#errorActions {
+    text-align: center;
+}
+
+#errorBox {
+    text-align: center;
+}
+
+#errorMessage {
+    margin: 50px auto;
+    max-height: 400px;
+    overflow-y: scroll;
+    font-size: 16px;
+    display: inline-block;
+    text-align: left;
+    word-wrap: break-word;
+    max-width: 75%;
+    padding: 20px 200px;
+    background-color: #fff59d;  /* yellow lighten-3 */
+    border: 2px solid #f9a825;  /* yellow darken-3 */
+}
+
+#errorMessage p.border {
+    border-bottom: 1px solid #000;
+}
+
+#errorMessage p.italic {
+    font-style: italic;
+}
+
+.hyphenate {
+    -ms-word-break: break-all;
+    word-break: break-all;
+    /* Non standard for webkit */
+    word-break: break-word;
+    -webkit-hyphens: auto;
+    -moz-hyphens: auto;
+    hyphens: auto;
+}
+
+#errorMessage::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 14px;
+    _background-color: #f0f0f0;
+}
+
+#errorMessage::-webkit-scrollbar-thumb {
+    border-radius: 12px;
+    border: 4px solid rgba(255,255,255,0);
+    background-clip: content-box;
+    _background-color: #bfbfbf;
+    background-color: #A0A0A0;
+}
+
+#errorMessage::-webkit-scrollbar-thumb:hover {
+    border-radius: 12px;
+    border: 4px solid rgba(255,255,255,0);
+    background-clip: content-box;
+    background-color: #A0A0A0;
+}
+
+#errorMessage::-webkit-scrollbar-corner {
+    background-color: #e6e6e6;
+}
+
+/*================
  *  Front page
 ==================*/
 
-h1#welcome {
+h1#heading {
     padding: 100px;
 }
 
-#formArea {
+#actions {
     position: fixed;
     top: 50%;
     left: 50%;
     margin-top: -20px;
-    margin-left: -95.5px;
+    margin-left: -190.844px;
     /*transform: translate(-50%, -50%);*/
+}
+
+#actions #register {
+    margin-right: 50px;
 }
 
 /*=========================
  *  Register/Login Form
 ===========================*/
 
-#loginForm,
-#verifySection,
-#return,
-#formMessage {
-    display: none;
-}
-
 #formMessage {
     margin: 20px auto;
     font-size: 14px;
-    width: 500px;
-    background-color: #fff59d; /* yellow lighten-3 */
-    border: 2px solid #f9a825; /* yellow darken-3 */
+    width: 100%;
+    background-color: #fff59d;          /* yellow lighten-3 */
+    border-top: 2px solid #f9a825;      /* yellow darken-3 */
+    border-bottom: 2px solid #f9a825;   /* yellow darken-3 */
 }
 
 input.border-blue {
@@ -91,15 +164,6 @@ input.border-blue {
 
 #controls {
     padding-top: 10px;
-}
-
-#register,
-#return {
-    float: left;
-}
-
-#login {
-    float: right;
 }
 
 label.invalid {
