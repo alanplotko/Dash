@@ -15,4 +15,10 @@ html.no-js
 
     script(src='/jquery/jquery.js')
     script(src='/materialize/materialize.js')
+    script.
+      $(document).ready(function() {
+        $('.dropdown-button').dropdown({ 
+          belowOrigin: true 
+        });
+      });
     block additionalScripts

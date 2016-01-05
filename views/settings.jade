@@ -1,0 +1,27 @@
+extends ./layout.jade
+
+block content
+  div.row
+    div.col.s8.offset-s2
+      h1#pageHeading.thin Dash Settings
+
+  div.row
+
+  if (message.length > 0)
+    div#formMessage.center: p #{message}
+
+  form#settingsForm.col.s8.offset-s2(action='/settings', method='POST')
+    div.row
+      div.input-field.col.s8.offset-s2
+        i.material-icons.prefix assignment_ind
+        input#displayName.border-blue(value='#{locals.displayName}', type='text', name='displayName')
+        label(for='displayName') Display Name
+    div.row
+      div#controls.input-field.col.s8.offset-s2.blue-text.text-darken-3
+        button#login.waves-effect.waves-dark.btn.btn-front.blue.darken-3.right(type='submit') Update
+          i.material-icons.right send
+
+block additionalScripts
+  script(src='/jquery/jquery.validate.js')
+  script(src='/jquery/additional-methods.js')
+  script(src='/static/js/settings.js')
