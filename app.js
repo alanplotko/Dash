@@ -1,7 +1,7 @@
 // --------- Environment Setup ---------
 process.env.NODE_ENV = (process.argv[2] == 'dev' || process.argv[2] == 'development') ? 'dev' : 'prod';
 var debug = (process.env.NODE_ENV == 'dev');
-var config = require('./config/settings').settings[process.env.NODE_ENV]
+var config = require('./config/settings').settings[process.env.NODE_ENV];
 
 // --------- Dependencies ---------
 var express = require('express');
@@ -13,15 +13,14 @@ const MongoStore = require('connect-mongo')(session);
 var cookieParser = require('cookie-parser');
 var passport = require('passport');
 var flash = require('connect-flash');
+var mongoose = require('mongoose');
+var User = require('./models/user');
 
 // --------- Support bodies ---------
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // --------- MongoDB & Mongoose Setup ---------
-var mongoose = require('mongoose');
-var User = require('./models/user');
-
 mongoose.connect(config.MONGO_URI, function(err) {
     if (err) throw err;
     if (debug) console.log('Successfully connected to MongoDB');
@@ -44,15 +43,43 @@ app.use(flash());
 app.use('/static', express.static(path.join(__dirname, '/assets')));
 app.use('/font', express.static(path.join(__dirname, '/node_modules/materialize-css/dist/font')));
 app.set('view engine', 'jade');
+require('./routes/assets')(app);
 
 // Pass login status for use in views
 app.use(function (req, res, next) {
+    // Set up login status and variables
     res.locals.login = req.isAuthenticated();
+    if (req.user)
+    {
+        // Get display name
+        res.locals.displayName = req.user.displayName;
+
+        // Set up greeting message
+        var date = new Date();
+        var hour = date.getHours();
+        var greeting = 'Hi';
+        switch (hour)
+        {
+            case hour < 12:
+                greeting = 'Good morning';
+                break;
+            case hour < 18:
+                greeting = 'Good afternoon';
+                break;
+            default:
+                greeting = 'Good evening';
+                break; 
+        }
+        res.locals.greeting = greeting;
+
+        // Get gravatar url
+        res.locals.gravatar = "http://gravatar.com/avatar/" + req.user.gravatar;
+    }
     next();
 });
 
 // Set up app routes
-var routes = require('./routes')(app, passport);
+require('./routes/pages')(app, passport);
 
 // --------- Error handling ---------
 app.use(function(err, req, res, next) {
