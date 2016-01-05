@@ -10,10 +10,11 @@ var LOCK_TIME = 2 * 60 * 60 * 1000; // 2-hour lock
 // Define user fields
 var UserSchema = new Schema({
     email: { type: String, required: true, index: { unique: true } },
-    displayName: {type: String, required: true },
+    displayName: { type: String, required: true },
     password: { type: String, required: true },
     loginAttempts: { type: Number, required: true, default: 0 },
-    lockUntil: { type: Number }
+    lockUntil: { type: Number },
+    gravatar: { type: String, required: true }
 });
 
 // Check for a future lockUntil timestamp
@@ -93,8 +94,8 @@ UserSchema.statics.authSerializer = function(user, done) {
 
 // Deserialize function for use with passport
 UserSchema.statics.authDeserializer = function(id, done) {
-    mongoose.models['User'].findById(id, 'email displayName', function(error, user) {
-        done(error, user);
+    mongoose.models['User'].findById(id, 'email displayName gravatar', function(err, user) {
+        done(err, user);
     });
 };
 
@@ -153,6 +154,16 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
                 return done(null, null, reasons.PASSWORD_INCORRECT);
             });
         });
+    });
+};
+
+// Update user settings
+UserSchema.statics.updateUser = function(id, settings, done) {
+    mongoose.models['User'].update({ _id: id }, settings, function(err, numAffected) {
+        // An error occurred
+        if (err) return done(err);
+        // Update succeeded
+        return done(null, true);
     });
 };
 
