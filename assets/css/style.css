@@ -6,6 +6,18 @@ body {
     background-color: #fafafa;
 }
 
+/*=========================
+ *  General Page Styles
+===========================*/
+
+#pageHeading {
+    padding: 50px 50px 10px 0;
+}
+
+h1#heading {
+    padding: 100px 100px 50px 100px;
+}
+
 /*================
  *  Navigation
 ==================*/
@@ -16,6 +28,43 @@ nav {
 
 ul#nav-mobile li a {
     font-size: 18px;
+}
+
+.dropdown-button .right {
+    margin-left: 5px;
+}
+
+#user-dropdown li a {
+    color: #1565c0; /* blue darken-3 */
+}
+
+#user-dropdown li a:hover {
+    background-color: #e3f2fd; /* blue lighten-5 */
+}
+
+#user-dropdown li a i {
+    font-size: 1.5rem; /* Between tiny (1rem) and small (2rem) */
+}
+
+nav img.avatar {
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    border-radius: 20px;
+    margin: 12px;
+}
+
+/*================
+ *  Settings
+==================*/
+
+ul#settings li a {
+    color: #000;
+    transition: background-color .3s;
+}
+
+ul#settings.tabs .tab a:hover {
+    background-color: #e3f2fd; /* blue lighten-5 */
 }
 
 /*================
@@ -108,10 +157,6 @@ h1#errorHeading {
  *  Front page
 ==================*/
 
-h1#heading {
-    padding: 100px;
-}
-
 #actions {
     position: fixed;
     top: 50%;
@@ -125,12 +170,12 @@ h1#heading {
     margin-right: 50px;
 }
 
-/*=========================
- *  Register/Login Form
-===========================*/
+/*==================
+ *  Form Styles
+====================*/
 
 #formMessage {
-    margin: 20px auto;
+    margin: 20px auto 30px auto;
     font-size: 14px;
     width: 100%;
     background-color: #fff59d;          /* yellow lighten-3 */
