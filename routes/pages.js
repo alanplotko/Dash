@@ -1,64 +1,65 @@
 // --------- Dependencies ---------
-var path = require('path');
-var User = require('./models/user');
+var User = require('../models/user');
 var validator = require('validator');
+require('../config/custom-validation.js')(validator);
 var xss = require('xss');
 var debug = (process.env.NODE_ENV == 'dev');
 
 module.exports = function(app, passport) {
 
-    // Define custom validation function for a password
-    validator.extend('isValidPassword', function (str) {
-        return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%\^&*\"\>\<\ \'\~\`\:\;\?\/\\\\{\}\[\]\|\,\.)(+=._-]{8,}$/.test(str);
-    });
-
-    /*===========================
-     *  Routes for App Assets
-    =============================*/
-
-    app.get('/jquery/jquery.js', function(req, res) {
-        res.sendFile(path.join(__dirname, '/node_modules/jquery/dist/jquery.min.js'));
-    });
-
-    app.get('/jquery/jquery.validate.js', function(req, res) {
-        res.sendFile(path.join(__dirname, '/node_modules/jquery-validation/dist/jquery.validate.js'));
-    });
-    app.get('/jquery/additional-methods.js', function(req, res) {
-        res.sendFile(path.join(__dirname, '/node_modules/jquery-validation/dist/additional-methods.js'));
-    });
-
-    app.get('/materialize/materialize.js', function(req, res) {
-        res.sendFile(path.join(__dirname, '/node_modules/materialize-css/dist/js/materialize.min.js'));
-    });
-
-    app.get('/materialize/materialize.css', function(req, res) {
-        res.sendFile(path.join(__dirname, '/node_modules/materialize-css/dist/css/materialize.min.css'));
-    });
-
-    /*===========================
-     *  Routes for App Pages
-    =============================*/
-
     // --------- Front Page ---------
-
     app.get('/', function (req, res) {
-        if (req.isAuthenticated())
-        {
-            return res.redirect('/dashboard');
-        }
-        else
-        {
-            res.render('index');
-        }
+        if (req.isAuthenticated()) return res.redirect('/dashboard');
+        res.render('index');
     });
 
     // --------- User Dashboard ---------
-
     app.get('/dashboard', isLoggedIn, function(req, res) {
-        console.log(req.user);
-        res.render('dashboard', {
-            username: xss(req.user.displayName)
+        res.render('dashboard');
+    });
+
+    // --------- User's Settings ---------
+    app.get('/settings', isLoggedIn, function(req, res) {
+        res.render('settings', {
+            message: req.flash('settingsMessage')
         });
+    });
+
+    app.post('/settings', isLoggedIn, function(req, res) {
+        var displayName = validator.trim(req.body.displayName);
+        var settings = {};
+        
+        // Validate changes
+        if (validator.isValidDisplayName(displayName))
+        {
+            settings.displayName = displayName;
+        }
+
+        // Update user settings
+        User.updateUser(req.user._id, settings, function(err, updateSuccess) {
+            // An error occurred
+            if (err)
+            {
+                req.flash('settingsMessage', err.toString())
+            }
+            // Update succeeded
+            if (updateSuccess)
+            {
+                req.flash('settingsMessage', 'Your changes have been saved.')
+            }
+            // An unexpected error occurred
+            else
+            {
+                req.flash('settingsMessage', 'An error occurred. Please try again in a few minutes.')
+            }
+
+            return res.redirect('/settings');
+        });
+    });
+
+    // --------- User's Connected Sites ---------
+    app.get('/connections', isLoggedIn, function(req, res) {
+        res.render('connections');
     });
 
     // --------- Dash Login/Logout ---------
