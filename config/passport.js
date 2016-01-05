@@ -2,7 +2,9 @@
 var LocalStrategy = require('passport-local').Strategy;
 var User = require('../models/user');
 var validator = require('validator');
+require('../config/custom-validation.js')(validator);
 var xss = require('xss');
+var crypto = require('crypto');
 var debug = (process.env.NODE_ENV == 'dev');
 
 module.exports = function(passport) {
@@ -40,9 +42,11 @@ module.exports = function(passport) {
                 var reasons = User.failedLogin;
                 if (debug) var logFlag = false;
 
-                switch (reason) {
+                switch (reason)
+                {
                     case reasons.NOT_FOUND:
-                        if (debug) {
+                        if (debug)
+                        {
                             console.log('DEBUG: NOT_FOUND');
                             logFlag = true;
                         }
@@ -61,11 +65,9 @@ module.exports = function(passport) {
                         return done(null, false, req.flash('loginMessage', 'Error: The account is temporarily locked.'));
                 }
             }
+
             // An unexpected error occurred
-            else
-            {
-                return done(null, false, req.flash('loginMessage', 'An error occurred. Please try again in a few minutes.'));
-            }
+            return done(null, false, req.flash('loginMessage', 'An error occurred. Please try again in a few minutes.'));
         });
     }));
 
@@ -80,6 +82,12 @@ module.exports = function(passport) {
         // Clean and verify form input
         var email = validator.trim(emailAddress);
         var displayName = email.split('@')[0];
+        var gravatar = crypto.createHash('md5').update(email).digest('hex');
+
+        if (!validator.isValidDisplayName(displayName))
+        {
+            displayName = 'New_User';
+        }
 
         if (!validator.isEmail(email) || email.length == 0 || password.length == 0)
         {
@@ -101,12 +109,13 @@ module.exports = function(passport) {
             var newUser = new User({
                 email: email,
                 displayName: displayName,
-                password: password
+                password: password,
+                gravatar: gravatar
             });
 
             newUser.save(function(err) {
                 // An error occurred
-                if (err) return done(err);
+                if (err) return done(null, false, req.flash('registerMessage', err.toString()));
                 
                 // Registration succeeded
                 return done(null, newUser);
