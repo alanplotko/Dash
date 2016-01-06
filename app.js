@@ -84,23 +84,15 @@ require('./routes/pages')(app, passport);
 // --------- Error handling ---------
 app.use(function(err, req, res, next) {
     // If no status is predefined, then label as internal server error
-    if (err.status == undefined)
-    {
-        err.status = 500;
-        err.message = 'Internal Server Error';
-        err.description = 'An error occurred! Click the button below to return to the front page.<br /><br />If you were in the middle of trying to do something, then try again after a few minutes.<br /><br />If you\'re still experiencing problems, then let the team know!';
-    }
-
-    res.status(err.status);
+    if (!err.status) err.status = 500;
 
     // If in dev env, pass all information on error
     if (debug)
     {
         res.render('error', {
-            title: 'Error ' + err.status,
-            message: err.message, 
-            fullError: err,
-            description: err.description,
+            title: err.name || 'Error ' + err.status,
+            message: err.message,
+            fullError: JSON.stringify(err, null, '<br />').replace('}', '<br />}'),
             stack: err.stack
         });
     }
@@ -109,8 +101,8 @@ app.use(function(err, req, res, next) {
     {
         res.render('error', {
             title: 'Error ' + err.status,
-            message: err.message,
-            description: err.description
+            message: 'Internal Server Error',
+            description: err.description || 'An error occurred! Click the button below to return to the front page.<br /><br />If you were in the middle of trying to do something, then try again after a few minutes.<br /><br />If you\'re still experiencing problems, then let the team know!'
         });
     }
 });

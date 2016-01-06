@@ -1,7 +1,7 @@
 extends ./layout.jade
 
 block title
-  title Dash | #{title}
+  title Dash | Error
 
 block content
   div.row
@@ -15,8 +15,6 @@ block content
               p.italic: strong Note: You are currently in the development environment. A full report on this error is made available below.
               p.border: strong Full Error:
               p.hyphenate !{fullError}
-              p.border: strong User-friendly Description:
-              p.hyphenate !{description}
               p.border: strong Stack Trace:
               p.hyphenate #{stack}
       else
