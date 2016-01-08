@@ -1,11 +1,15 @@
 // --------- Dependencies ---------
 var LocalStrategy = require('passport-local').Strategy;
+var FacebookStrategy = require('passport-facebook').Strategy;
+var refresh = require('passport-oauth2-refresh');
 var User = require('../models/user');
 var validator = require('validator');
 require('../config/custom-validation.js')(validator);
 var xss = require('xss');
 var crypto = require('crypto');
 var debug = (process.env.NODE_ENV == 'dev');
+var config = require('../config/settings').settings[process.env.NODE_ENV];
+config.connections = require('../config/settings').settings['connections'];
 
 module.exports = function(passport) {
 
@@ -119,8 +123,39 @@ module.exports = function(passport) {
                 
                 // Registration succeeded
                 return done(null, newUser);
-            });   
+            });
         });
     }));
+
+    // Define Facebook strategy for passport
+    var fbStrategy = new FacebookStrategy({
+        clientID: config.connections.facebook.clientID,
+        clientSecret: config.connections.facebook.clientSecret,
+        callbackURL: config.url + '/connect/auth/facebook/callback',
+        enableProof: true,
+        passReqToCallback: true
+    },
+    function(req, accessToken, refreshToken, profile, done) {
+
+        connection = {
+            name: 'facebook',
+            connectionId: profile.id,
+            accessToken: accessToken,
+            data: {}
+        };
+
+        process.nextTick(function() {
+            User.addConnection(req.user.id, connection, function(err, user) {
+                // An error occurred
+                if (err) return done(null, false, req.flash('connectMessage', err.toString()));
+
+                // Connection added successfully
+                connection.name = connection.name.charAt(0).toUpperCase() + connection.name.slice(1);
+                if (connection) return done(null, user, req.flash('connectMessage', 'You are now connected with ' + connection.name + '.'));
+            });
+        });
+    });
+    passport.use(fbStrategy);
+    refresh.use(fbStrategy);
 
 };
