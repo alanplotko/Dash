@@ -89,8 +89,7 @@ module.exports = function(app, passport) {
             }
             // No groups found; proceed to pages
             else
-            {
-                req.flash('setupMessage', 'No groups found');
+            {;
                 res.redirect('/setup/facebook/pages');
             }
         });
@@ -132,8 +131,7 @@ module.exports = function(app, passport) {
             // No groups found; proceed to pages
             else
             {
-                req.flash('setupMessage', 'No pages found');
-                res.redirect('/setup/facebook/pages');
+                res.redirect('/connect');
             }
         });
     });
