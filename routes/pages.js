@@ -15,7 +15,12 @@ module.exports = function(app, passport) {
 
     // --------- User Dashboard ---------
     app.get('/dashboard', isLoggedIn, function(req, res) {
-        res.render('dashboard');
+        req.user.connectedSites.forEach(function(site) {
+            User.updateContent(req.user._id);
+        });
+        res.render('dashboard', {
+            connected: req.user.connectedSites.length > 0
+        });
     });
 
     // --------- User's Settings ---------
@@ -40,17 +45,17 @@ module.exports = function(app, passport) {
             // An error occurred
             if (err)
             {
-                req.flash('settingsMessage', err.toString())
+                req.flash('settingsMessage', err.toString());
             }
             // Update succeeded
-            if (updateSuccess)
+            else if (updateSuccess)
             {
-                req.flash('settingsMessage', 'Your changes have been saved.')
+                req.flash('settingsMessage', 'Your changes have been saved.');
             }
             // An unexpected error occurred
             else
             {
-                req.flash('settingsMessage', 'An error occurred. Please try again in a few minutes.')
+                req.flash('settingsMessage', 'An error occurred. Please try again in a few minutes.');
             }
 
             return res.redirect('/settings');
@@ -58,8 +63,110 @@ module.exports = function(app, passport) {
     });
 
     // --------- User's Connected Sites ---------
-    app.get('/connections', isLoggedIn, function(req, res) {
-        res.render('connections');
+    app.get('/connect', isLoggedIn, function(req, res) {
+        res.render('connect', {
+            message: req.flash('connectMessage'),
+            connectedSites: req.user.connectedSites
+        });
+    });
+
+    app.get('/setup/facebook/groups', isLoggedIn, function(req, res) {
+        User.setUpFacebookGroups(req.user._id, function(err, data) {
+            // An error occurred
+            if (err)
+            {
+                req.flash('setupMessage', err.toString());
+                res.redirect('/setup/facebook/groups');
+            }
+            // Found groups
+            else if (Object.keys(data).length > 0)
+            {
+                res.render('setup', {
+                    message: req.flash('setupMessage'),
+                    content: data,
+                    contentName: 'groups'
+                });
+            }
+            // No groups found; proceed to pages
+            else
+            {
+                req.flash('setupMessage', 'No groups found');
+                res.redirect('/setup/facebook/pages');
+            }
+        });
+    });
+
+    app.post('/setup/facebook/groups', isLoggedIn, function(req, res) {
+        User.saveFacebookGroups(req.user._id, Object.keys(req.body), function(err, data) {
+            // An error occurred
+            if (err)
+            {
+                req.flash('setupMessage', err.toString());
+                res.redirect('/setup/facebook/groups');
+            }
+            // Saved groups
+            else
+            {
+                res.redirect('/setup/facebook/pages');
+            }
+        });
+    });
+
+    app.get('/setup/facebook/pages', isLoggedIn, function(req, res) {
+        User.setUpFacebookPages(req.user._id, function(err, data) {
+            // An error occurred
+            if (err)
+            {
+                req.flash('setupMessage', err.toString());
+                res.redirect('/setup/facebook/groups');
+            }
+            // Found groups
+            else if (Object.keys(data).length > 0)
+            {
+                res.render('setup', {
+                    message: req.flash('setupMessage'),
+                    content: data,
+                    contentName: 'pages'
+                });
+            }
+            // No groups found; proceed to pages
+            else
+            {
+                req.flash('setupMessage', 'No pages found');
+                res.redirect('/setup/facebook/pages');
+            }
+        });
+    });
+
+    app.post('/setup/facebook/pages', isLoggedIn, function(req, res) {
+        User.saveFacebookPages(req.user._id, Object.keys(req.body), function(err, data) {
+            // An error occurred
+            if (err)
+            {
+                req.flash('setupMessage', err.toString());
+                res.redirect('/setup/facebook/pages');
+            }
+            // Saved pages; return to connect page
+            else
+            {
+                res.redirect('/connect');
+            }
+        });
+    });
+
+    app.get('/connect/auth/facebook', passport.authenticate('facebook', { 
+        scope: ['user_managed_groups', 'user_likes']
+    }));
+
+    app.get('/connect/auth/facebook/callback', passport.authenticate('facebook', {
+        failureRedirect: '/connect',
+        successRedirect: '/setup/facebook/groups'
+    }));
+
+    app.get('/connect/remove/:connection', isLoggedIn, function(req, res) {
+        User.removeConnection(req.user.id, req.params.connection, function(err) { if (err) throw err; });
+        req.flash('connectMessage', 'Your ' + req.params.connection.charAt(0).toUpperCase() + req.params.connection.slice(1) + ' connection has been removed.');
+        res.redirect('/connect');
     });
 
     // --------- Dash Login/Logout ---------
