@@ -11,7 +11,8 @@ body {
 ===========================*/
 
 #pageHeading {
-    padding: 50px 50px 10px 0;
+    padding: 50px 50px 0 0;
+    margin-bottom: 1rem;
 }
 
 h1#heading {
@@ -209,6 +210,10 @@ input.border-blue {
 
 #controls {
     padding-top: 10px;
+}
+
+#controls.topPadding {
+    padding-top: 30px;
 }
 
 label.invalid {
