@@ -1,0 +1,16 @@
+extends ./layout.jade
+
+block additionalStyles
+  link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css')
+
+block content
+  div.row
+    div.col.s8.offset-s2
+      h1#pageHeading.thin Connected Sites
+
+  div.row
+    if (message.length > 0)
+      div#formMessage.center: p #{message}
+    div.col.s8.offset-s2
+      a.waves-effect.waves-light.btn.btn-front.darken-3.left(href=connectedSites.indexOf('facebook') == -1 ? '/connect/auth/facebook' : '/connect/remove/facebook', class=connectedSites.indexOf('facebook') == -1 ? 'grey' : 'blue') Facebook
+        i.fa.fa-facebook-official.left
