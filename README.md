@@ -14,6 +14,8 @@ Dash highlights the information and news you care about. Rather than opening up 
 
 Optional: If you plan on making changes to the files, consider using nodemon. Nodemon restarts your app whenever it detects changes. To use nodemon, run the app with `nodemon app.js dev` instead.
 
+Note: There are environment variables in the settings.js file. You will need to create your own test apps to fill in the missing information for connections. You will also need to create your own MongoDB database and update the MongoDB details accordingly.
+
 # Plans
 
 There are various sites Dash could potentially connect with, such as Google+, Facebook, Twitter, and Reddit. There needs to be a central account in the database that is connected with all of these sites. For instance, the user logs into Dash. They have no connected accounts. I can have options for displaying the weather, time, and so on. I can use the GitHub API to pull in latest commits or updates, so that users can "subscribe" to latest developments in Dash. These "basic modules" are defaults that the user can opt in to see aside from their content.
