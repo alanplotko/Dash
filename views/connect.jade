@@ -12,5 +12,5 @@ block content
     if (message.length > 0)
       div#formMessage.center: p #{message}
     div.col.s8.offset-s2
-      a.waves-effect.waves-light.btn.btn-front.darken-3.left(href=connectedSites.indexOf('facebook') == -1 ? '/connect/auth/facebook' : '/connect/remove/facebook', class=connectedSites.indexOf('facebook') == -1 ? 'grey' : 'blue') Facebook
+      a.waves-effect.waves-light.btn.btn-front.darken-3.left(href=typeof facebook === 'undefined' ? '/connect/auth/facebook' : '/connect/remove/facebook', class=typeof facebook === 'undefined' ? 'grey' : 'blue') Facebook
         i.fa.fa-facebook-official.left

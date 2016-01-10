@@ -18,7 +18,7 @@ block content
         each val, index in content
           div.col.s4
             p
-              input(type='checkbox', id=val, name=val)
+              input(type='checkbox', id=val, name=val+':'+index)
               label(for=val)= index
         div.row
           div#controls.input-field.col.s8.offset-s2.blue-text.text-darken-3.topPadding

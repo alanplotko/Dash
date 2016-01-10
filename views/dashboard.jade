@@ -7,3 +7,14 @@ block content
         h1#heading.center.thin Welcome back, #{locals.displayName}!
         h2.center.thin: a(href='/connect') Get started by connecting a site!
       else
+        h1#heading.center.thin Welcome back, #{locals.displayName}!
+        if posts.length > 0
+          each post in posts
+            div.row
+              div.col.s6.offset-s3
+                div.card
+                  div.card-content
+                    span.card-title= post.title
+                    p= post.content
+        else
+          h2.center.thin: a(href='/dashboard') Refresh Content

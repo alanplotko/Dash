@@ -5,27 +5,69 @@ var passportLocalMongoose = require('passport-local-mongoose');
 var bcrypt = require('bcrypt');
 var crypto = require('crypto');
 const https = require('https');
-var connectionSettings = require('../config/settings').settings['connections'];
+var config = require('../config/settings').settings[process.env.NODE_ENV];
+config.connections = require('../config/settings').settings['connections'];
 var SALT_WORK_FACTOR = 10;
 var MAX_LOGIN_ATTEMPTS = 5;
 var LOCK_TIME = 2 * 60 * 60 * 1000; // 2-hour lock
 
+// Define post fields
+var postSchema = new Schema({
+    title: { type: String },    // Post title
+    content: { type: String },  // Post content
+    timestamp: { type: Date },  // Last updated
+    type: { type: String }      // Optional: Type of post
+});
+
 // Define user fields
 var UserSchema = new Schema({
+
+    // Username/Email
     email: { type: String, required: true, index: { unique: true } },
+
+    // Personal
     displayName: { type: String, required: true },
+    gravatar: { type: String, required: true },
+
+    // Password & Security
     password: { type: String, required: true },
     loginAttempts: { type: Number, required: true, default: 0 },
     lockUntil: { type: Number },
-    gravatar: { type: String, required: true },
-    connectedSites: { type: Array },
-    connections: [{
-        name: { type: String, index: { unique: true } },
-        connectionId: { type: String, index: { unique: true } },
+
+    // Connections
+    facebook: {
+        // Identifiers & Tokens
+        profileId: { type: String, index: { unique: true } },
         accessToken: { type: String },
-        data: {}
-    }]
+        
+        // Facebook Content
+        groups: [{
+            groupId: { type: String },
+            name: { type: String }
+        }],
+        pages: [{
+            pageId: { type: String },
+            name: { type: String }
+        }],
+        posts: [postSchema],
+        
+        // Last time data pulled from Facebook
+        lastUpdateTime: { type: Date }
+    }
 });
+
+/*=====================
+ * User Connections
+=======================*/
+
+// Check if user has existing Facbeook connection
+UserSchema.virtual('hasFacebook').get(function() {
+    return !!(this.facebook.profileId);
+});
+
+/*===========================
+ * User Account Functions
+=============================*/
 
 // Check for a future lockUntil timestamp
 UserSchema.virtual('isLocked').get(function() {
@@ -104,13 +146,12 @@ var reasons = UserSchema.statics.failedLogin = {
 
 // Serialize function for use with passport
 UserSchema.statics.authSerializer = function(user, done) {
-    console.log(user);
     done(null, user.id);
 };
 
 // Deserialize function for use with passport
 UserSchema.statics.authDeserializer = function(id, done) {
-    mongoose.models['User'].findById(id, 'email displayName gravatar connectedSites', function(err, user) {
+    mongoose.models['User'].findById(id, 'email displayName gravatar facebook.profileId facebook.posts', function(err, user) {
         done(err, user);
     });
 };
@@ -123,9 +164,7 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
         if (err) return done(err);
 
         // Check if user exists
-        if (!user) {
-            return done(null, null, reasons.NOT_FOUND);
-        }
+        if (!user) return done(null, null, reasons.NOT_FOUND);
 
         // Check if account is currently locked
         if (user.isLocked) {
@@ -133,7 +172,6 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
             return user.incLoginAttempts(function(err) {
                 // An error occurred
                 if (err) return done(err);
-
                 return done(null, null, reasons.MAX_ATTEMPTS);
             });
         }
@@ -157,7 +195,6 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
                 return user.update(updates, function(err) {
                     // An error occurred
                     if (err) return done(err);
-
                     return done(null, user);
                 });
             }
@@ -166,7 +203,6 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
             user.incLoginAttempts(function(err) {
                 // An error occurred
                 if (err) return done(err);
-                
                 return done(null, null, reasons.PASSWORD_INCORRECT);
             });
         });
@@ -176,15 +212,17 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
 // Update user settings
 UserSchema.statics.updateUser = function(id, settings, done) {
     mongoose.models['User'].update({ _id: id }, settings, function(err, numAffected) {
-        // An error occurred
-        if (err) return done(err);
-        // Update succeeded
-        return done(null, true);
+        if (err) return done(err);  // An error occurred
+        return done(null, true);    // Update succeeded
     });
 };
 
-// Add connection
-UserSchema.statics.addConnection = function(id, connection, done) {
+/*========================
+ * Facebook Connection
+==========================*/
+
+// Add Facebook id and access token to user
+UserSchema.statics.addFacebook = function(id, connection, done) {
     mongoose.models['User'].findById(id, function(err, user) {
         // An error occurred
         if (err) return done(err);
@@ -193,147 +231,50 @@ UserSchema.statics.addConnection = function(id, connection, done) {
         if (!user) return done(null, null, new Error('An error occurred. Please try again in a few minutes.'));
 
         // Connection already exists
-        var index = user.connectedSites.indexOf(connection.name);
-        if (index > -1) return done(new Error('You\'re already connected with ' + connection.name + '.'));
+        if(user.hasFacebook) return done(new Error('You\'re already connected with Facebook.'));
 
-        // Add connection
-        var addConnectionResult = user.connections.addToSet(connection);
-        var addSiteNameResult = user.connectedSites.addToSet(connection.name);
+        // Add Facebook connection
+        user.facebook = connection;
 
         // Save changes
         user.save(function (err) {
-            // An error occurred
-            if (err) return done(err);
-            // Connection successfully added
-            return done(null, user);
+            if (err) return done(err);  // An error occurred
+            return done(null, user);    // Added connection
         });
     });
 };
 
-// Remove connection
-UserSchema.statics.removeConnection = function(id, connectionName, done) {
-    var update = {
-        $pull: {
-            connections: { name: connectionName },
-            connectedSites: connectionName
-        }
-    };
-
-    mongoose.models['User'].findByIdAndUpdate(id, update, function(err, user) {
-        // An error occurred
-        if (err) return done(err);
-
-        // User can't be found; unexpected error
-        if (user) return done(null, connectionName);
-    });
-};
-
-UserSchema.statics.setUpFacebookGroups = function(id, done) {
+// Remove Facebook
+UserSchema.statics.removeFacebook = function(id, done) {
     mongoose.models['User'].findById(id, function(err, user) {
         // An error occurred
         if (err) return done(err);
 
         // User can't be found; unexpected error
-        if (!user) return done(null, null, new Error('An error occurred. Please try again in a few minutes.'));
+        if (!user) return done(new Error('An error occurred. Please try again in a few minutes.'));
 
-        var index = user.connections.map(function(el) { return el.name; }).indexOf('facebook');
-        var appsecret_proof = '&appsecret_proof=' + crypto.createHmac('sha256', connectionSettings.facebook.clientSecret).update(user.connections[index].accessToken).digest('hex');
-        var url = 'https://graph.facebook.com/v2.5/' + user.connections[index].connectionId + '/groups?access_token=' + user.connections[index].accessToken;
-        var content = getFacebookContent(url, {}, appsecret_proof, function(err, content) {
-            // An error occurred
-            if (err) return done(err);
-            // Retrieved groups successfully
-            return done(null, content);
-        });
-    });
-};
-
-UserSchema.statics.saveFacebookGroups = function(id, groups, done) {
-    mongoose.models['User'].findById(id, function(err, user) {
-        // An error occurred
-        if (err) return done(err);
-
-        // User can't be found; unexpected error
-        if (!user) return done(null, null, new Error('An error occurred. Please try again in a few minutes.'));
-
-        // Set groups; save previous pages
-        var index = user.connections.map(function(el) { return el.name; }).indexOf('facebook');
-        var data = {};
-        console.log(data);
-        if (user.connections[index].data && user.connections[index].data.pages)
-        {
-            data.pages = user.connections[index].data.pages;
-        }
-        data.groups = groups;
-        user.connections[index].data = data;
-        user.markModified('user.connections.facebook.data');
+        // Connection already exists
+        if(!user.hasFacebook) return done(new Error('You\'re not connected with Facebook.'));
+        
+        // Remove Facebook connection
+        user.facebook = undefined;
 
         // Save changes
         user.save(function (err) {
-            // An error occurred
-            if (err) return done(err);
-            // Connection successfully added
-            return done(null, user);
+            if (err) return done(err);  // An error occurred
+            return done(null, user);    // Removed connection
         });
     });
 };
 
-UserSchema.statics.setUpFacebookPages = function(id, done) {
-    mongoose.models['User'].findById(id, function(err, user) {
-        // An error occurred
-        if (err) return done(err);
-
-        // User can't be found; unexpected error
-        if (!user) return done(null, null, new Error('An error occurred. Please try again in a few minutes.'));
-
-        var index = user.connections.map(function(el) { return el.name; }).indexOf('facebook');
-        var appsecret_proof = '&appsecret_proof=' + crypto.createHmac('sha256', connectionSettings.facebook.clientSecret).update(user.connections[index].accessToken).digest('hex');
-        var url = 'https://graph.facebook.com/v2.5/' + user.connections[index].connectionId + '/likes?access_token=' + user.connections[index].accessToken;
-        var content = getFacebookContent(url, {}, appsecret_proof, function(err, content) {
-            // An error occurred
-            if (err) return done(err);
-            // Retrieved groups successfully
-            return done(null, content);
-        });
-    });
-};
-
-UserSchema.statics.saveFacebookPages = function(id, pages, done) {
-    mongoose.models['User'].findById(id, function(err, user) {
-        // An error occurred
-        if (err) return done(err);
-
-        // User can't be found; unexpected error
-        if (!user) return done(null, null, new Error('An error occurred. Please try again in a few minutes.'));
-
-        // Set pages; save previous groups
-        var index = user.connections.map(function(el) { return el.name; }).indexOf('facebook');
-        var data = {};
-        if (user.connections[index].data && user.connections[index].data.groups)
-        {
-            data.groups = user.connections[index].data.groups;
-        }
-        data.pages = pages;
-        user.connections[index].data = data;
-        user.markModified('user.connections.facebook.data');
-
-        // Save changes
-        user.save(function (err) {
-            // An error occurred
-            if (err) return done(err);
-            // Connection successfully added
-            return done(null, user);
-        });
-    });
-};
-
-function getFacebookContent(url, content, appSecretProofString, done) {
-    https.get(url + appSecretProofString, (res) => {
+// Get content from Facebook
+function getFacebookContent(url, content, appSecretProof, done) {
+    https.get(url + appSecretProof, (res) => {
         var buffer = '';
         res.on('data', (d) => { buffer += d; });
         res.on('end', (d) => {
             buffer = JSON.parse(buffer);
-            if (buffer.data.length > 0)
+            if (buffer.data && buffer.data.length > 0)
             {
                 buffer.data.forEach(function(element) {
                     content[element.name] = element.id;
@@ -341,7 +282,7 @@ function getFacebookContent(url, content, appSecretProofString, done) {
             }
             if (buffer.paging && buffer.paging.next)
             {
-                getFacebookContent(buffer.paging.next, content, appSecretProofString, done);
+                getFacebookContent(buffer.paging.next, content, appSecretProof, done);
             }
             else
             {
@@ -351,14 +292,182 @@ function getFacebookContent(url, content, appSecretProofString, done) {
     }).on('error', (err) => { done(err); });
 }
 
+// Get Facebook posts
+function getFacebookPosts(url, content, name, type, appSecretProofString, done) {
+    https.get(url + appSecretProofString, (res) => {
+        var buffer = '';
+        res.on('data', (d) => { buffer += d; });
+        res.on('end', (d) => {
+            buffer = JSON.parse(buffer);
+            if (buffer.data && buffer.data.length > 0)
+            {
+                buffer.data.forEach(function(element) {
+                    content.push({
+                        title: element.story || 'A post in ' + name,
+                        content: element.message || '',
+                        timestamp: element.updated_time || element.created_time,
+                        type: type
+                    });
+                });
+            }
+            if (buffer.paging && buffer.paging.next)
+            {
+                getFacebookPosts(buffer.paging.next, content, name, type, appSecretProofString, done);
+            }
+            else
+            {
+                done(null, content);
+            }
+        });
+    }).on('error', (err) => { done(err); });
+}
+
+// --------- First-time setup for Facebook groups ---------
+
+// Get groups to display on setup page
+UserSchema.statics.setUpFacebookGroups = function(id, done) {
+    mongoose.models['User'].findById(id, function(err, user) {
+        // An error occurred
+        if (err) return done(err);
+
+        // User can't be found; unexpected error
+        if (!user) return done(null, null, new Error('An error occurred. Please try again in a few minutes.'));
+
+        var appsecret_proof = '&appsecret_proof=' + crypto.createHmac('sha256', config.connections.facebook.clientSecret).update(user.facebook.accessToken).digest('hex');
+        var url = 'https://graph.facebook.com/v2.5/' + user.facebook.profileId + '/groups?access_token=' + user.facebook.accessToken;
+
+        var content = getFacebookContent(url, {}, appsecret_proof, function(err, content) {
+            if (err) return done(err);  // An error occurred
+            return done(null, content); // Retrieved groups
+        });
+    });
+};
+
+// Save selected groups
+UserSchema.statics.saveFacebookGroups = function(id, groups, done) {
+    mongoose.models['User'].findById(id, function(err, user) {
+        // An error occurred
+        if (err) return done(err);
+
+        // User can't be found; unexpected error
+        if (!user) return done(null, null, new Error('An error occurred. Please try again in a few minutes.'));
+
+        user.facebook.groups = [];
+
+        groups.forEach(function(group) {
+            user.facebook.groups.push({
+                groupId: group.split(':')[0],
+                name: group.split(':')[1]
+            });
+        })
+
+        // Save changes
+        user.save(function (err) {
+            if (err) return done(err);  // An error occurred
+            return done(null, user);    // Saved groups
+        });
+    });
+};
+
+// --------- First-time setup for Facebook pages ---------
+
+// Get pages to display on setup page
+UserSchema.statics.setUpFacebookPages = function(id, done) {
+    mongoose.models['User'].findById(id, function(err, user) {
+        // An error occurred
+        if (err) return done(err);
+
+        // User can't be found; unexpected error
+        if (!user) return done(null, null, new Error('An error occurred. Please try again in a few minutes.'));
+
+        var appsecret_proof = '&appsecret_proof=' + crypto.createHmac('sha256', config.connections.facebook.clientSecret).update(user.facebook.accessToken).digest('hex');
+        var url = 'https://graph.facebook.com/v2.5/' + user.facebook.profileId + '/likes?access_token=' + user.facebook.accessToken;
+
+        var content = getFacebookContent(url, {}, appsecret_proof, function(err, content) {
+            if (err) return done(err);  // An error occurred
+            return done(null, content); // Retrieved pages
+        });
+    });
+};
+
+// Save selected pages
+UserSchema.statics.saveFacebookPages = function(id, pages, done) {
+    mongoose.models['User'].findById(id, function(err, user) {
+        // An error occurred
+        if (err) return done(err);
+
+        // User can't be found; unexpected error
+        if (!user) return done(null, null, new Error('An error occurred. Please try again in a few minutes.'));
+        
+        user.facebook.pages = [];
+
+        pages.forEach(function(page) {
+            user.facebook.pages.push({
+                pageId: page.split(':')[0],
+                name: page.split(':')[1]
+            });
+        })
+
+        // Save changes
+        user.save(function (err) {
+            if (err) return done(err);  // An error occurred
+            return done(null, user);    // Saved pages
+        });
+    });
+};
+
 // Update content
-UserSchema.statics.updateContent = function(id, connectionName, done) {
-    switch(connectionName)
-    {
-        case 'facebook':
-            // To Do: Add timestamp to get new posts after last update (group posts [/group-id/feed] have updated_time variable, pages [/page-id/posts] have created_time variable)
-            break;
-    }
+UserSchema.statics.updateContent = function(id, done) {
+    mongoose.models['User'].findById(id, function(err, user) {
+        // An error occurred
+        if (err) return done(err);
+
+        // User can't be found; unexpected error
+        if (!user) return done(new Error('An error occurred. Please try again in a few minutes.'));
+
+        // To Do: Add timestamp to get new posts after last update (group posts [/group-id/feed] have updated_time variable, pages [/page-id/posts] have created_time variable)
+        if (user.hasFacebook)
+        {
+            var appsecret_proof = '&appsecret_proof=' + crypto.createHmac('sha256', config.connections.facebook.clientSecret).update(user.facebook.accessToken).digest('hex');
+            var lastUpdateTime = user.facebook.lastUpdateTime;
+
+            // Get group posts
+            user.facebook.groups.forEach(function(group) {
+                var feedUrl = 'https://graph.facebook.com/v2.5/' + group.groupId + '/feed?since=' + lastUpdateTime + '&access_token=' + user.facebook.accessToken;
+                var content = getFacebookPosts(feedUrl, [], group.name, 'group', appsecret_proof, function(err, content) {
+                    // An error occurred
+                    if (err) return done(err);
+                    // Retrieved posts successfully
+                    content.forEach(function(post) {
+                        user.facebook.posts.push(post);
+                    });
+
+                    // Get page posts
+                    user.facebook.pages.forEach(function(page) {
+                        var feedUrl = 'https://graph.facebook.com/v2.5/' + page.pageId + '/feed?since=' + lastUpdateTime + '&access_token=' + user.facebook.accessToken;
+                        var content = getFacebookPosts(feedUrl, [], page.name, 'page', appsecret_proof, function(err, content) {
+                            // An error occurred
+                            if (err) return done(err);
+                            // Retrieved posts successfully
+                            content.forEach(function(post) {
+                                user.facebook.posts.push(post);
+                            });
+
+                            // Update time that posts were pulled from Facebook
+                            user.facebook.lastUpdateTime = Date.now();
+                            user.save(function (err) {
+                                if (err) return done(err);              // An error occurred
+                                return done(null, user.facebook.posts); // Saved group and page posts
+                            });
+                        });
+                    });
+                });
+            });
+        }
+
+        // User has no existing connections
+        return done(null, null);
+    });
 };
 
 // Set up passport local strategy with mongoose

@@ -15,11 +15,23 @@ module.exports = function(app, passport) {
 
     // --------- User Dashboard ---------
     app.get('/dashboard', isLoggedIn, function(req, res) {
-        req.user.connectedSites.forEach(function(site) {
-            User.updateContent(req.user._id);
+        User.updateContent(req.user._id, function(err, posts) {
+            if (err) return next(err); // An error occurred
         });
+
+        console.log(req.user);
+
+        // Update req.user
+        req.login(req.user, function(err) {
+            if (err) return next(err);
+        });
+
+        console.log(req.user);
+        
         res.render('dashboard', {
-            connected: req.user.connectedSites.length > 0
+            // Add other connection fields here
+            connected: req.user.facebook.profileId !== undefined,
+            posts: req.user.facebook.posts
         });
     });
 
@@ -66,7 +78,7 @@ module.exports = function(app, passport) {
     app.get('/connect', isLoggedIn, function(req, res) {
         res.render('connect', {
             message: req.flash('connectMessage'),
-            connectedSites: req.user.connectedSites
+            facebook: req.user.facebook.profileId
         });
     });
 
@@ -161,10 +173,18 @@ module.exports = function(app, passport) {
         successRedirect: '/setup/facebook/groups'
     }));
 
-    app.get('/connect/remove/:connection', isLoggedIn, function(req, res) {
-        User.removeConnection(req.user.id, req.params.connection, function(err) { if (err) throw err; });
-        req.flash('connectMessage', 'Your ' + req.params.connection.charAt(0).toUpperCase() + req.params.connection.slice(1) + ' connection has been removed.');
-        res.redirect('/connect');
+    app.get('/connect/remove/facebook', isLoggedIn, function(req, res) {
+        User.removeFacebook(req.user.id, function(err) {
+            if (err)
+            {
+                req.flash('connectMessage', err.toString());
+            }
+            else
+            {
+                req.flash('connectMessage', 'Your Facebook connection has been removed.');
+            }
+            res.redirect('/connect');
+        });
     });
 
     // --------- Dash Login/Logout ---------

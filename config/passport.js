@@ -136,22 +136,24 @@ module.exports = function(passport) {
         passReqToCallback: true
     },
     function(req, accessToken, refreshToken, profile, done) {
+        // Set update date as yesterday
+        var date = new Date();
+        date.setDate(date.getDate() - 1);
 
+        // Set up connection
         connection = {
-            name: 'facebook',
-            connectionId: profile.id,
+            profileId: profile.id,
             accessToken: accessToken,
-            data: {}
+            lastUpdateTime: date
         };
 
         process.nextTick(function() {
-            User.addConnection(req.user.id, connection, function(err, user) {
+            User.addFacebook(req.user.id, connection, function(err, user) {
                 // An error occurred
                 if (err) return done(null, false, req.flash('connectMessage', err.toString()));
 
                 // Connection added successfully
-                connection.name = connection.name.charAt(0).toUpperCase() + connection.name.slice(1);
-                if (connection) return done(null, user, req.flash('connectMessage', 'You are now connected with ' + connection.name + '.'));
+                if (connection) return done(null, user, req.flash('connectMessage', 'You are now connected with Facebook.'));
             });
         });
     });
