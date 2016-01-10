@@ -1,5 +1,8 @@
 extends ./layout.jade
 
+block additionalStyles
+  link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css')
+
 block content
   div.row
     div.col.s12
@@ -8,13 +11,17 @@ block content
         h2.center.thin: a(href='/connect') Get started by connecting a site!
       else
         h1#heading.center.thin Welcome back, #{locals.displayName}!
-        if posts.length > 0
-          each post in posts
+        if facebook.length > 0
+          each post in facebook
             div.row
               div.col.s6.offset-s3
                 div.card
-                  div.card-content
-                    span.card-title= post.title
+                  div.card-content.facebook
+                    a(onclick='dismiss("#{post._id}", "facebook", this)'): i.fa.fa-times.close.grey-text.darken-3
+                    span.card-title.truncate= post.title
                     p= post.content
         else
-          h2.center.thin: a(href='/dashboard') Refresh Content
+          h5.center.thin (No updates... check back later!)
+
+block additionalScripts
+  script(src='/static/js/dismiss.js')

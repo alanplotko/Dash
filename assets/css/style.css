@@ -56,6 +56,52 @@ nav img.avatar {
 }
 
 /*================
+ *  Dashboard
+==================*/
+
+.card .card-content.facebook a i.close {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.card .card-content.facebook {
+    position: relative;
+    border: 2px solid #3b5998;
+}
+
+.card .card-content.facebook .card-title {
+    padding-left: 48px;
+}
+
+.card .card-content.facebook p {
+    padding-top: 10px;
+}
+
+.card .card-content.facebook:before {
+    position: absolute;
+    content: '\f082';
+    font-family: FontAwesome;
+    font-size: 36px;
+    color: #3b5998;
+    top: 15px;
+    left: 20px;
+}
+
+.btn.facebook {
+    background-color: #3b5998;
+}
+
+.truncate {
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/*================
  *  Settings
 ==================*/
 

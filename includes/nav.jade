@@ -3,6 +3,10 @@ ul#user-dropdown.dropdown-content
     i.material-icons.left settings
   li: a(href='/connect') Connected Sites
     i.material-icons.left settings_input_antenna
+  //- Add other connections here later
+  if facebook && facebook.length > 0
+    li: a(onclick='dismiss("all", "facebook", $(".card .facebook"))') Clear Updates
+      i.material-icons.left clear
 nav.blue.darken-3
   div.nav-wrapper
     a.brand-logo(href='/') Dash
@@ -11,5 +15,4 @@ nav.blue.darken-3
         li: a.dropdown-button(href='#', data-activates='user-dropdown') #{locals.greeting}, #{locals.displayName}!
           i.material-icons.right arrow_drop_down
           img.avatar.left(src='#{locals.gravatar}')
-        li: a(hrref='#') #{locals.date}
         li: a(href='/logout') Logout

@@ -22,7 +22,31 @@ module.exports = function(app, passport) {
         res.render('dashboard', {
             // Add other connection fields here
             connected: req.user.facebook.profileId !== undefined,
-            posts: req.user.facebook.posts
+            facebook: req.user.facebook.posts
+        });
+    });
+
+    app.post('/dismiss/facebook/:id', isLoggedIn, function(req, res) {
+        User.findByIdAndUpdate(req.user._id, {
+            $set: {
+                'facebook.posts': []
+            }
+        }, function(err, user) {
+            if (err) return res.sendStatus(500);
+            return res.sendStatus(200);
+        });
+    });
+
+    app.post('/dismiss/facebook/all', isLoggedIn, function(req, res) {
+        User.findByIdAndUpdate(req.user._id, {
+            $pull: {
+                'facebook.posts': {
+                    _id: req.params.id
+                }
+            }
+        }, function(err, user) {
+            if (err) return res.sendStatus(500);
+            return res.sendStatus(200);
         });
     });
 
