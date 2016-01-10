@@ -19,15 +19,6 @@ module.exports = function(app, passport) {
             if (err) return next(err); // An error occurred
         });
 
-        console.log(req.user);
-
-        // Update req.user
-        req.login(req.user, function(err) {
-            if (err) return next(err);
-        });
-
-        console.log(req.user);
-        
         res.render('dashboard', {
             // Add other connection fields here
             connected: req.user.facebook.profileId !== undefined,
