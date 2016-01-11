@@ -302,12 +302,26 @@ function getFacebookPosts(url, content, name, type, appSecretProofString, done) 
             if (buffer.data && buffer.data.length > 0)
             {
                 buffer.data.forEach(function(element) {
-                    content.push({
-                        title: element.story || 'A post in ' + name,
-                        content: element.message || '',
-                        timestamp: element.updated_time || element.created_time,
-                        type: type
-                    });
+                    // We have a link or media share
+                    if (element.story && element.message)
+                    {
+                        content.push({
+                            title: element.story,
+                            content: element.message,
+                            timestamp: element.updated_time || element.created_time,
+                            type: type
+                        });
+                    }
+                    // We have a standard post
+                    else if (!element.story && element.message)
+                    {
+                        content.push({
+                            title: name,
+                            content: element.message,
+                            timestamp: element.updated_time || element.created_time,
+                            type: type
+                        });
+                    }
                 });
             }
             if (buffer.paging && buffer.paging.next)
@@ -425,7 +439,6 @@ UserSchema.statics.updateContent = function(id, done) {
         // User can't be found; unexpected error
         if (!user) return done(new Error('An error occurred. Please try again in a few minutes.'));
 
-        // To Do: Add timestamp to get new posts after last update (group posts [/group-id/feed] have updated_time variable, pages [/page-id/posts] have created_time variable)
         if (user.hasFacebook)
         {
             var appsecret_proof = '&appsecret_proof=' + crypto.createHmac('sha256', config.connections.facebook.clientSecret).update(user.facebook.accessToken).digest('hex');
@@ -444,7 +457,7 @@ UserSchema.statics.updateContent = function(id, done) {
 
                     // Get page posts
                     user.facebook.pages.forEach(function(page) {
-                        var feedUrl = 'https://graph.facebook.com/v2.5/' + page.pageId + '/feed?since=' + lastUpdateTime + '&access_token=' + user.facebook.accessToken;
+                        var feedUrl = 'https://graph.facebook.com/v2.5/' + page.pageId + '/posts?since=' + lastUpdateTime + '&access_token=' + user.facebook.accessToken;
                         var content = getFacebookPosts(feedUrl, [], page.name, 'page', appsecret_proof, function(err, content) {
                             // An error occurred
                             if (err) return done(err);
