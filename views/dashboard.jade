@@ -15,8 +15,8 @@ block content
           each post in facebookPosts
             div.row
               div.col.s6.offset-s3
-                div.card
-                  div.card-content.facebook
+                div.card.facebook
+                  div.card-content
                     a(onclick='dismiss("#{post._id}", "facebook", this)'): i.fa.fa-times.close.grey-text.darken-3
                     span.card-title.truncate= post.title
                     p= post.content

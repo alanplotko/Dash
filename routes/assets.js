@@ -12,6 +12,7 @@ module.exports = function(app) {
     app.get('/jquery/jquery.validate.js', function(req, res) {
         res.sendFile(path.join(__dirname, '../node_modules/jquery-validation/dist/jquery.validate.js'));
     });
+
     app.get('/jquery/additional-methods.js', function(req, res) {
         res.sendFile(path.join(__dirname, '../node_modules/jquery-validation/dist/additional-methods.js'));
     });

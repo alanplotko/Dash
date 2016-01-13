@@ -47,7 +47,7 @@ module.exports = function(app, passport) {
         });
     });
 
-    app.post('/dismiss/facebook/:id', isLoggedIn, function(req, res) {
+    app.post('/dismiss/facebook/all', isLoggedIn, function(req, res) {
         User.findByIdAndUpdate(req.user._id, {
             $set: {
                 'facebook.posts': []
@@ -58,7 +58,7 @@ module.exports = function(app, passport) {
         });
     });
 
-    app.post('/dismiss/facebook/all', isLoggedIn, function(req, res) {
+    app.post('/dismiss/facebook/:id', isLoggedIn, function(req, res) {
         User.findByIdAndUpdate(req.user._id, {
             $pull: {
                 'facebook.posts': {

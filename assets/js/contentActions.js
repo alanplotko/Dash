@@ -2,13 +2,10 @@ function dismiss(id, connection, el) {
     $.post('/dismiss/' + connection + '/' + id, function(data) {
         var post = $(el).closest('div.row');
         $.when(post.fadeOut()).then(function() {
-            post.remove();
+            post.remove().delay(1000);
+            if (id === 'all') window.location.reload();
         });
     });
-    if (id === 'all')
-    {
-        window.location.reload();
-    }
 }
 
 function refresh() {
