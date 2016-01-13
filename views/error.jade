@@ -7,7 +7,7 @@ block content
   div.row
     div.col.s12
       h1#errorHeading.center.thin #{title}: #{message}
-    if (message.length > 0)
+    if (message && message.length > 0)
       if (process.env.NODE_ENV == 'dev')
         div.row
           div#errorBox.col.s12
