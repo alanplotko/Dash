@@ -11,8 +11,8 @@ block content
         h2.center.thin: a(href='/connect') Get started by connecting a site!
       else
         h1#heading.center.thin Welcome back, #{locals.displayName}!
-        if facebook.length > 0
-          each post in facebook
+        if facebookPosts.length > 0
+          each post in facebookPosts
             div.row
               div.col.s6.offset-s3
                 div.card
@@ -24,4 +24,4 @@ block content
           h5.center.thin (No updates... check back later!)
 
 block additionalScripts
-  script(src='/static/js/dismiss.js')
+  script(src='/static/js/contentActions.js')
