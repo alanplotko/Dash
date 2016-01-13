@@ -14,6 +14,7 @@ var cookieParser = require('cookie-parser');
 var passport = require('passport');
 var flash = require('connect-flash');
 var mongoose = require('mongoose');
+require('express-mongoose');
 var User = require('./models/user');
 
 // --------- Support bodies ---------
