@@ -14,15 +14,36 @@ module.exports = function(app, passport) {
     });
 
     // --------- User Dashboard ---------
-    app.get('/dashboard', isLoggedIn, function(req, res) {
-        User.updateContent(req.user._id, function(err, posts) {
-            if (err) return next(err); // An error occurred
-        });
-
+     app.get('/dashboard', isLoggedIn, function(req, res) {
         res.render('dashboard', {
             // Add other connection fields here
             connected: req.user.facebook.profileId !== undefined,
-            facebook: req.user.facebook.posts
+            facebookPosts: req.user.facebook.posts
+        });
+    });
+
+    app.post('/refresh', isLoggedIn, function(req, res) {
+        req.user.updateContent(function(err, posts) {
+            if (err)
+            {
+                return res.status(500).send({
+                    message: 'Encountered an error. Please try again in a few minutes.'
+                });
+            }
+            else if (posts)
+            {
+                return res.status(200).send({
+                    message: 'New posts have come in!',
+                    refresh: true
+                });
+            }
+            else
+            {
+                return res.status(200).send({
+                    message: 'No new posts.',
+                    refresh: false
+                });
+            }
         });
     });
 
