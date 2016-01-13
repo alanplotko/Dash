@@ -5,6 +5,7 @@ var passportLocalMongoose = require('passport-local-mongoose');
 var bcrypt = require('bcrypt');
 var crypto = require('crypto');
 const https = require('https');
+var async = require('async');
 var config = require('../config/settings').settings[process.env.NODE_ENV];
 config.connections = require('../config/settings').settings['connections'];
 var SALT_WORK_FACTOR = 10;
@@ -12,11 +13,11 @@ var MAX_LOGIN_ATTEMPTS = 5;
 var LOCK_TIME = 2 * 60 * 60 * 1000; // 2-hour lock
 
 // Define post fields
-var postSchema = new Schema({
+var PostSchema = new Schema({
     title: { type: String },    // Post title
     content: { type: String },  // Post content
     timestamp: { type: Date },  // Last updated
-    type: { type: String }      // Optional: Type of post
+    postType: { type: String }  // Optional: Type of post
 });
 
 // Define user fields
@@ -49,7 +50,7 @@ var UserSchema = new Schema({
             pageId: { type: String },
             name: { type: String }
         }],
-        posts: [postSchema],
+        posts: [PostSchema],
         
         // Last time data pulled from Facebook
         lastUpdateTime: { type: Date }
@@ -306,20 +307,22 @@ function getFacebookPosts(url, content, name, type, appSecretProofString, done) 
                     if (element.story && element.message)
                     {
                         content.push({
+                            _id: mongoose.Types.ObjectId(),
                             title: element.story,
                             content: element.message,
                             timestamp: element.updated_time || element.created_time,
-                            type: type
+                            postType: type
                         });
                     }
                     // We have a standard post
                     else if (!element.story && element.message)
                     {
                         content.push({
+                            _id: mongoose.Types.ObjectId(),
                             title: name,
                             content: element.message,
                             timestamp: element.updated_time || element.created_time,
-                            type: type
+                            postType: type
                         });
                     }
                 });
@@ -431,55 +434,98 @@ UserSchema.statics.saveFacebookPages = function(id, pages, done) {
 };
 
 // Update content
-UserSchema.statics.updateContent = function(id, done) {
-    mongoose.models['User'].findById(id, function(err, user) {
-        // An error occurred
-        if (err) return done(err);
+UserSchema.methods.updateContent = function(done) {
+    mongoose.models['User'].findById(this._id, function(err, user) {
+        var appsecret_proof = '&appsecret_proof=' + crypto.createHmac('sha256', config.connections.facebook.clientSecret).update(user.facebook.accessToken).digest('hex');
+        var lastUpdateTime = user.facebook.lastUpdateTime;
 
-        // User can't be found; unexpected error
-        if (!user) return done(new Error('An error occurred. Please try again in a few minutes.'));
+        // Set up async calls
+        var calls = [];
+
+        // Set up call for update time
+        calls.push(function(callback) {
+            callback(null, Date.now());
+        });
 
         if (user.hasFacebook)
         {
-            var appsecret_proof = '&appsecret_proof=' + crypto.createHmac('sha256', config.connections.facebook.clientSecret).update(user.facebook.accessToken).digest('hex');
-            var lastUpdateTime = user.facebook.lastUpdateTime;
+            // Get page posts
+            calls.push(function(callback) {
+                var pagePosts = [];
+                var progress = 0;
+                user.facebook.pages.forEach(function(page) {
+                    var feedUrl = 'https://graph.facebook.com/v2.5/' + page.pageId + '/posts?since=' + lastUpdateTime + '&access_token=' + user.facebook.accessToken;
+                    var content = getFacebookPosts(feedUrl, [], page.name, 'page', appsecret_proof, function(err, content) {
+                        // An error occurred
+                        if (err) return callback(err);
+
+                        // Retrieved posts successfully
+                        Array.prototype.push.apply(pagePosts, content);
+                        progress++;
+                        if (progress == user.facebook.pages.length)
+                        {
+                            callback(null, pagePosts);
+                        }
+                    });
+                });
+            });
 
             // Get group posts
-            user.facebook.groups.forEach(function(group) {
-                var feedUrl = 'https://graph.facebook.com/v2.5/' + group.groupId + '/feed?since=' + lastUpdateTime + '&access_token=' + user.facebook.accessToken;
-                var content = getFacebookPosts(feedUrl, [], group.name, 'group', appsecret_proof, function(err, content) {
-                    // An error occurred
-                    if (err) return done(err);
-                    // Retrieved posts successfully
-                    content.forEach(function(post) {
-                        user.facebook.posts.push(post);
-                    });
+            calls.push(function(callback) {
+                var groupPosts = [];
+                var progress = 0;
+                user.facebook.groups.forEach(function(group) {
+                    var feedUrl = 'https://graph.facebook.com/v2.5/' + group.groupId + '/feed?since=' + lastUpdateTime + '&access_token=' + user.facebook.accessToken;
+                    var content = getFacebookPosts(feedUrl, [], group.name, 'group', appsecret_proof, function(err, content) {
+                        // An error occurred
+                        if (err) return callback(err);
 
-                    // Get page posts
-                    user.facebook.pages.forEach(function(page) {
-                        var feedUrl = 'https://graph.facebook.com/v2.5/' + page.pageId + '/posts?since=' + lastUpdateTime + '&access_token=' + user.facebook.accessToken;
-                        var content = getFacebookPosts(feedUrl, [], page.name, 'page', appsecret_proof, function(err, content) {
-                            // An error occurred
-                            if (err) return done(err);
-                            // Retrieved posts successfully
-                            content.forEach(function(post) {
-                                user.facebook.posts.push(post);
-                            });
-
-                            // Update time that posts were pulled from Facebook
-                            user.facebook.lastUpdateTime = Date.now();
-                            user.save(function (err) {
-                                if (err) return done(err);              // An error occurred
-                                return done(null, user.facebook.posts); // Saved group and page posts
-                            });
-                        });
+                        // Retrieved posts successfully
+                        Array.prototype.push.apply(groupPosts, content);
+                        progress++;
+                        if (progress == user.facebook.groups.length)
+                        {
+                            callback(null, groupPosts);
+                        }
                     });
                 });
             });
         }
 
-        // User has no existing connections
-        return done(null, null);
+        async.parallel(calls, function(err, results) {
+            if (err) return done(err);
+
+            var progress = 0;
+
+            // Group posts together
+            Array.prototype.push.apply(results[1], results[2]);
+
+            // Set new last update time
+            user.facebook.lastUpdateTime = results[0];
+
+            if (results[1].length > 0)
+            {
+                results[1].forEach(function(post) {
+                    user.facebook.posts.push(post);
+                    progress++;
+                    if (progress == results[1].length)
+                    {
+                        user.save(function (err) {
+                            if (err) return done(err);              // An error occurred
+                            return done(null, user.facebook.posts); // Saved posts and update time; return posts
+                        });
+                    }
+                });
+            }
+            else
+            {
+                // No new posts, set new update time
+                user.save(function (err) {
+                    if (err) return done(err);  // An error occurred
+                    return done(null, null);    // Saved update time
+                });
+            }
+        });
     });
 };
 
