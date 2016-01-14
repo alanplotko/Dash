@@ -12,14 +12,15 @@ block content
       else
         h1#heading.center.thin Welcome back, #{locals.displayName}!
         if facebookPosts.length > 0
-          each post in facebookPosts
+          each post in facebookPosts.reverse()
             div.row
               div.col.s6.offset-s3
                 div.card.facebook
                   div.card-content
                     a(onclick='dismiss("#{post._id}", "facebook", this)'): i.fa.fa-times.close.grey-text.darken-3
                     span.card-title.truncate= post.title
-                    p= post.content
+                    p.content= post.content
+                    p.timestamp= 'Posted ' +  moment(new Date(post.timestamp).toISOString()).fromNow()
         else
           h5.center.thin (No updates... check back later!)
 

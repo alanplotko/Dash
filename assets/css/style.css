@@ -76,7 +76,7 @@ nav img.avatar {
     padding-left: 48px;
 }
 
-.card.facebook .card-content p {
+.card.facebook .card-content p.content {
     padding-top: 10px;
 }
 
@@ -92,6 +92,16 @@ nav img.avatar {
 
 .btn.facebook {
     background-color: #3b5998;
+}
+
+p.timestamp {
+    position: relative;
+    top: 15px;
+    left: 15px;
+    font-style: italic;
+    color: #444!important;
+    padding: 0 10px 0 0;
+    text-align: right;
 }
 
 .truncate {

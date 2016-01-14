@@ -46,10 +46,13 @@ app.use('/font', express.static(path.join(__dirname, '/node_modules/materialize-
 app.set('view engine', 'jade');
 require('./routes/assets')(app);
 
-// Set up function to capitalize a variable in Jade
+// Capitalize Jade variables
 app.locals.ucfirst = function(value) {
     return value.charAt(0).toUpperCase() + value.slice(1);
 };
+
+// Use moment library on Jade variables
+app.locals.moment = require('moment');
 
 // Pass login status for use in views
 app.use(function (req, res, next) {

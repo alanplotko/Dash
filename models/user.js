@@ -497,8 +497,11 @@ UserSchema.methods.updateContent = function(done) {
 
             var progress = 0;
 
-            // Group posts together
+            // Group posts together and sort by timestamp
             Array.prototype.push.apply(results[1], results[2]);
+            results[1].sort(function(a, b) {
+                return new Date(a.timestamp) - new Date(b.timestamp)
+            });
 
             // Set new last update time
             user.facebook.lastUpdateTime = results[0];

@@ -15,6 +15,7 @@ module.exports = function(app, passport) {
 
     // --------- User Dashboard ---------
      app.get('/dashboard', isLoggedIn, function(req, res) {
+        console.log(req.user.facebook.posts);
         res.render('dashboard', {
             // Add other connection fields here
             connected: req.user.facebook.profileId !== undefined,

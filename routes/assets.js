@@ -17,6 +17,12 @@ module.exports = function(app) {
         res.sendFile(path.join(__dirname, '../node_modules/jquery-validation/dist/additional-methods.js'));
     });
 
+    // --------- Date & Time ---------
+
+    app.get('/calendar/moment.js', function(req, res) {
+        res.sendFile(path.join(__dirname, '../node_modules/moment/min/moment.min.js'));
+    });
+
     // --------- Materialize Assets ---------
 
     app.get('/materialize/materialize.js', function(req, res) {
