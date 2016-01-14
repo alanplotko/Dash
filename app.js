@@ -64,22 +64,24 @@ app.use(function (req, res, next) {
         var date = new Date();
         var hour = date.getHours();
         var greeting = 'Hi';
-        switch (hour)
+
+        if (hour < 12)
         {
-            case hour < 12:
-                greeting = 'Good morning';
-                break;
-            case hour < 18:
-                greeting = 'Good afternoon';
-                break;
-            default:
-                greeting = 'Good evening';
-                break; 
+            greeting = 'Good morning';
         }
+        else if (hour < 18)
+        {
+            greeting = 'Good afternoon';
+        }
+        else
+        {
+            greeting = 'Good evening';
+        }
+
         res.locals.greeting = greeting;
 
         // Get gravatar url
-        res.locals.gravatar = "http://gravatar.com/avatar/" + req.user.gravatar;
+        res.locals.gravatar = 'http://gravatar.com/avatar/' + req.user.gravatar;
     }
     next();
 });
@@ -116,7 +118,7 @@ app.use(function(err, req, res, next) {
 // Run App
 var server = app.listen(3000, function () {
     if (debug) {
-        var host = (server.address().address == "::") ? "localhost" : server.address().address;
+        var host = (server.address().address == '::') ? 'localhost' : server.address().address;
         var port = server.address().port;
         console.log('Listening on %s:%s', host, port);
     }
