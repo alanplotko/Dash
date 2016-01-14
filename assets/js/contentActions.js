@@ -25,3 +25,14 @@ function refresh() {
         $('#refresh').css('color', '#fff');
     });
 }
+
+$(document).ready(function() {
+    update = function() {
+        var times = $('.card.facebook p.timestamp').toArray();
+        times.forEach(function(time) {
+            $(time).hide().html(moment(new Date($(time).attr('data-timestamp')).toISOString()).fromNow()).fadeIn(1000);
+        });
+    };
+
+    setInterval(update, 600000);
+});

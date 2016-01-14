@@ -18,11 +18,13 @@ block content
                 div.card.facebook
                   div.card-content
                     a(onclick='dismiss("#{post._id}", "facebook", this)'): i.fa.fa-times.close.grey-text.darken-3
-                    span.card-title.truncate= post.title
+                    div.postInfo
+                      p.card-title.truncate= post.title
+                      p.timestamp(data-timestamp='#{post.timestamp}')= moment(new Date(post.timestamp).toISOString()).fromNow()
                     p.content= post.content
-                    p.timestamp= 'Posted ' +  moment(new Date(post.timestamp).toISOString()).fromNow()
         else
           h5.center.thin (No updates... check back later!)
 
 block additionalScripts
   script(src='/static/js/contentActions.js')
+  script(src='/calendar/moment.js')
