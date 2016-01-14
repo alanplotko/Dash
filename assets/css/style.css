@@ -72,6 +72,16 @@ nav img.avatar {
     border: 2px solid #3b5998;
 }
 
+.card.facebook .card-content:before {
+    position: absolute;
+    content: '\f082';
+    font-family: FontAwesome;
+    font-size: 44px;
+    color: #3b5998;
+    top: 13px;
+    left: 20px;
+}
+
 .card.facebook .card-content .postInfo {
     padding-left: 52px;
 }
@@ -92,14 +102,16 @@ p.timestamp {
     padding-top: 20px;
 }
 
-.card.facebook .card-content:before {
-    position: absolute;
-    content: '\f082';
-    font-family: FontAwesome;
-    font-size: 44px;
-    color: #3b5998;
-    top: 13px;
-    left: 20px;
+.card.facebook .card-image {
+    width: inherit;
+    height: 200px;
+    overflow: hidden;
+    padding: 0 20px 20px 20px;
+}
+
+.card.facebook .card-image img {
+    width: 100%;
+    border: 2px solid #444;
 }
 
 .btn.facebook {

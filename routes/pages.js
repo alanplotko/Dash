@@ -33,7 +33,7 @@ module.exports = function(app, passport) {
             else if (posts)
             {
                 return res.status(200).send({
-                    message: 'New posts have come in!',
+                    message: 'New posts! Loading them in...',
                     refresh: true
                 });
             }

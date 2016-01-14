@@ -14,10 +14,13 @@ var LOCK_TIME = 2 * 60 * 60 * 1000; // 2-hour lock
 
 // Define post fields
 var PostSchema = new Schema({
-    title: { type: String },    // Post title
-    content: { type: String },  // Post content
-    timestamp: { type: Date },  // Last updated
-    postType: { type: String }  // Optional: Type of post
+    title: { type: String },        // Post title
+    content: { type: String },      // Post content
+    timestamp: { type: Date },      // Last updated
+    permalink: { type: String },    // Link to source post
+    picture: { type: String },      // Optional: Attached picture
+    url: { type: String },          // Optional: Attached link
+    postType: { type: String },     // Optional: Type of post
 });
 
 // Define user fields
@@ -303,14 +306,28 @@ function getFacebookPosts(url, content, name, type, appSecretProofString, done) 
             if (buffer.data && buffer.data.length > 0)
             {
                 buffer.data.forEach(function(element) {
+                    var idInfo = element.id.split('_');
+                    var permalink;
+
+                    if (type === 'page')
+                    {
+                        permalink = 'https://www.facebook.com/' + idInfo[0] + '/posts/' + idInfo[1];
+                    }
+                    else
+                    {
+                        permalink = 'https://www.facebook.com/groups' + idInfo[0] + '/permalink/' + idInfo[1];
+                    }
+
                     // We have a link or media share
                     if (element.story && element.message)
                     {
                         content.push({
-                            _id: mongoose.Types.ObjectId(),
                             title: element.story,
                             content: element.message,
-                            timestamp: element.updated_time || element.created_time,
+                            timestamp: element.created_time,
+                            permalink: permalink,
+                            picture: element.full_picture || '',
+                            url: element.link || '',
                             postType: type
                         });
                     }
@@ -318,10 +335,12 @@ function getFacebookPosts(url, content, name, type, appSecretProofString, done) 
                     else if (!element.story && element.message)
                     {
                         content.push({
-                            _id: mongoose.Types.ObjectId(),
                             title: name,
                             content: element.message,
-                            timestamp: element.updated_time || element.created_time,
+                            timestamp: element.created_time,
+                            permalink: permalink,
+                            picture: element.full_picture || '',
+                            url: element.link || '',
                             postType: type
                         });
                     }
@@ -453,42 +472,56 @@ UserSchema.methods.updateContent = function(done) {
             calls.push(function(callback) {
                 var pagePosts = [];
                 var progress = 0;
-                user.facebook.pages.forEach(function(page) {
-                    var feedUrl = 'https://graph.facebook.com/v2.5/' + page.pageId + '/posts?since=' + lastUpdateTime + '&access_token=' + user.facebook.accessToken;
-                    var content = getFacebookPosts(feedUrl, [], page.name, 'page', appsecret_proof, function(err, content) {
-                        // An error occurred
-                        if (err) return callback(err);
+                if (user.facebook.pages.length > 0)
+                {
+                    user.facebook.pages.forEach(function(page) {
+                        var feedUrl = 'https://graph.facebook.com/v2.5/' + page.pageId + '/posts?fields=id,story,message,link,full_picture,created_time&since=' + lastUpdateTime + '&access_token=' + user.facebook.accessToken;
+                        var content = getFacebookPosts(feedUrl, [], page.name, 'page', appsecret_proof, function(err, content) {
+                            // An error occurred
+                            if (err) return callback(err);
 
-                        // Retrieved posts successfully
-                        Array.prototype.push.apply(pagePosts, content);
-                        progress++;
-                        if (progress == user.facebook.pages.length)
-                        {
-                            callback(null, pagePosts);
-                        }
+                            // Retrieved posts successfully
+                            Array.prototype.push.apply(pagePosts, content);
+                            progress++;
+                            if (progress == user.facebook.pages.length)
+                            {
+                                callback(null, pagePosts);
+                            }
+                        });
                     });
-                });
+                }
+                else
+                {
+                    callback(null, []);
+                }
             });
 
             // Get group posts
             calls.push(function(callback) {
                 var groupPosts = [];
                 var progress = 0;
-                user.facebook.groups.forEach(function(group) {
-                    var feedUrl = 'https://graph.facebook.com/v2.5/' + group.groupId + '/feed?since=' + lastUpdateTime + '&access_token=' + user.facebook.accessToken;
-                    var content = getFacebookPosts(feedUrl, [], group.name, 'group', appsecret_proof, function(err, content) {
-                        // An error occurred
-                        if (err) return callback(err);
+                if (user.facebook.groups.length > 0)
+                {
+                    user.facebook.groups.forEach(function(group) {
+                        var feedUrl = 'https://graph.facebook.com/v2.5/' + group.groupId + '/feed?fields=id,story,message,link,full_picture,created_time&since=' + lastUpdateTime + '&access_token=' + user.facebook.accessToken;
+                        var content = getFacebookPosts(feedUrl, [], group.name, 'group', appsecret_proof, function(err, content) {
+                            // An error occurred
+                            if (err) return callback(err);
 
-                        // Retrieved posts successfully
-                        Array.prototype.push.apply(groupPosts, content);
-                        progress++;
-                        if (progress == user.facebook.groups.length)
-                        {
-                            callback(null, groupPosts);
-                        }
+                            // Retrieved posts successfully
+                            Array.prototype.push.apply(groupPosts, content);
+                            progress++;
+                            if (progress == user.facebook.groups.length)
+                            {
+                                callback(null, groupPosts);
+                            }
+                        });
                     });
-                });
+                }
+                else
+                {
+                    callback(null, []);
+                }
             });
         }
 

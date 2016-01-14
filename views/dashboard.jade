@@ -19,9 +19,22 @@ block content
                   div.card-content
                     a(onclick='dismiss("#{post._id}", "facebook", this)'): i.fa.fa-times.close.grey-text.darken-3
                     div.postInfo
-                      p.card-title.truncate= post.title
-                      p.timestamp(data-timestamp='#{post.timestamp}')= moment(new Date(post.timestamp).toISOString()).fromNow()
+                      p.card-title.truncate= post.title                        
+                      p.timestamp(data-timestamp='#{post.timestamp}')
+                        span= moment(new Date(post.timestamp).toISOString()).fromNow()
+                        if post.permalink
+                          span &nbsp;&bull;&nbsp;
+                            a(href='#{post.permalink}') permalink
+                        if post.url
+                          span &nbsp;&bull;&nbsp;
+                            a(href='#{post.url}') shared link
                     p.content= post.content
+                  if post.picture
+                    div.card-image
+                      if post.url
+                        a(href='#{post.url}'): img(src='#{post.picture}')
+                      else
+                        img(src='#{post.picture}')
         else
           h5.center.thin (No updates... check back later!)
 

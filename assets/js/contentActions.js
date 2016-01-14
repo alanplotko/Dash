@@ -12,6 +12,7 @@ function refresh() {
     $('#refresh').attr('onclick', 'return false;');
     $('#refresh').css('color', '#ffff00');
     $.post('/refresh', function(data) {
+        console.log(data);
         Materialize.toast(data.message, 4000, '', function() {
             if (data.refresh)
             {
