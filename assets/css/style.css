@@ -16,7 +16,7 @@ body {
 }
 
 h1#heading {
-    padding: 100px 100px 50px 100px;
+    padding: 100px 0 50px 0;
 }
 
 /*================
@@ -99,19 +99,20 @@ p.timestamp {
 }
 
 .card.facebook .card-content p.content {
-    padding-top: 20px;
+    padding: 30px 0 10px 0;
 }
 
 .card.facebook .card-image {
     width: inherit;
     height: 200px;
     overflow: hidden;
-    padding: 0 20px 20px 20px;
-}
-
-.card.facebook .card-image img {
-    width: 100%;
-    border: 2px solid #444;
+    background-position: center center;
+    background-size: cover;
+    margin-left: 20px;
+    margin-right: 20px;
+    border-top: 2px solid #444;
+    border-left: 2px solid #444;
+    border-right: 2px solid #444;
 }
 
 .btn.facebook {

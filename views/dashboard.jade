@@ -14,12 +14,12 @@ block content
         if facebookPosts.length > 0
           each post in facebookPosts.reverse()
             div.row
-              div.col.s6.offset-s3
+              div.col.l6.offset-l3.s12
                 div.card.facebook
                   div.card-content
                     a(onclick='dismiss("#{post._id}", "facebook", this)'): i.fa.fa-times.close.grey-text.darken-3
                     div.postInfo
-                      p.card-title.truncate= post.title                        
+                      p.card-title= post.title                        
                       p.timestamp(data-timestamp='#{post.timestamp}')
                         span= moment(new Date(post.timestamp).toISOString()).fromNow()
                         if post.permalink
@@ -30,11 +30,11 @@ block content
                             a(href='#{post.url}', target='_blank') shared link
                     p.content= post.content
                   if post.picture
-                    div.card-image
-                      if post.url
-                        a(href='#{post.url}', target='_blank'): img(src='#{post.picture}')
-                      else
-                        img(src='#{post.picture}')
+                    if post.url
+                      a(href='#{post.url}', target='_blank')
+                        div.card-image(style='background-image: url("#{post.picture}");')
+                    else
+                      div.card-image(style='background-image: url("#{post.picture}");')
         else
           h5.center.thin (No updates... check back later!)
 
