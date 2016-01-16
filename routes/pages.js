@@ -18,7 +18,7 @@ module.exports = function(app, passport) {
         res.render('dashboard', {
             // Add other connection fields here
             connected: req.user.facebook.profileId !== undefined,
-            facebookPosts: req.user.facebook.posts
+            posts: req.user.posts
         });
     });
 
@@ -47,10 +47,10 @@ module.exports = function(app, passport) {
         });
     });
 
-    app.post('/dismiss/facebook/all', isLoggedIn, function(req, res) {
+    app.post('/dismiss/all', isLoggedIn, function(req, res) {
         User.findByIdAndUpdate(req.user._id, {
             $set: {
-                'facebook.posts': []
+                'posts': []
             }
         }, function(err, user) {
             if (err) return res.sendStatus(500);
@@ -58,10 +58,10 @@ module.exports = function(app, passport) {
         });
     });
 
-    app.post('/dismiss/facebook/:id', isLoggedIn, function(req, res) {
+    app.post('/dismiss/:id', isLoggedIn, function(req, res) {
         User.findByIdAndUpdate(req.user._id, {
             $pull: {
-                'facebook.posts': {
+                'posts': {
                     _id: req.params.id
                 }
             }
@@ -119,7 +119,7 @@ module.exports = function(app, passport) {
     });
 
     app.get('/setup/facebook/groups', isLoggedIn, function(req, res) {
-        User.setUpFacebookGroups(req.user._id, function(err, data) {
+        User.setUpFacebookGroups(req.user._id, function(err, allGroups, existingGroups) {
             // An error occurred
             if (err)
             {
@@ -127,23 +127,53 @@ module.exports = function(app, passport) {
                 res.redirect('/setup/facebook/groups');
             }
             // Found groups
-            else if (Object.keys(data).length > 0)
+            else if (Object.keys(allGroups).length > 0)
             {
+                var editingMode = false;
+
+                // Fill in checkboxes for existing groups
+                if (existingGroups.length > 0)
+                {
+                    var groupIds = [];
+                    editingMode = true;
+
+                    existingGroups.forEach(function(group) {
+                        groupIds.push(group.groupId);
+                    });
+
+                    for (var key in allGroups)
+                    {
+                        if (groupIds.indexOf(allGroups[key].id) > -1)
+                        {
+                            allGroups[key].checked = true;
+                        }
+                        else
+                        {
+                            allGroups[key].checked = false;
+                        }
+                    }
+                }
+
                 res.render('setup', {
                     message: req.flash('setupMessage'),
-                    content: data,
-                    contentName: 'groups'
+                    content: allGroups,
+                    contentName: 'groups',
+                    editingMode: editingMode
                 });
             }
             // No groups found; proceed to pages
             else
-            {;
+            {
                 res.redirect('/setup/facebook/pages');
             }
         });
     });
 
     app.post('/setup/facebook/groups', isLoggedIn, function(req, res) {
+        // Determine whether user is editing their settings
+        var editingMode = validator.escape(req.body.editingMode);
+        delete req.body.editingMode;
+        
         User.saveFacebookGroups(req.user._id, Object.keys(req.body), function(err, data) {
             // An error occurred
             if (err)
@@ -154,13 +184,17 @@ module.exports = function(app, passport) {
             // Saved groups
             else
             {
+                if (editingMode && editingMode === 'true' && !req.session.flash.connectMessage)
+                {
+                    req.flash('connectMessage', 'Your Facebook settings have been updated.');
+                }
                 res.redirect('/setup/facebook/pages');
             }
         });
     });
 
     app.get('/setup/facebook/pages', isLoggedIn, function(req, res) {
-        User.setUpFacebookPages(req.user._id, function(err, data) {
+        User.setUpFacebookPages(req.user._id, function(err, allPages, existingPages) {
             // An error occurred
             if (err)
             {
@@ -168,15 +202,41 @@ module.exports = function(app, passport) {
                 res.redirect('/setup/facebook/groups');
             }
             // Found groups
-            else if (Object.keys(data).length > 0)
+            else if (Object.keys(allPages).length > 0)
             {
+                var editingMode = false;
+
+                // Fill in checkboxes for existing groups
+                if (existingPages.length > 0)
+                {
+                    var pageIds = [];
+                    editingMode = true;
+
+                    existingPages.forEach(function(page) {
+                        pageIds.push(page.pageId);
+                    });
+
+                    for (var key in allPages)
+                    {
+                        if (pageIds.indexOf(allPages[key].id) > -1)
+                        {
+                            allPages[key].checked = true;
+                        }
+                        else
+                        {
+                            allPages[key].checked = false;
+                        }
+                    }
+                }
+
                 res.render('setup', {
                     message: req.flash('setupMessage'),
-                    content: data,
-                    contentName: 'pages'
+                    content: allPages,
+                    contentName: 'pages',
+                    editingMode: editingMode
                 });
             }
-            // No groups found; proceed to pages
+            // No pages found; proceed to connect page
             else
             {
                 res.redirect('/connect');
@@ -185,6 +245,10 @@ module.exports = function(app, passport) {
     });
 
     app.post('/setup/facebook/pages', isLoggedIn, function(req, res) {
+        // Determine whether user is editing their settings
+        var editingMode = validator.escape(req.body.editingMode);
+        delete req.body.editingMode;
+
         User.saveFacebookPages(req.user._id, Object.keys(req.body), function(err, data) {
             // An error occurred
             if (err)
@@ -195,19 +259,25 @@ module.exports = function(app, passport) {
             // Saved pages; return to connect page
             else
             {
+                if (editingMode && editingMode === 'true' && !req.session.flash.connectMessage)
+                {
+                    req.flash('connectMessage', 'Your Facebook settings have been updated.');
+                }
                 res.redirect('/connect');
             }
         });
     });
 
-    app.get('/connect/auth/facebook', passport.authenticate('facebook', { 
+    app.get('/connect/auth/facebook', isLoggedIn, passport.authenticate('facebook', { 
         scope: ['user_managed_groups', 'user_likes']
     }));
 
-    app.get('/connect/auth/facebook/callback', passport.authenticate('facebook', {
+    app.get('/connect/auth/facebook/callback', isLoggedIn, passport.authenticate('facebook', {
         failureRedirect: '/connect',
         successRedirect: '/setup/facebook/groups'
-    }));
+    }), function(req, res) {
+        req.user
+    });
 
     app.get('/connect/remove/facebook', isLoggedIn, function(req, res) {
         User.removeFacebook(req.user.id, function(err) {
@@ -270,8 +340,8 @@ module.exports = function(app, passport) {
     // Route middleware to ensure user is logged in
     function isLoggedIn(req, res, next) {
         // Proceed if user is authenticated
-        if (req.isAuthenticated())
-            return next();
+        if (req.isAuthenticated()) return next();
+
         // Otherwise, redirect to front page
         res.redirect('/');
     }
