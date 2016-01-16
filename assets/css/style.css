@@ -19,6 +19,30 @@ h1#heading {
     padding: 100px 0 50px 0;
 }
 
+::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 14px;
+    background-color: #f0f0f0;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 12px;
+    border: 4px solid rgba(255,255,255,0);
+    background-clip: content-box;
+    background-color: #A0A0A0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    border-radius: 12px;
+    border: 4px solid rgba(255,255,255,0);
+    background-clip: content-box;
+    background-color: #A0A0A0;
+}
+
+::-webkit-scrollbar-corner {
+    background-color: #e6e6e6;
+}
+
 /*================
  *  Navigation
 ==================*/
@@ -35,7 +59,8 @@ ul#nav-mobile li a {
     margin-left: 5px;
 }
 
-#user-dropdown li a {
+.dropdown-content li > a,
+.dropdown-content li > span {
     color: #1565c0; /* blue darken-3 */
 }
 
@@ -198,31 +223,6 @@ h1#errorHeading {
     -webkit-hyphens: auto;
     -moz-hyphens: auto;
     hyphens: auto;
-}
-
-#errorMessage::-webkit-scrollbar {
-    -webkit-appearance: none;
-    width: 14px;
-    _background-color: #f0f0f0;
-}
-
-#errorMessage::-webkit-scrollbar-thumb {
-    border-radius: 12px;
-    border: 4px solid rgba(255,255,255,0);
-    background-clip: content-box;
-    _background-color: #bfbfbf;
-    background-color: #A0A0A0;
-}
-
-#errorMessage::-webkit-scrollbar-thumb:hover {
-    border-radius: 12px;
-    border: 4px solid rgba(255,255,255,0);
-    background-clip: content-box;
-    background-color: #A0A0A0;
-}
-
-#errorMessage::-webkit-scrollbar-corner {
-    background-color: #e6e6e6;
 }
 
 /*================
