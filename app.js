@@ -89,8 +89,33 @@ app.use(function (req, res, next) {
     next();
 });
 
+// --------- Miscellaneous Routes & Helper Functions ---------
+
+// Route middleware to ensure user is logged in
+function isLoggedIn(req, res, next) {
+    // Proceed if user is authenticated
+    if (req.isAuthenticated()) return next();
+
+    // Otherwise, redirect to front page
+    res.redirect('/');
+}
+
 // Set up app routes
-require('./routes/pages')(app, passport);
+require('./routes/pages')(app, passport, isLoggedIn);
+require('./routes/facebook')(app, passport, isLoggedIn);
+
+/*================================================================
+ *  If the route does not exist (error 404), go to the error 
+ *  page. This route must remain as the last defined route, so
+ *  that other routes are not overridden!
+==================================================================*/
+app.all('*', function(req, res, next) {
+    var err = new Error();
+    err.status = 404;
+    err.message = 'Page Not Found';
+    err.description = 'That\'s strange... we couldn\'t find what you were looking for.<br /><br />If you\'re sure that you\'re in the right place, let the team know.<br /><br />Otherwise, if you\'re lost, you can find your way back to the front page using the button below.';
+    next(err);
+});
 
 // --------- Error handling ---------
 app.use(function(err, req, res, next) {
