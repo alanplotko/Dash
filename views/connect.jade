@@ -12,5 +12,12 @@ block content
     if (message.length > 0)
       div#formMessage.center: p #{message}
     div.col.s8.offset-s2
-      a.waves-effect.waves-light.btn.btn-front.darken-3.left(href=typeof facebook === 'undefined' ? '/connect/auth/facebook' : '/connect/remove/facebook', class=typeof facebook === 'undefined' ? 'grey' : 'facebook') Facebook
+      a.waves-effect.waves-light.btn.btn-front.darken-3.left(href=typeof facebook === 'undefined' ? '/connect/auth/facebook' : '#', class=typeof facebook === 'undefined' ? 'grey' : 'facebook dropdown-button', data-activates=typeof facebook === 'undefined' ? '' : 'facebook') Facebook
         i.fa.fa-facebook-official.left
+
+      <!-- Facebook Dropdown Structure -->
+      ul#facebook.dropdown-content
+        li: a(href='/setup/facebook/groups') Settings
+          i.material-icons.left settings
+        li: a(href='/connect/remove/facebook') Remove
+          i.material-icons.left clear
