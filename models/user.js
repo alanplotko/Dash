@@ -6,6 +6,7 @@ var bcrypt = require('bcrypt');
 var crypto = require('crypto');
 const https = require('https');
 var async = require('async');
+var moment = require('moment');
 var config = require('../config/settings').settings[process.env.NODE_ENV];
 config.connections = require('../config/settings').settings['connections'];
 var SALT_WORK_FACTOR = 10;
@@ -14,13 +15,14 @@ var LOCK_TIME = 2 * 60 * 60 * 1000; // 2-hour lock
 
 // Define post fields
 var PostSchema = new Schema({
+    connection: { type: String },   // Connection name
     title: { type: String },        // Post title
     content: { type: String },      // Post content
     timestamp: { type: Date },      // Last updated
     permalink: { type: String },    // Link to source post
-    picture: { type: String },      // Optional: Attached picture
+    picture: { type: String },      // Optional: Attached picture or video thumbnail
     url: { type: String },          // Optional: Attached link
-    postType: { type: String },     // Optional: Type of post
+    postType: { type: String },     // Optional: Type of post (e.g. group, page, video, etc.)
 });
 
 // Define user fields
@@ -37,6 +39,12 @@ var UserSchema = new Schema({
     password: { type: String, required: true },
     loginAttempts: { type: Number, required: true, default: 0 },
     lockUntil: { type: Number },
+    
+    // Posts for all content
+    posts: [PostSchema],
+
+    // Last time data pulled from connections
+    lastUpdateTime: { type: Date },
 
     // Connections
     facebook: {
@@ -52,11 +60,7 @@ var UserSchema = new Schema({
         pages: [{
             pageId: { type: String },
             name: { type: String }
-        }],
-        posts: [PostSchema],
-        
-        // Last time data pulled from Facebook
-        lastUpdateTime: { type: Date }
+        }]
     }
 });
 
@@ -155,7 +159,7 @@ UserSchema.statics.authSerializer = function(user, done) {
 
 // Deserialize function for use with passport
 UserSchema.statics.authDeserializer = function(id, done) {
-    mongoose.models['User'].findById(id, 'email displayName gravatar facebook.profileId facebook.posts', function(err, user) {
+    mongoose.models['User'].findById(id, 'email displayName gravatar facebook.profileId posts', function(err, user) {
         done(err, user);
     });
 };
@@ -281,7 +285,9 @@ function getFacebookContent(url, content, appSecretProof, done) {
             if (buffer.data && buffer.data.length > 0)
             {
                 buffer.data.forEach(function(element) {
-                    content[element.name] = element.id;
+                    content[element.name] = {
+                        'id': element.id
+                    }
                 });
             }
             if (buffer.paging && buffer.paging.next)
@@ -373,8 +379,11 @@ UserSchema.statics.setUpFacebookGroups = function(id, done) {
         var url = 'https://graph.facebook.com/v2.5/' + user.facebook.profileId + '/groups?access_token=' + user.facebook.accessToken;
 
         var content = getFacebookContent(url, {}, appsecret_proof, function(err, content) {
-            if (err) return done(err);  // An error occurred
-            return done(null, content); // Retrieved groups
+            // An error occurred
+            if (err) return done(err);
+
+            // Retrieved groups
+            return done(null, content, user.facebook.groups);
         });
     });
 };
@@ -392,8 +401,8 @@ UserSchema.statics.saveFacebookGroups = function(id, groups, done) {
 
         groups.forEach(function(group) {
             user.facebook.groups.push({
-                groupId: group.split(':')[0],
-                name: group.split(':')[1]
+                groupId: group.substring(0, group.indexOf(':')),
+                name: group.substring(group.indexOf(':') + 1)
             });
         })
 
@@ -420,8 +429,11 @@ UserSchema.statics.setUpFacebookPages = function(id, done) {
         var url = 'https://graph.facebook.com/v2.5/' + user.facebook.profileId + '/likes?access_token=' + user.facebook.accessToken;
 
         var content = getFacebookContent(url, {}, appsecret_proof, function(err, content) {
-            if (err) return done(err);  // An error occurred
-            return done(null, content); // Retrieved pages
+            // An error occurred
+            if (err) return done(err);
+
+            // Retrieved pages
+            return done(null, content, user.facebook.pages); 
         });
     });
 };
@@ -439,8 +451,8 @@ UserSchema.statics.saveFacebookPages = function(id, pages, done) {
 
         pages.forEach(function(page) {
             user.facebook.pages.push({
-                pageId: page.split(':')[0],
-                name: page.split(':')[1]
+                pageId: page.substring(0, page.indexOf(':')),
+                name: page.substring(page.indexOf(':') + 1)
             });
         })
 
@@ -456,7 +468,7 @@ UserSchema.statics.saveFacebookPages = function(id, pages, done) {
 UserSchema.methods.updateContent = function(done) {
     mongoose.models['User'].findById(this._id, function(err, user) {
         var appsecret_proof = '&appsecret_proof=' + crypto.createHmac('sha256', config.connections.facebook.clientSecret).update(user.facebook.accessToken).digest('hex');
-        var lastUpdateTime = user.facebook.lastUpdateTime;
+        var lastUpdateTime = user.lastUpdateTime ? user.lastUpdateTime : moment().add(-1, 'days').toDate();
 
         // Set up async calls
         var calls = [];
@@ -537,18 +549,18 @@ UserSchema.methods.updateContent = function(done) {
             });
 
             // Set new last update time
-            user.facebook.lastUpdateTime = results[0];
+            user.lastUpdateTime = results[0];
 
             if (results[1].length > 0)
             {
                 results[1].forEach(function(post) {
-                    user.facebook.posts.push(post);
+                    user.posts.push(post);
                     progress++;
                     if (progress == results[1].length)
                     {
                         user.save(function (err) {
                             if (err) return done(err);              // An error occurred
-                            return done(null, user.facebook.posts); // Saved posts and update time; return posts
+                            return done(null, user.posts); // Saved posts and update time; return posts
                         });
                     }
                 });
