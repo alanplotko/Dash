@@ -1,5 +1,5 @@
-function dismiss(id, connection, el) {
-    $.post('/dismiss/' + connection + '/' + id, function(data) {
+function dismiss(id, el) {
+    $.post('/dismiss/' + id, function(data) {
         var post = $(el).closest('div.row');
         $.when(post.fadeOut()).then(function() {
             post.remove().delay(1000);
@@ -12,7 +12,6 @@ function refresh() {
     $('#refresh').attr('onclick', 'return false;');
     $('#refresh').css('color', '#ffff00');
     $.post('/refresh', function(data) {
-        console.log(data);
         Materialize.toast(data.message, 4000, '', function() {
             if (data.refresh)
             {
