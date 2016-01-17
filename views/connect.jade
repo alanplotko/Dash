@@ -21,5 +21,19 @@ block content
       ul#facebook.dropdown-content
         li: a(href='/setup/facebook/groups') Settings
           i.material-icons.left settings
+        li: a.modal-trigger(href='#', onclick='resetModal("facebook"); return false;') Reset
+          i.material-icons.left sync
         li: a(href='/connect/remove/facebook') Remove
           i.material-icons.left clear
+
+      <!-- Reset Modal Structure -->
+      div#resetModal.modal
+        div.modal-content
+          h4#resetTitle
+          p#resetDescription
+        div.modal-footer
+          a.modal-action.modal-close.waves-effect.waves-blue.btn-flat Cancel
+          a#resetConfirm.modal-action.modal-close.waves-effect.waves-blue.btn-flat(href='#', onclick='reset("facebook"); return false;')
+
+block additionalScripts
+  script(src='/static/js/connectActions.js')

@@ -3,7 +3,7 @@ function dismiss(id, el) {
         var post = $(el).closest('div.row');
         $.when(post.fadeOut()).then(function() {
             post.remove().delay(1000);
-            if (id === 'all') window.location.reload();
+            if (id === 'all' || $('.card').length == 0) window.location.reload();
         });
     });
 }
