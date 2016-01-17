@@ -17,7 +17,7 @@ block content
               div.col.l6.offset-l3.s12
                 div.card.facebook
                   div.card-content
-                    a(onclick='dismiss("#{post._id}", "facebook", this)'): i.fa.fa-times.close.grey-text.darken-3
+                    a(onclick='dismiss("#{post._id}", this)'): i.fa.fa-times.close.grey-text.darken-3
                     div.postInfo
                       p.card-title= post.title                        
                       p.timestamp(data-timestamp='#{post.timestamp}')
