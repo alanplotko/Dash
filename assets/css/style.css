@@ -144,6 +144,10 @@ p.timestamp {
     background-color: #3b5998;
 }
 
+.btn.youtube {
+    background-color: #cc181e;
+}
+
 .truncate {
     width: 100%;
     white-space: nowrap;
@@ -173,6 +177,10 @@ ul#settings.tabs .tab a:hover {
     font-size: 16px;
     height: 40px;
     line-height: 42px;
+}
+
+#connections a {
+    margin-right: 30px;
 }
 
 /*================
