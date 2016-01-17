@@ -1,7 +1,7 @@
 // --------- Dependencies ---------
-var User = require('../models/user');
+var User = require.main.require('./models/user');
 var validator = require('validator');
-require('../config/custom-validation.js')(validator);
+require.main.require('./config/custom-validation.js')(validator);
 
 module.exports = function(app, passport, isLoggedIn) {
 
@@ -12,11 +12,42 @@ module.exports = function(app, passport, isLoggedIn) {
     });
 
     // --------- User Dashboard ---------
-     app.get('/dashboard', isLoggedIn, function(req, res) {
+    app.get('/dashboard', isLoggedIn, function(req, res) {
         res.render('dashboard', {
             // Add other connection fields here
             connected: req.user.facebook.profileId !== undefined,
             posts: req.user.posts
+        });
+    });
+
+    app.post('/reset/:id', isLoggedIn, function(req, res) {
+        var connectionName = req.params.id;
+        var connectionNameProper = connectionName.charAt(0).toUpperCase() + connectionName.slice(1);
+        var connectionUpdateTime = 'lastUpdateTime.' + connectionName;
+
+        var pullQuery = {}, unsetQuery = {};
+        pullQuery['connection'] = connectionName;
+        unsetQuery[connectionUpdateTime] = 1;
+
+        User.findByIdAndUpdate(req.user._id, {
+            $pull: {
+                posts: pullQuery
+            },
+            $unset: unsetQuery
+        }, function(err, user) {
+            if (err)
+            {
+                return res.status(500).send({
+                    message: 'Encountered an error. Please try again in a few minutes.'
+                });
+            }
+            else
+            {
+                return res.status(200).send({
+                    message: 'Successfully reset ' + connectionNameProper + ' connection. Refreshing...',
+                    refresh: true
+                });
+            }
         });
     });
 
@@ -154,4 +185,5 @@ module.exports = function(app, passport, isLoggedIn) {
         failureRedirect : '/register',
         failureFlash : true
     }));
+
 };

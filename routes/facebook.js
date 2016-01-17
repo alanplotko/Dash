@@ -1,7 +1,7 @@
 // --------- Dependencies ---------
-var User = require('../models/user');
+var User = require.main.require('./models/user');
 var validator = require('validator');
-require('../config/custom-validation.js')(validator);
+require.main.require('./config/custom-validation.js')(validator);
 
 module.exports = function(app, passport, isLoggedIn) {
 
