@@ -1,7 +1,8 @@
 // --------- Environment Setup ---------
 process.env.NODE_ENV = (process.argv[2] == 'dev' || process.argv[2] == 'development') ? 'dev' : 'prod';
 var debug = (process.env.NODE_ENV == 'dev');
-var config = require('./config/settings').settings[process.env.NODE_ENV];
+var config = require('./config/settings')[process.env.NODE_ENV];
+config.connections = require('./config/settings')['connections'];
 
 // --------- Dependencies ---------
 var express = require('express');
@@ -15,7 +16,10 @@ var passport = require('passport');
 var flash = require('connect-flash');
 var mongoose = require('mongoose');
 require('express-mongoose');
-var User = require('./models/user');
+
+// Require models
+require('./models/post');
+require('./models/user');
 
 // --------- Support bodies ---------
 app.use(bodyParser.json());
@@ -103,6 +107,7 @@ function isLoggedIn(req, res, next) {
 // Set up app routes
 require('./routes/pages')(app, passport, isLoggedIn);
 require('./routes/facebook')(app, passport, isLoggedIn);
+//require('./routes/youtube')(app, passport, isLoggedIn);
 
 /*================================================================
  *  If the route does not exist (error 404), go to the error 

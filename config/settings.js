@@ -1,5 +1,5 @@
 // Define variables for development and production environments
-module.exports.settings = {
+var settings = {
     'connections': {
         'facebook': {
             'clientID': process.env.DASH_FACEBOOK_APP_ID,
@@ -13,4 +13,6 @@ module.exports.settings = {
     'prod': {
         'MONGO_URI': process.env.DASH_MONGODB_URL
     }
-}
+};
+
+module.exports = settings;
