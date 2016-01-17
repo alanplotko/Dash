@@ -169,6 +169,18 @@ ul#settings.tabs .tab a:hover {
 }
 
 /*================
+ *  Modals
+==================*/
+
+.modal .modal-content {
+    padding: 50px 50px 20px 50px;
+}
+
+.modal .modal-content p {
+    font-size: 18px;
+}
+
+/*================
  *  Buttons
 ==================*/
 
@@ -181,6 +193,10 @@ ul#settings.tabs .tab a:hover {
 
 #connections a {
     margin-right: 30px;
+}
+
+.waves-effect.waves-blue .waves-ripple {
+    background-color: rgba(21, 101, 192, 0.65);
 }
 
 /*================
