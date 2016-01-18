@@ -1,15 +1,16 @@
+// --------- Environment Setup ---------
+var config = require.main.require('./config/settings')[process.env.NODE_ENV];
+config.connections = require.main.require('./config/settings')['connections'];
+
 // --------- Dependencies ---------
 var LocalStrategy = require('passport-local').Strategy;
 var FacebookStrategy = require('passport-facebook').Strategy;
 var refresh = require('passport-oauth2-refresh');
-var User = require('../models/user');
+var User = require.main.require('./models/user');
 var validator = require('validator');
-require('../config/custom-validation.js')(validator);
+require.main.require('./config/custom-validation.js')(validator);
 var xss = require('xss');
 var crypto = require('crypto');
-var debug = (process.env.NODE_ENV == 'dev');
-var config = require('../config/settings').settings[process.env.NODE_ENV];
-config.connections = require('../config/settings').settings['connections'];
 
 module.exports = function(passport) {
 
@@ -44,27 +45,13 @@ module.exports = function(passport) {
             if (reason !== null)
             {
                 var reasons = User.failedLogin;
-                if (debug) var logFlag = false;
 
                 switch (reason)
                 {
                     case reasons.NOT_FOUND:
-                        if (debug)
-                        {
-                            console.log('DEBUG: NOT_FOUND');
-                            logFlag = true;
-                        }
                     case reasons.PASSWORD_INCORRECT:
-                        if (debug && !logFlag)
-                        {
-                            console.log('DEBUG: PASSWORD_INCORRECT');
-                        }
                         return done(null, false, req.flash('loginMessage', 'Error: The email address or password is incorrect.'));
                     case reasons.MAX_ATTEMPTS:
-                        if (debug)
-                        {
-                            console.log('DEBUG: MAX_ATTEMPTS');
-                        }
                         // To Do: Send email about account being locked
                         return done(null, false, req.flash('loginMessage', 'Error: The account is temporarily locked.'));
                 }
