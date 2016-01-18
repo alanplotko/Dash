@@ -41,6 +41,7 @@
     "passport-local": "^1.0.0",
     "passport-local-mongoose": "^3.1.0",
     "passport-oauth2-refresh": "^1.0.0",
+    "passport-youtube-v3": "^2.0.0",
     "validator": "^4.4.0",
     "xss": "^0.2.10"
   }

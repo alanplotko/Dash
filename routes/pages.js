@@ -22,11 +22,11 @@ module.exports = function(app, passport, isLoggedIn) {
 
     app.post('/reset/:id', isLoggedIn, function(req, res) {
         var connectionName = req.params.id;
-        var connectionNameProper = connectionName.charAt(0).toUpperCase() + connectionName.slice(1);
-        var connectionUpdateTime = 'lastUpdateTime.' + connectionName;
+        var connectionNameLower = connectionName.toLowerCase();
+        var connectionUpdateTime = 'lastUpdateTime.' + connectionNameLower;
 
         var pullQuery = {}, unsetQuery = {};
-        pullQuery['connection'] = connectionName;
+        pullQuery['connection'] = connectionNameLower;
         unsetQuery[connectionUpdateTime] = 1;
 
         User.findByIdAndUpdate(req.user._id, {
@@ -44,7 +44,7 @@ module.exports = function(app, passport, isLoggedIn) {
             else
             {
                 return res.status(200).send({
-                    message: 'Successfully reset ' + connectionNameProper + ' connection. Refreshing...',
+                    message: 'Successfully reset ' + connectionName + ' connection. Refreshing...',
                     refresh: true
                 });
             }
@@ -143,7 +143,8 @@ module.exports = function(app, passport, isLoggedIn) {
     app.get('/connect', isLoggedIn, function(req, res) {
         res.render('connect', {
             message: req.flash('connectMessage'),
-            facebook: req.user.facebook.profileId
+            facebook: req.user.facebook.profileId,
+            youtube: req.user.youtube.profileId
         });
     });
 

@@ -4,6 +4,10 @@ var settings = {
         'facebook': {
             'clientID': process.env.DASH_FACEBOOK_APP_ID,
             'clientSecret': process.env.DASH_FACEBOOK_APP_SECRET
+        },
+        'youtube': {
+            'clientID': process.env.DASH_YOUTUBE_APP_ID,
+            'clientSecret': process.env.DASH_YOUTUBE_APP_SECRET
         }
     },
     'dev': {

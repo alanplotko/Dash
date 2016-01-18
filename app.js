@@ -107,7 +107,7 @@ function isLoggedIn(req, res, next) {
 // Set up app routes
 require('./routes/pages')(app, passport, isLoggedIn);
 require('./routes/facebook')(app, passport, isLoggedIn);
-//require('./routes/youtube')(app, passport, isLoggedIn);
+require('./routes/youtube')(app, passport, isLoggedIn);
 
 /*================================================================
  *  If the route does not exist (error 404), go to the error 

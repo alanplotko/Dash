@@ -43,6 +43,15 @@ h1#heading {
     background-color: #e6e6e6;
 }
 
+#contentLoader {
+    margin: 0;
+    background-color: #d0e0f2;
+}
+
+#contentLoader .indeterminate {
+    background-color: #1565c0; /* blue darken-3 */
+}
+
 /*================
  *  Navigation
 ==================*/
@@ -138,6 +147,11 @@ p.timestamp {
     border-top: 2px solid #444;
     border-left: 2px solid #444;
     border-right: 2px solid #444;
+}
+
+.btn.facebook,
+.btn.youtube {
+    width: 170px;
 }
 
 .btn.facebook {

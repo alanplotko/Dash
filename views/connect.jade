@@ -21,9 +21,16 @@ block content
       ul#facebook.dropdown-content
         li: a(href='/setup/facebook/groups') Settings
           i.material-icons.left settings
-        li: a.modal-trigger(href='#', onclick='resetModal("facebook"); return false;') Reset
+        li: a.modal-trigger(href='#', onclick='resetModal("Facebook"); return false;') Reset
           i.material-icons.left sync
         li: a(href='/connect/remove/facebook') Remove
+          i.material-icons.left clear
+
+      <!-- YouTube Dropdown Structure -->
+      ul#youtube.dropdown-content
+        li: a.modal-trigger(href='#', onclick='resetModal("YouTube"); return false;') Reset
+          i.material-icons.left sync
+        li: a(href='/connect/remove/youtube') Remove
           i.material-icons.left clear
 
       <!-- Reset Modal Structure -->
@@ -33,7 +40,7 @@ block content
           p#resetDescription
         div.modal-footer
           a.modal-action.modal-close.waves-effect.waves-blue.btn-flat Cancel
-          a#resetConfirm.modal-action.modal-close.waves-effect.waves-blue.btn-flat(href='#', onclick='reset("facebook"); return false;')
+          a#resetConfirm.modal-action.modal-close.waves-effect.waves-blue.btn-flat(href='#', onclick='')
 
 block additionalScripts
   script(src='/static/js/connectActions.js')

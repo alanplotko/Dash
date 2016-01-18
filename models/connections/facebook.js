@@ -4,7 +4,6 @@ config.connections = require.main.require('./config/settings')['connections'];
 
 // --------- Dependencies ---------
 var mongoose = require('mongoose');
-var async = require('async');
 var moment = require('moment');
 var crypto = require('crypto');
 const https = require('https');
@@ -15,7 +14,7 @@ module.exports = function(UserSchema) {
      * Facebook Connection
     ==========================*/
 
-    // Check if user has existing Facbeook connection
+    // Check if user has existing Facebook connection
     UserSchema.virtual('hasFacebook').get(function() {
         return !!(this.facebook.profileId);
     });
@@ -248,116 +247,74 @@ module.exports = function(UserSchema) {
         });
     };
 
-    // Update content
-    UserSchema.methods.updateContent = function(done) {
-        mongoose.models['User'].findById(this._id, function(err, user) {
-            var appsecret_proof = '&appsecret_proof=' + crypto.createHmac('sha256', config.connections.facebook.clientSecret).update(user.facebook.accessToken).digest('hex');
-            var lastUpdateTime = user.lastUpdateTime.facebook ? user.lastUpdateTime.facebook : moment().add(-1, 'days').toDate();
+    // Update Facebook
+    UserSchema.methods.updateFacebook = function(calls) {
+        var user = this;
 
-            // Set up async calls
-            var calls = [];
+        // Set up call for update time
+        calls['facebookUpdateTime'] = function(callback) {
+            callback(null, Date.now());
+        };
 
-            // Set up call for update time
-            calls.push(function(callback) {
-                callback(null, Date.now());
-            });
+        var appsecret_proof = '&appsecret_proof=' + crypto.createHmac('sha256', config.connections.facebook.clientSecret).update(user.facebook.accessToken).digest('hex');
+        var lastUpdateTime = user.lastUpdateTime.facebook ? user.lastUpdateTime.facebook : moment().add(-1, 'days').toDate();
 
-            if (user.hasFacebook)
+        // Get page posts
+        calls['facebookPages'] = function(callback) {
+            var pagePosts = [];
+            var progress = 0;
+            if (user.facebook.pages.length > 0)
             {
-                // Get page posts
-                calls.push(function(callback) {
-                    var pagePosts = [];
-                    var progress = 0;
-                    if (user.facebook.pages.length > 0)
-                    {
-                        user.facebook.pages.forEach(function(page) {
-                            var feedUrl = 'https://graph.facebook.com/v2.5/' + page.pageId + '/posts?fields=id,story,message,link,full_picture,created_time&since=' + lastUpdateTime + '&access_token=' + user.facebook.accessToken;
-                            var content = getFacebookPosts(feedUrl, [], page.name, 'page', appsecret_proof, function(err, content) {
-                                // An error occurred
-                                if (err) return callback(err);
+                user.facebook.pages.forEach(function(page) {
+                    var feedUrl = 'https://graph.facebook.com/v2.5/' + page.pageId + '/posts?fields=id,story,message,link,full_picture,created_time&since=' + lastUpdateTime + '&access_token=' + user.facebook.accessToken;
+                    var content = getFacebookPosts(feedUrl, [], page.name, 'page', appsecret_proof, function(err, content) {
+                        // An error occurred
+                        if (err) return callback(err);
 
-                                // Retrieved posts successfully
-                                Array.prototype.push.apply(pagePosts, content);
-                                progress++;
-                                if (progress == user.facebook.pages.length)
-                                {
-                                    callback(null, pagePosts);
-                                }
-                            });
-                        });
-                    }
-                    else
-                    {
-                        callback(null, []);
-                    }
-                });
-
-                // Get group posts
-                calls.push(function(callback) {
-                    var groupPosts = [];
-                    var progress = 0;
-                    if (user.facebook.groups.length > 0)
-                    {
-                        user.facebook.groups.forEach(function(group) {
-                            var feedUrl = 'https://graph.facebook.com/v2.5/' + group.groupId + '/feed?fields=id,story,message,link,full_picture,created_time&since=' + lastUpdateTime + '&access_token=' + user.facebook.accessToken;
-                            var content = getFacebookPosts(feedUrl, [], group.name, 'group', appsecret_proof, function(err, content) {
-                                // An error occurred
-                                if (err) return callback(err);
-
-                                // Retrieved posts successfully
-                                Array.prototype.push.apply(groupPosts, content);
-                                progress++;
-                                if (progress == user.facebook.groups.length)
-                                {
-                                    callback(null, groupPosts);
-                                }
-                            });
-                        });
-                    }
-                    else
-                    {
-                        callback(null, []);
-                    }
-                });
-            }
-
-            async.parallel(calls, function(err, results) {
-                if (err) return done(err);
-
-                var progress = 0;
-
-                // Group posts together and sort by timestamp
-                Array.prototype.push.apply(results[1], results[2]);
-                results[1].sort(function(a, b) {
-                    return new Date(a.timestamp) - new Date(b.timestamp)
-                });
-
-                // Set new last update time
-                user.lastUpdateTime.facebook = results[0];
-
-                if (results[1].length > 0)
-                {
-                    results[1].forEach(function(post) {
-                        user.posts.push(post);
+                        // Retrieved posts successfully
+                        Array.prototype.push.apply(pagePosts, content);
                         progress++;
-                        if (progress == results[1].length)
+                        if (progress == user.facebook.pages.length)
                         {
-                            user.save(function (err) {
-                                if (err) return done(err);              // An error occurred
-                                return done(null, user.posts); // Saved posts and update time; return posts
-                            });
+                            callback(null, pagePosts);
                         }
                     });
-                }
-                else
-                {
-                    // No new posts, set new update time
-                    user.save(function (err) {
-                        if (err) return done(err);  // An error occurred
-                        return done(null, null);    // Saved update time
+                });
+            }
+            else
+            {
+                callback(null, []);
+            }
+        };
+
+        // Get group posts
+        calls['facebookGroups'] = function(callback) {
+            var groupPosts = [];
+            var progress = 0;
+            if (user.facebook.groups.length > 0)
+            {
+                user.facebook.groups.forEach(function(group) {
+                    var feedUrl = 'https://graph.facebook.com/v2.5/' + group.groupId + '/feed?fields=id,story,message,link,full_picture,created_time&since=' + lastUpdateTime + '&access_token=' + user.facebook.accessToken;
+                    var content = getFacebookPosts(feedUrl, [], group.name, 'group', appsecret_proof, function(err, content) {
+                        // An error occurred
+                        if (err) return callback(err);
+
+                        // Retrieved posts successfully
+                        Array.prototype.push.apply(groupPosts, content);
+                        progress++;
+                        if (progress == user.facebook.groups.length)
+                        {
+                            callback(null, groupPosts);
+                        }
                     });
-                }
-            });
-        });
+                });
+            }
+            else
+            {
+                callback(null, []);
+            }
+        };
+
+        return calls;
     };
 };

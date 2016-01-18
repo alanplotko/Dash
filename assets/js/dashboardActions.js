@@ -11,18 +11,22 @@ function dismiss(id, el) {
 function refresh() {
     $('#refresh').attr('onclick', 'return false;');
     $('#refresh').css('color', '#ffff00');
+    $('<div id="contentLoader" class="progress"><div class="indeterminate"></div></div>').insertAfter('nav');
     $.post('/refresh', function(data) {
+        $('#contentLoader').fadeOut();
         Materialize.toast(data.message, 4000, '', function() {
             if (data.refresh)
             {
                 window.location.reload();
             }
+            $('#refresh').attr('onclick', 'refresh(); return false;').css('color', '#fff');
         });
     }).fail(function(data) {
-        Materialize.toast(data.responseJSON.message, 4000);
-    }).always(function(data) {
-        $('#refresh').attr('onclick', 'refresh(); return false;');
-        $('#refresh').css('color', '#fff');
+        Materialize.toast(data.responseJSON.message, 4000, '', function() {
+            $('#contentLoader').fadeOut(function() {
+                $('#refresh').attr('onclick', 'refresh(); return false;').css('color', '#fff');
+            });
+        });
     });
 }
 

@@ -41,7 +41,7 @@ module.exports = function(app, passport, isLoggedIn) {
                     }
                 }
 
-                res.render('setup', {
+                res.render('facebook-setup', {
                     message: req.flash('setupMessage'),
                     content: allGroups,
                     contentName: 'groups',
@@ -116,7 +116,7 @@ module.exports = function(app, passport, isLoggedIn) {
                     }
                 }
 
-                res.render('setup', {
+                res.render('facebook-setup', {
                     message: req.flash('setupMessage'),
                     content: allPages,
                     contentName: 'pages',
@@ -162,9 +162,7 @@ module.exports = function(app, passport, isLoggedIn) {
     app.get('/connect/auth/facebook/callback', isLoggedIn, passport.authenticate('facebook', {
         failureRedirect: '/connect',
         successRedirect: '/setup/facebook/groups'
-    }), function(req, res) {
-        req.user
-    });
+    }));
 
     app.get('/connect/remove/facebook', isLoggedIn, function(req, res) {
         User.removeFacebook(req.user.id, function(err) {

@@ -5,6 +5,7 @@ config.connections = require.main.require('./config/settings')['connections'];
 // --------- Dependencies ---------
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+var async = require('async');
 var PostSchema = mongoose.model('Post').schema;
 var passportLocalMongoose = require('passport-local-mongoose');
 var bcrypt = require('bcrypt');
@@ -34,7 +35,8 @@ var UserSchema = new Schema({
 
     // Last time data pulled from connections
     lastUpdateTime: { 
-        facebook: Date 
+        facebook: Date,
+        youtube: Date
     },
 
     // Connections
@@ -52,6 +54,11 @@ var UserSchema = new Schema({
             pageId: { type: String },
             name: { type: String }
         }]
+    },
+    youtube: {
+        // Identifiers & Tokens
+        profileId: { type: String, index: { unique: true } },
+        accessToken: { type: String }
     }
 });
 
@@ -141,7 +148,7 @@ UserSchema.statics.authSerializer = function(user, done) {
 
 // Deserialize function for use with passport
 UserSchema.statics.authDeserializer = function(id, done) {
-    mongoose.models['User'].findById(id, 'email displayName gravatar facebook.profileId posts', function(err, user) {
+    mongoose.models['User'].findById(id, 'email displayName gravatar posts facebook.profileId youtube.profileId', function(err, user) {
         done(err, user);
     });
 };
@@ -212,6 +219,76 @@ UserSchema.statics.updateUser = function(id, settings, done) {
 =========================*/
 
 require('./connections/facebook')(UserSchema);
+require('./connections/youtube')(UserSchema);
+
+// Update content
+UserSchema.methods.updateContent = function(done) {
+    mongoose.models['User'].findById(this._id, function(err, user) {
+        // Set up async calls
+        var calls = {};
+
+        if (user.hasFacebook)
+        {
+            calls = user.updateFacebook(calls, user);
+        }
+        if (user.hasYouTube)
+        {
+            calls = user.updateYouTube(calls, user);
+        }
+
+        async.parallel(calls, function(err, results) {
+            if (err) return done(err);
+
+            var progress = 0;
+            var newPosts = [];
+
+            if (user.hasFacebook)
+            {
+                Array.prototype.push.apply(newPosts, results.facebookPages);
+                Array.prototype.push.apply(newPosts, results.facebookGroups);
+
+                // Set new last update time
+                user.lastUpdateTime.facebook = results.facebookUpdateTime;
+            }
+
+            if (user.hasYouTube)
+            {
+                Array.prototype.push.apply(newPosts, results.youtubeVideos);
+
+                // Set new last update time
+                user.lastUpdateTime.youtube = results.youtubeUpdateTime;
+            }
+            
+            // Sort posts by timestamp
+            newPosts.sort(function(a, b) {
+                return new Date(a.timestamp) - new Date(b.timestamp)
+            });
+
+            if (newPosts.length > 0)
+            {
+                newPosts.forEach(function(post) {
+                    user.posts.push(post);
+                    progress++;
+                    if (progress == newPosts.length)
+                    {
+                        user.save(function (err) {
+                            if (err) return done(err);      // An error occurred
+                            return done(null, user.posts);  // Saved posts and update times; return posts
+                        });
+                    }
+                });
+            }
+            else
+            {
+                // No new posts, set new update time
+                user.save(function (err) {
+                    if (err) return done(err);  // An error occurred
+                    return done(null, null);    // Saved update time
+                });
+            }
+        });
+    });
+};
 
 // Set up passport local strategy with mongoose
 UserSchema.plugin(passportLocalMongoose, {

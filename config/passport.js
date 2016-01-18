@@ -5,6 +5,7 @@ config.connections = require.main.require('./config/settings')['connections'];
 // --------- Dependencies ---------
 var LocalStrategy = require('passport-local').Strategy;
 var FacebookStrategy = require('passport-facebook').Strategy;
+var YoutubeV3Strategy = require('passport-youtube-v3').Strategy
 var refresh = require('passport-oauth2-refresh');
 var User = require.main.require('./models/user');
 var validator = require('validator');
@@ -123,15 +124,10 @@ module.exports = function(passport) {
         passReqToCallback: true
     },
     function(req, accessToken, refreshToken, profile, done) {
-        // Set update date as yesterday
-        var date = new Date();
-        date.setDate(date.getDate() - 1);
-
         // Set up connection
         connection = {
             profileId: profile.id,
-            accessToken: accessToken,
-            lastUpdateTime: date
+            accessToken: accessToken
         };
 
         process.nextTick(function() {
@@ -146,5 +142,32 @@ module.exports = function(passport) {
     });
     passport.use(fbStrategy);
     refresh.use(fbStrategy);
+
+    // Define YouTube strategy for passport
+    var ytStrategy = new YoutubeV3Strategy({
+        clientID: config.connections.youtube.clientID,
+        clientSecret: config.connections.youtube.clientSecret,
+        callbackURL: config.url + '/connect/auth/youtube/callback',
+        passReqToCallback: true
+    },
+    function(req, accessToken, refreshToken, profile, done) {
+        // Set up connection
+        connection = {
+            profileId: profile.id,
+            accessToken: accessToken
+        };
+
+        process.nextTick(function() {
+            User.addYouTube(req.user.id, connection, function(err, user) {
+                // An error occurred
+                if (err) return done(null, false, req.flash('connectMessage', err.toString()));
+
+                // Connection added successfully
+                if (connection) return done(null, user, req.flash('connectMessage', 'You are now connected with YouTube.'));
+            });
+        });
+    });
+    passport.use(ytStrategy);
+    refresh.use(ytStrategy);
 
 };
