@@ -60,11 +60,66 @@ module.exports = function(UserSchema) {
 
             // Save changes
             user.save(function (err) {
-                if (err) return done(err);  // An error occurredz
+                if (err) return done(err);  // An error occurred
                 return done(null, user);    // Removed connection
             });
         });
     };
+
+    // Get YouTube subscriptions
+    function getYouTubeContent(url, content, name, type, done) {
+        https.get(url + appSecretProofString, (res) => {
+            var buffer = '';
+            res.on('data', (d) => { buffer += d; });
+            res.on('end', (d) => {
+                buffer = JSON.parse(buffer);
+                if (buffer.data && buffer.data.length > 0)
+                {
+                    buffer.data.forEach(function(element) {
+                        var idInfo = element.id.split('_');
+                        var permalink;
+
+                        if (type === 'page')
+                        {
+                            permalink = 'https://www.facebook.com/' + idInfo[0] + '/posts/' + idInfo[1];
+                        }
+                        else
+                        {
+                            permalink = 'https://www.facebook.com/groups' + idInfo[0] + '/permalink/' + idInfo[1];
+                        }
+
+                        if (element.message)
+                        {
+                            if (element.story && element.story.indexOf(name) > -1)
+                            {
+                                element.story = element.story.replace(name, '').trim().replace(/[.?!,:;]$/g, '');
+                            }
+
+                            content.push({
+                                connection: 'facebook',
+                                title: name,
+                                actionDescription: element.story || '',
+                                content: element.message,
+                                timestamp: element.created_time,
+                                permalink: permalink,
+                                picture: element.full_picture || '',
+                                url: element.link || '',
+                                postType: type
+                            });
+                        }
+                    });
+                }
+                if (buffer.paging && buffer.paging.next)
+                {
+                    getFacebookPosts(buffer.paging.next, content, name, type, appSecretProofString, done);
+                }
+                else
+                {
+                    done(null, content);
+                }
+            });
+        }).on('error', (err) => { done(err); });
+    }
 
     // Get YouTube updates
     UserSchema.methods.updateYouTube = function(calls) {

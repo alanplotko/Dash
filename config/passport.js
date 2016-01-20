@@ -127,7 +127,8 @@ module.exports = function(passport) {
         // Set up connection
         connection = {
             profileId: profile.id,
-            accessToken: accessToken
+            accessToken: accessToken,
+            refreshToken: refreshToken
         };
 
         process.nextTick(function() {
@@ -154,7 +155,8 @@ module.exports = function(passport) {
         // Set up connection
         connection = {
             profileId: profile.id,
-            accessToken: accessToken
+            accessToken: accessToken,
+            refreshToken: refreshToken
         };
 
         process.nextTick(function() {
@@ -169,5 +171,4 @@ module.exports = function(passport) {
     });
     passport.use(ytStrategy);
     refresh.use(ytStrategy);
-
 };
