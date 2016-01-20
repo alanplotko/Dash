@@ -5,6 +5,15 @@ require.main.require('./config/custom-validation.js')(validator);
 
 module.exports = function(app, passport, isLoggedIn) {
 
+    app.get('/connect/auth/facebook', isLoggedIn, passport.authenticate('facebook', { 
+        scope: ['user_managed_groups', 'user_likes']
+    }));
+
+    app.get('/connect/auth/facebook/callback', isLoggedIn, passport.authenticate('facebook', {
+        failureRedirect: '/connect',
+        successRedirect: '/setup/facebook/groups'
+    }));
+
     app.get('/setup/facebook/groups', isLoggedIn, function(req, res) {
         User.setUpFacebookGroups(req.user._id, function(err, allGroups, existingGroups) {
             // An error occurred
@@ -154,15 +163,6 @@ module.exports = function(app, passport, isLoggedIn) {
             }
         });
     });
-
-    app.get('/connect/auth/facebook', isLoggedIn, passport.authenticate('facebook', { 
-        scope: ['user_managed_groups', 'user_likes']
-    }));
-
-    app.get('/connect/auth/facebook/callback', isLoggedIn, passport.authenticate('facebook', {
-        failureRedirect: '/connect',
-        successRedirect: '/setup/facebook/groups'
-    }));
 
     app.get('/connect/remove/facebook', isLoggedIn, function(req, res) {
         User.removeFacebook(req.user.id, function(err) {

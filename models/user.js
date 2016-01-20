@@ -44,7 +44,8 @@ var UserSchema = new Schema({
         // Identifiers & Tokens
         profileId: { type: String, index: { unique: true } },
         accessToken: { type: String },
-        
+        refreshToken: { type: String },
+
         // Facebook Content
         groups: [{
             groupId: { type: String },
@@ -58,7 +59,15 @@ var UserSchema = new Schema({
     youtube: {
         // Identifiers & Tokens
         profileId: { type: String, index: { unique: true } },
-        accessToken: { type: String }
+        accessToken: { type: String },
+        refreshToken: { type: String },
+
+        // YouTube Content
+        subscriptions: [{
+            subId: { type: String },
+            name: { type: String },
+            avatar: { type: String }
+        }]
     }
 });
 
