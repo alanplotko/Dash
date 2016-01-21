@@ -18,12 +18,13 @@ block content
         input(type='hidden', id='editingMode', name='editingMode', value='#{editingMode}')
         each val, index in content
           div.col.s3
-            div.card.medium.youtubeSub
-              div.card-image
-                img(src='#{val.thumbnail}')
-                span.card-title.fadeTitle= index
-              div.card-content.enableScroll
-                p= val.description
+            div.card.youtubeSub
+              a(href='https://www.youtube.com/channel/'+val.id, target='_blank')
+                div.card-image
+                  img(src='#{val.thumbnail}')
+                  span.card-title.fadeTitle= index
+              div.card-content
+                p.contain-text= val.description
               div.card-action
                 input(type='checkbox', id=val.id, name=val.id+';'+index+';'+val.thumbnail checked=val.checked)
                 label(for=val.id)= 'Receive updates'
