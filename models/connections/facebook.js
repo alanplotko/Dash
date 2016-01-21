@@ -87,8 +87,15 @@ module.exports = function(UserSchema) {
             if (body.data && body.data.length > 0)
             {
                 body.data.forEach(function(element) {
+                    var coverImage = undefined;
+                    if (element.cover) coverImage = element.cover.source;
+
                     content[element.name] = {
-                        'id': element.id
+                        'id': element.id,
+                        'cover': coverImage || '/static/img/no-image.png',
+                        'description': element.description || 'No description provided.',
+                        'is_verified': element.is_verified || false,
+                        'link': element.link || 'https://www.facebook.com/groups/' + element.id
                     }
                 });
             }
@@ -174,7 +181,7 @@ module.exports = function(UserSchema) {
             if (!user) return done(null, null, new Error('An error occurred. Please try again in a few minutes.'));
 
             var appSecretProof = '&appsecret_proof=' + crypto.createHmac('sha256', config.connections.facebook.clientSecret).update(user.facebook.accessToken).digest('hex');
-            var url = 'https://graph.facebook.com/v2.5/' + user.facebook.profileId + '/groups?access_token=' + user.facebook.accessToken;
+            var url = 'https://graph.facebook.com/v2.5/' + user.facebook.profileId + '/groups?fields=cover,name,id,description,is_verified&access_token=' + user.facebook.accessToken;
 
             var content = getFacebookContent(url, {}, appSecretProof, function(err, content) {
                 // Error while retrieving content
@@ -226,7 +233,7 @@ module.exports = function(UserSchema) {
             if (!user) return done(null, null, new Error('An error occurred. Please try again in a few minutes.'));
 
             var appSecretProof = '&appsecret_proof=' + crypto.createHmac('sha256', config.connections.facebook.clientSecret).update(user.facebook.accessToken).digest('hex');
-            var url = 'https://graph.facebook.com/v2.5/' + user.facebook.profileId + '/likes?access_token=' + user.facebook.accessToken;
+            var url = 'https://graph.facebook.com/v2.5/' + user.facebook.profileId + '/likes?fields=cover,name,id,description,link,is_verified&access_token=' + user.facebook.accessToken;
 
             var content = getFacebookContent(url, {}, appSecretProof, function(err, content) {
                 // Error while retrieving content

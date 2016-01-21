@@ -23,7 +23,7 @@ module.exports = function(app, passport, isLoggedIn) {
                 res.redirect('/setup/youtube/subscriptions');
             }
             // Found subscriptions
-            else if (Object.keys(allSubscriptions).length > 0)
+            else if (allSubscriptions && Object.keys(allSubscriptions).length > 0)
             {
                 var editingMode = false;
 
@@ -60,6 +60,7 @@ module.exports = function(app, passport, isLoggedIn) {
             // No subscriptions found; proceed to pages
             else
             {
+                req.flash('connectMessage', 'Error: Either no YouTube subscriptions were found or a connection was not possible. Please try again in a few minutes.');
                 res.redirect('/connect');
             }
         });

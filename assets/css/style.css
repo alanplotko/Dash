@@ -173,17 +173,23 @@ p.timestamp {
  *  Setup Pages
 ===================*/
 
-/* --------- YouTube Setup --------- */
+/* --------- YouTube Setup, Facebook Setup --------- */
 
-.card.youtubeSub .fadeTitle {
+.card.youtubeSub .fadeTitle,
+.card.facebookItem .fadeTitle {
     padding: 5px 10px!important;
     background-color: rgba(0, 0, 0, 0.75);
 }
 
-.card.youtubeSub .card-content {
+.card.youtubeSub .card-content,
+.card.facebookItem .card-content {
     height: 200px;
     max-height: 200px;
     overflow-y: auto;
+}
+
+.card.facebookItem .card-image img {
+    height: 200px;
 }
 
 .contain-text {
