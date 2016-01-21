@@ -169,6 +169,23 @@ p.timestamp {
     text-overflow: ellipsis;
 }
 
+/*=================
+ *  Setup Pages
+===================*/
+
+/* --------- YouTube Setup --------- */
+
+.card.youtubeSub .fadeTitle {
+    padding: 5px 10px!important;
+    background-color: rgba(0, 0, 0, 0.75);
+}
+
+.card.small.youtubeSub .card-content.enableScroll,
+.card.medium.youtubeSub .card-content.enableScroll,
+.card.large.youtubeSub .card-content.enableScroll {
+    overflow-y: scroll;
+}
+
 /*================
  *  Settings
 ==================*/

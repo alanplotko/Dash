@@ -15,19 +15,19 @@ module.exports = function(app, passport, isLoggedIn) {
     }));
 
     app.get('/setup/youtube/subscriptions', isLoggedIn, function(req, res) {
-        User.setUpFacebookGroups(req.user._id, function(err, allSubscriptions, existingSubscriptions) {
+        User.setUpYouTubeSubs(req.user._id, function(err, allSubscriptions, existingSubscriptions) {
             // An error occurred
             if (err)
             {
                 req.flash('setupMessage', err.toString());
                 res.redirect('/setup/youtube/subscriptions');
             }
-            // Found groups
+            // Found subscriptions
             else if (Object.keys(allSubscriptions).length > 0)
             {
                 var editingMode = false;
 
-                // Fill in checkboxes for existing groups
+                // Fill in checkboxes for existing subscriptions
                 if (existingSubscriptions.length > 0)
                 {
                     var subIds = [];
@@ -39,7 +39,7 @@ module.exports = function(app, passport, isLoggedIn) {
 
                     for (var key in allSubscriptions)
                     {
-                        if (groupIds.indexOf(allSubscriptions[key].id) > -1)
+                        if (subIds.indexOf(allSubscriptions[key].id) > -1)
                         {
                             allSubscriptions[key].checked = true;
                         }
@@ -57,9 +57,33 @@ module.exports = function(app, passport, isLoggedIn) {
                     editingMode: editingMode
                 });
             }
-            // No groups found; proceed to pages
+            // No subscriptions found; proceed to pages
             else
             {
+                res.redirect('/connect');
+            }
+        });
+    });
+
+    app.post('/setup/youtube/subscriptions', isLoggedIn, function(req, res) {
+        // Determine whether user is editing their settings
+        var editingMode = validator.escape(req.body.editingMode);
+        delete req.body.editingMode;
+        
+        User.saveYouTubeSubs(req.user._id, Object.keys(req.body), function(err, data) {
+            // An error occurred
+            if (err)
+            {
+                req.flash('setupMessage', err.toString());
+                res.redirect('/setup/youtube/subscriptions');
+            }
+            // Saved subscriptions; return to connect page
+            else
+            {
+                if (editingMode && editingMode === 'true' && !req.session.flash.connectMessage)
+                {
+                    req.flash('connectMessage', 'Your YouTube settings have been updated.');
+                }
                 res.redirect('/connect');
             }
         });

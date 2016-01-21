@@ -4,10 +4,9 @@ config.connections = require.main.require('./config/settings')['connections'];
 
 // --------- Dependencies ---------
 var mongoose = require('mongoose');
-var async = require('async');
 var moment = require('moment');
-var crypto = require('crypto');
-const https = require('https');
+var request = require('request');
+var refresh = require('passport-oauth2-refresh');
 
 module.exports = function(UserSchema) {
 
@@ -20,276 +19,186 @@ module.exports = function(UserSchema) {
         return !!(this.youtube.profileId);
     });
 
-    // Add YouTube id and access token to user
+    // Populate user's YouTube identifiers and tokens
     UserSchema.statics.addYouTube = function(id, connection, done) {
         mongoose.models['User'].findById(id, function(err, user) {
-            // An error occurred
+            // Database Error
             if (err) return done(err);
 
-            // User can't be found; unexpected error
+            // Unexpected Error: User not found
             if (!user) return done(null, null, new Error('An error occurred. Please try again in a few minutes.'));
 
-            // Connection already exists
+            // Defined Error: Connection already exists
             if(user.hasYouTube) return done(new Error('You\'re already connected with YouTube.'));
 
-            // Add YouTube connection
+            // Save connection information to account
             user.youtube = connection;
-
-            // Save changes
             user.save(function (err) {
-                if (err) return done(err);  // An error occurred
-                return done(null, user);    // Added connection
+                // Database Error
+                if (err) return done(err);
+
+                // Success: Added YouTube connection
+                return done(null, user);
             });
         });
     };
 
-    // Remove YouTube
+    // Remove user's YouTube identifiers and tokens; deauthorize Dash app from account
     UserSchema.statics.removeYouTube = function(id, done) {
         mongoose.models['User'].findById(id, function(err, user) {
-            // An error occurred
+            // Database Error
             if (err) return done(err);
 
-            // User can't be found; unexpected error
+            // Unexpected Error: User not found
             if (!user) return done(new Error('An error occurred. Please try again in a few minutes.'));
 
-            // Connection already exists
+            // Defined Error: Connection does not exist
             if(!user.hasYouTube) return done(new Error('You\'re not connected with YouTube.'));
             
-            // Remove YouTube connection and update time
-            user.youtube = user.lastUpdateTime.youtube = undefined;
+            var url = 'https://accounts.google.com/o/oauth2/revoke?token=' + user.youtube.accessToken;
 
-            // Save changes
-            user.save(function (err) {
-                if (err) return done(err);  // An error occurred
-                return done(null, user);    // Removed connection
+            request({ 'url': url, 'json': true }, function(err, res, body) {
+                // Request Error
+                if (err) return done(err);
+
+                // Success: Deauthorized Dash app or Dash app already deauthorized
+                if (res.statusCode == 200 || (res.statusCode == 400 && body.error === 'invalid_token'))
+                {
+                    // Remove relevant YouTube data
+                    user.youtube = user.lastUpdateTime.youtube = undefined;
+                    user.save(function(err) {
+                        // Database Error
+                        if (err) return done(err);
+
+                        // Success: Removed YouTube connection
+                        return done(null, user);
+                    });
+                }
             });
         });
     };
 
     // Get YouTube subscriptions
-    function getYouTubeContent(url, content, name, type, done) {
-        https.get(url + appSecretProofString, (res) => {
-            var buffer = '';
-            res.on('data', (d) => { buffer += d; });
-            res.on('end', (d) => {
-                buffer = JSON.parse(buffer);
-                if (buffer.data && buffer.data.length > 0)
+    function getYouTubeContent(url, content, done) {
+        request({ 'url': url, 'json': true }, function(err, res, body) {
+            // Request Error
+            if (err) return done(err);
+            
+            // Access Token Error
+            if (body.error && body.error.code == 401 && body.error.message === 'Invalid Credentials') return done(new Error('Invalid Credentials'));
+
+            if (body.items && body.items.length > 0)
+            {
+                body.items.forEach(function(element) {
+                    content[element.snippet.title] = {
+                        'id': element.snippet.resourceId.channelId,
+                        'thumbnail': element.snippet.thumbnails.high.url || element.snippet.thumbnails.default.url,
+                        'description': element.snippet.description || 'No description provided.'
+                    }
+                });
+            }
+
+            // Go to next page
+            if (body.nextPageToken)
+            {
+                getYouTubeContent(url + '&pageToken=' + body.nextPageToken, content, done);
+            }
+            // Success: Retrieved all available content
+            else
+            {
+                return done(null, content);
+            }
+        });
+    }
+
+    // --------- Setup: YouTube subscriptions ---------
+
+    // Retrieve YouTube subscriptions to display on setup page
+    UserSchema.statics.setUpYouTubeSubs = function(id, done) {
+        mongoose.models['User'].findById(id, function(err, user) {
+            // Database Error
+            if (err) return done(err);
+
+            // Unexpected Error: User not found
+            if (!user) return done(null, null, new Error('An error occurred. Please try again in a few minutes.'));
+
+            var url = 'https://www.googleapis.com/youtube/v3/subscriptions?part=snippet&maxResults=50&mine=true&order=alphabetical&access_token=' + user.youtube.accessToken;
+            var retries = 2;
+            var content = function() {
+                if (retries > 0)
                 {
-                    buffer.data.forEach(function(element) {
-                        var idInfo = element.id.split('_');
-                        var permalink;
-
-                        if (type === 'page')
+                    retries--;
+                    getYouTubeContent(url, {}, function(err, content) {
+                        // Error while retrieving content
+                        if (err)
                         {
-                            permalink = 'https://www.facebook.com/' + idInfo[0] + '/posts/' + idInfo[1];
-                        }
-                        else
-                        {
-                            permalink = 'https://www.facebook.com/groups' + idInfo[0] + '/permalink/' + idInfo[1];
-                        }
-
-                        if (element.message)
-                        {
-                            if (element.story && element.story.indexOf(name) > -1)
+                            if (err.message === 'Invalid Credentials')
                             {
-                                element.story = element.story.replace(name, '').trim().replace(/[.?!,:;]$/g, '');
-                            }
+                                refresh.requestNewAccessToken('youtube', user.youtube.refreshToken, function(err, accessToken, refreshToken) {
+                                    user.youtube.accessToken = accessToken;
+                                    user.save(function(err) {
+                                        // Database Error
+                                        if (err) return done(err);
 
-                            content.push({
-                                connection: 'facebook',
-                                title: name,
-                                actionDescription: element.story || '',
-                                content: element.message,
-                                timestamp: element.created_time,
-                                permalink: permalink,
-                                picture: element.full_picture || '',
-                                url: element.link || '',
-                                postType: type
-                            });
+                                        // Success: Saved new YouTube access token
+                                        content();
+                                    });
+                                });
+                            }
+                            else
+                            {
+                                return done(err);
+                            }
                         }
+
+                        // Success: Retrieved subscriptions
+                        return done(null, content, user.youtube.subscriptions);
                     });
-                }
-                if (buffer.paging && buffer.paging.next)
-                {
-                    getFacebookPosts(buffer.paging.next, content, name, type, appSecretProofString, done);
                 }
                 else
                 {
-                    done(null, content);
+                    return done(new Error('An error occurred while refreshing credentials. Please try again in a few minutes.'));
                 }
+            };
+
+            content();
+        });
+    };
+
+    // Save selected subscriptions to user's account
+    UserSchema.statics.saveYouTubeSubs = function(id, subscriptions, done) {
+        mongoose.models['User'].findById(id, function(err, user) {
+            // Database Error
+            if (err) return done(err);
+
+            // Unexpected Error: User not found
+            if (!user) return done(null, null, new Error('An error occurred. Please try again in a few minutes.'));
+
+            user.youtube.subscriptions = [];
+
+            subscriptions.forEach(function(sub) {
+                var info = sub.split(';');
+                user.youtube.subscriptions.push({
+                    subId: info[0],
+                    name: info[1],
+                    thumbnail: info[2]
+                });
+            })
+
+            user.save(function (err) {
+                // Database Error
+                if (err) return done(err);
+
+                // Success: Saved selected YouTube subscriptions
+                return done(null, user);
             });
-        }).on('error', (err) => { done(err); });
-    }
+        });
+    };
 
     // Get YouTube updates
     UserSchema.methods.updateYouTube = function(calls) {
         // To do: get subscriber updates
         return calls;
     };
-    /*function getYouTubeContent(url, content, name, type, appSecretProofString, done) {
-        https.get(url + appSecretProofString, (res) => {
-            var buffer = '';
-            res.on('data', (d) => { buffer += d; });
-            res.on('end', (d) => {
-                buffer = JSON.parse(buffer);
-                if (buffer.data && buffer.data.length > 0)
-                {
-                    buffer.data.forEach(function(element) {
-                        var idInfo = element.id.split('_');
-                        var permalink;
 
-                        if (type === 'page')
-                        {
-                            permalink = 'https://www.facebook.com/' + idInfo[0] + '/posts/' + idInfo[1];
-                        }
-                        else
-                        {
-                            permalink = 'https://www.facebook.com/groups' + idInfo[0] + '/permalink/' + idInfo[1];
-                        }
-
-                        if (element.message)
-                        {
-                            if (element.story && element.story.indexOf(name) > -1)
-                            {
-                                element.story = element.story.replace(name, '').trim().replace(/[.?!,:;]$/g, '');
-                            }
-
-                            content.push({
-                                connection: 'facebook',
-                                title: name,
-                                actionDescription: element.story || '',
-                                content: element.message,
-                                timestamp: element.created_time,
-                                permalink: permalink,
-                                picture: element.full_picture || '',
-                                url: element.link || '',
-                                postType: type
-                            });
-                        }
-                    });
-                }
-                if (buffer.paging && buffer.paging.next)
-                {
-                    getYouTubeContent(buffer.paging.next, content, name, type, appSecretProofString, done);
-                }
-                else
-                {
-                    done(null, content);
-                }
-            });
-        }).on('error', (err) => { done(err); });
-    }
-    
-    // Update content
-    UserSchema.methods.updateContent = function(done) {
-        mongoose.models['User'].findById(this._id, function(err, user) {
-            var appsecret_proof = '&appsecret_proof=' + crypto.createHmac('sha256', config.connections.facebook.clientSecret).update(user.facebook.accessToken).digest('hex');
-            var lastUpdateTime = user.lastUpdateTime.facebook ? user.lastUpdateTime.facebook : moment().add(-1, 'days').toDate();
-
-            // Set up async calls
-            var calls = [];
-
-            // Set up call for update time
-            calls.push(function(callback) {
-                callback(null, Date.now());
-            });
-
-            if (user.hasFacebook)
-            {
-                // Get page posts
-                calls.push(function(callback) {
-                    var pagePosts = [];
-                    var progress = 0;
-                    if (user.facebook.pages.length > 0)
-                    {
-                        user.facebook.pages.forEach(function(page) {
-                            var feedUrl = 'https://graph.facebook.com/v2.5/' + page.pageId + '/posts?fields=id,story,message,link,full_picture,created_time&since=' + lastUpdateTime + '&access_token=' + user.facebook.accessToken;
-                            var content = getFacebookPosts(feedUrl, [], page.name, 'page', appsecret_proof, function(err, content) {
-                                // An error occurred
-                                if (err) return callback(err);
-
-                                // Retrieved posts successfully
-                                Array.prototype.push.apply(pagePosts, content);
-                                progress++;
-                                if (progress == user.facebook.pages.length)
-                                {
-                                    callback(null, pagePosts);
-                                }
-                            });
-                        });
-                    }
-                    else
-                    {
-                        callback(null, []);
-                    }
-                });
-
-                // Get group posts
-                calls.push(function(callback) {
-                    var groupPosts = [];
-                    var progress = 0;
-                    if (user.facebook.groups.length > 0)
-                    {
-                        user.facebook.groups.forEach(function(group) {
-                            var feedUrl = 'https://graph.facebook.com/v2.5/' + group.groupId + '/feed?fields=id,story,message,link,full_picture,created_time&since=' + lastUpdateTime + '&access_token=' + user.facebook.accessToken;
-                            var content = getFacebookPosts(feedUrl, [], group.name, 'group', appsecret_proof, function(err, content) {
-                                // An error occurred
-                                if (err) return callback(err);
-
-                                // Retrieved posts successfully
-                                Array.prototype.push.apply(groupPosts, content);
-                                progress++;
-                                if (progress == user.facebook.groups.length)
-                                {
-                                    callback(null, groupPosts);
-                                }
-                            });
-                        });
-                    }
-                    else
-                    {
-                        callback(null, []);
-                    }
-                });
-            }
-
-            async.parallel(calls, function(err, results) {
-                if (err) return done(err);
-
-                var progress = 0;
-
-                // Group posts together and sort by timestamp
-                Array.prototype.push.apply(results[1], results[2]);
-                results[1].sort(function(a, b) {
-                    return new Date(a.timestamp) - new Date(b.timestamp)
-                });
-
-                // Set new last update time
-                user.lastUpdateTime.facebook = results[0];
-
-                if (results[1].length > 0)
-                {
-                    results[1].forEach(function(post) {
-                        user.posts.push(post);
-                        progress++;
-                        if (progress == results[1].length)
-                        {
-                            user.save(function (err) {
-                                if (err) return done(err);              // An error occurred
-                                return done(null, user.posts); // Saved posts and update time; return posts
-                            });
-                        }
-                    });
-                }
-                else
-                {
-                    // No new posts, set new update time
-                    user.save(function (err) {
-                        if (err) return done(err);  // An error occurred
-                        return done(null, null);    // Saved update time
-                    });
-                }
-            });
-        });
-    };*/
 };

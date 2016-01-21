@@ -17,10 +17,16 @@ block content
       form#setupForm.col.s8.offset-s2(action='/setup/youtube/#{contentName}', method='POST')
         input(type='hidden', id='editingMode', name='editingMode', value='#{editingMode}')
         each val, index in content
-          div.col.s4
-            p
-              input(type='checkbox', id=val.id, name=val.id+':'+index, checked=val.checked)
-              label(for=val.id)= index
+          div.col.s3
+            div.card.medium.youtubeSub
+              div.card-image
+                img(src='#{val.thumbnail}')
+                span.card-title.fadeTitle= index
+              div.card-content.enableScroll
+                p= val.description
+              div.card-action
+                input(type='checkbox', id=val.id, name=val.id+';'+index+';'+val.thumbnail checked=val.checked)
+                label(for=val.id)= 'Receive updates'
         div.row
           div#controls.input-field.col.s12.blue-text.text-darken-3.topPadding
             button.waves-effect.waves-dark.btn.btn-front.blue.darken-3.right(type='submit') Submit #{ucfirst(contentName)}

@@ -66,7 +66,7 @@ var UserSchema = new Schema({
         subscriptions: [{
             subId: { type: String },
             name: { type: String },
-            avatar: { type: String }
+            thumbnail: { type: String }
         }]
     }
 });

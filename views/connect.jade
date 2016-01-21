@@ -28,6 +28,8 @@ block content
 
       <!-- YouTube Dropdown Structure -->
       ul#youtube.dropdown-content
+        li: a(href='/setup/youtube/subscriptions') Settings
+          i.material-icons.left settings
         li: a.modal-trigger(href='#', onclick='resetModal("YouTube"); return false;') Reset
           i.material-icons.left sync
         li: a(href='/connect/remove/youtube') Remove
