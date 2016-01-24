@@ -14,7 +14,7 @@ Dash highlights the information and news you care about. Rather than opening up 
 
 Optional: If you plan on making changes to the files, consider using nodemon. Nodemon restarts your app whenever it detects changes. To use nodemon, run the app with `nodemon app.js dev` instead.
 
-Note: There are environment variables in the settings.js file. You will need to create your own test apps to fill in the missing information for connections. You will also need to create your own MongoDB database and update the MongoDB details accordingly.
+Note: There are environment variables in the settings.js file. You will need to create your own test apps to fill in the missing information for connections. You will also need to create your own MongoDB database and update the MongoDB details accordingly. If you'd like to add a new connection, take a look at the existing connections as an example. You'll need to add the associated tokens and secrets in the settings.js file.
 
 # Contributing
 
