@@ -79,8 +79,8 @@ module.exports = function(UserSchema) {
     };
 
     // Get YouTube subscriptions
-    function getYouTubeContent(url, content, done) {
-        request({ 'url': url, 'json': true }, function(err, res, body) {
+    function getYouTubeContent(url, nextPageToken, content, done) {
+        request({ 'url': url + nextPageToken, 'json': true }, function(err, res, body) {
             // Request Error
             if (err) return done(err);
             
@@ -101,7 +101,7 @@ module.exports = function(UserSchema) {
             // Go to next page
             if (body.nextPageToken)
             {
-                getYouTubeContent(url + '&pageToken=' + body.nextPageToken, content, done);
+                getYouTubeContent(url, '&pageToken=' + body.nextPageToken, content, done);
             }
             // Success: Retrieved all available content
             else
@@ -128,7 +128,7 @@ module.exports = function(UserSchema) {
                 if (retries > 0)
                 {
                     retries--;
-                    getYouTubeContent(url, {}, function(err, content) {
+                    getYouTubeContent(url, '', {}, function(err, content) {
                         // Error while retrieving content
                         if (err)
                         {
