@@ -12,6 +12,9 @@ block content
     div.col.s8.offset-s2
       h5 Select the #{contentName} you'd like to be updated on below!
 
+      input(id='selectAll', type='checkbox')
+      label(for='selectAll') Select All Subscriptions
+
   div.row
     div.col.s12
       form#setupForm.col.s8.offset-s2(action='/setup/youtube/#{contentName}', method='POST')
@@ -32,3 +35,6 @@ block content
           div#controls.input-field.col.s12.blue-text.text-darken-3.topPadding
             button.waves-effect.waves-dark.btn.btn-front.blue.darken-3.right(type='submit') Submit #{ucfirst(contentName)}
               i.material-icons.right send
+
+block additionalScripts
+  script(src='/static/js/select.js')
