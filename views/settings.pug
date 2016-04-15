@@ -1,4 +1,4 @@
-extends ./layout.jade
+extends ./layout.pug
 
 block content
   div.row
@@ -14,7 +14,7 @@ block content
     div.row
       div.input-field.col.s8.offset-s2
         i.material-icons.prefix assignment_ind
-        input#displayName.border-blue(value='#{locals.displayName}', type='text', name='displayName')
+        input#displayName.border-blue(value=locals.displayName, type='text', name='displayName')
         label(for='displayName') Display Name
     div.row
       div#controls.input-field.col.s8.offset-s2.blue-text.text-darken-3

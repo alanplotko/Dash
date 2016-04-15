@@ -1,4 +1,4 @@
-extends ./layout.jade
+extends ./layout.pug
 
 block additionalStyles
   link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css')
@@ -17,26 +17,26 @@ block content
               div.col.l6.offset-l3.s12
                 div.card.facebook
                   div.card-content
-                    a(onclick='dismiss("#{post._id}", this)'): i.fa.fa-times.close.grey-text.darken-3
+                    a(onclick='dismiss("'+post._id+'", this)'): i.fa.fa-times.close.grey-text.darken-3
                     div.postInfo
                       p.card-title= post.title                        
-                      p.timestamp.truncate(data-timestamp='#{post.timestamp}')
+                      p.timestamp.truncate(data-timestamp=post.timestamp)
                         span= moment(new Date(post.timestamp).toISOString()).fromNow()
                         if post.permalink
                           span &nbsp;&bull;&nbsp;
-                            a(href='#{post.permalink}', target='_blank') permalink
+                            a(href=post.permalink, target='_blank') permalink
                         if post.url
                           span &nbsp;&bull;&nbsp;
-                            a(href='#{post.url}', target='_blank') shared link
+                            a(href=post.url, target='_blank') shared link
                         if post.actionDescription
-                          span(title='#{post.actionDescription}') &nbsp;&bull;&nbsp; #{post.actionDescription}
+                          span(title=post.actionDescription) &nbsp;&bull;&nbsp; #{post.actionDescription}
                     p.content= post.content
                   if post.picture
                     if post.url
-                      a(href='#{post.url}', target='_blank')
-                        div.card-image(style='background-image: url("#{post.picture}");')
+                      a(href=post.url, target='_blank')
+                        div.card-image(style='background-image: url("'+post.picture+'");')
                     else
-                      div.card-image(style='background-image: url("#{post.picture}");')
+                      div.card-image(style='background-image: url("'+post.picture+'");')
         else
           h5.center.thin (No updates... check back later!)
 

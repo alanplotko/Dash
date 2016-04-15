@@ -1,4 +1,4 @@
-extends ./layout.jade
+extends ./layout.pug
 
 block additionalStyles
   link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css')
@@ -17,14 +17,14 @@ block content
 
   div.row
     div.col.s12
-      form#setupForm.col.s8.offset-s2(action='/setup/facebook/#{contentName}', method='POST')
-        input(type='hidden', id='editingMode', name='editingMode', value='#{editingMode}')
+      form#setupForm.col.s8.offset-s2(action='/setup/facebook/'+contentName, method='POST')
+        input(type='hidden', id='editingMode', name='editingMode', value=editingMode)
         each val, index in content
           div.col.s4
             div.card.facebookItem
               a(href=val.link, target='_blank')
                 div.card-image
-                  img(src='#{val.cover}')
+                  img(src=val.cover)
                   if val.is_verified
                     div.card-title.fadeTitle.valign-wrapper
                       i.fa.fa-check-circle.left.valign.tooltipped(data-position='top', data-tooltip='Facebook Verified Page')

@@ -48,16 +48,16 @@ app.use(flash());
 
 // --------- Assets Setup ---------
 app.use('/static', express.static(path.join(__dirname, '/assets')));
-app.use('/font', express.static(path.join(__dirname, '/node_modules/materialize-css/dist/font')));
-app.set('view engine', 'jade');
+app.use('/fonts', express.static(path.join(__dirname, '/node_modules/materialize-css/dist/font')));
+app.set('view engine', 'pug');
 require('./routes/assets')(app);
 
-// Capitalize Jade variables
+// Capitalize Pug variables
 app.locals.ucfirst = function(value) {
     return value.charAt(0).toUpperCase() + value.slice(1);
 };
 
-// Use moment library on Jade variables
+// Use moment library on Pug variables
 app.locals.moment = require('moment');
 
 // Pass login status for use in views
