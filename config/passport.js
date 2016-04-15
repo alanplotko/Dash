@@ -1,11 +1,11 @@
 // --------- Environment Setup ---------
 var config = require.main.require('./config/settings')[process.env.NODE_ENV];
-config.connections = require.main.require('./config/settings')['connections'];
+config.connections = require.main.require('./config/settings').connections;
 
 // --------- Dependencies ---------
 var LocalStrategy = require('passport-local').Strategy;
 var FacebookStrategy = require('passport-facebook').Strategy;
-var YoutubeV3Strategy = require('passport-youtube-v3').Strategy
+var YoutubeV3Strategy = require('passport-youtube-v3').Strategy;
 var refresh = require('passport-oauth2-refresh');
 var User = require.main.require('./models/user');
 var validator = require('validator');
@@ -29,7 +29,7 @@ module.exports = function(passport) {
         // Clean and verify form input
         var email = validator.trim(emailAddress);
 
-        if (!validator.isEmail(email) || email.length == 0 || password.length == 0)
+        if (!validator.isEmail(email) || email.length === 0 || password.length === 0)
         {
             return done(null, false, req.flash('loginMessage', 'An error occurred. Please check if you\'ve typed in your credentials.'));
         }
@@ -81,7 +81,7 @@ module.exports = function(passport) {
             displayName = 'New_User';
         }
 
-        if (!validator.isEmail(email) || email.length == 0 || password.length == 0)
+        if (!validator.isEmail(email) || email.length === 0 || password.length === 0)
         {
             return done(null, false, req.flash('registerMessage', 'An error occurred. Please check if you\'ve typed in your credentials.'));
         }

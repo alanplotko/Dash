@@ -1,6 +1,6 @@
 // --------- Environment Setup ---------
 var config = require.main.require('./config/settings')[process.env.NODE_ENV];
-config.connections = require.main.require('./config/settings')['connections'];
+config.connections = require.main.require('./config/settings').connections;
 
 // --------- Dependencies ---------
 var mongoose = require('mongoose');
@@ -85,7 +85,7 @@ UserSchema.pre('save', function(next) {
     var user = this;
 
     // Check if the provided email address already exists
-    mongoose.models['User'].findOne({ email: user.email }, function (err, user) {
+    mongoose.models.User.findOne({ email: user.email }, function (err, user) {
         // An error occurred
         if (err) return next(new Error('An error occurred. Please try again in a few minutes.'));
 
@@ -157,7 +157,7 @@ UserSchema.statics.authSerializer = function(user, done) {
 
 // Deserialize function for use with passport
 UserSchema.statics.authDeserializer = function(id, done) {
-    mongoose.models['User'].findById(id, 'email displayName gravatar posts facebook.profileId youtube.profileId', function(err, user) {
+    mongoose.models.User.findById(id, 'email displayName gravatar posts facebook.profileId youtube.profileId', function(err, user) {
         done(err, user);
     });
 };
@@ -217,7 +217,7 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
 
 // Update user settings
 UserSchema.statics.updateUser = function(id, settings, done) {
-    mongoose.models['User'].update({ _id: id }, settings, function(err, numAffected) {
+    mongoose.models.User.update({ _id: id }, settings, function(err, numAffected) {
         if (err) return done(err);  // An error occurred
         return done(null, true);    // Update succeeded
     });
@@ -232,7 +232,7 @@ require('./connections/youtube')(UserSchema);
 
 // Update content
 UserSchema.methods.updateContent = function(done) {
-    mongoose.models['User'].findById(this._id, function(err, user) {
+    mongoose.models.User.findById(this._id, function(err, user) {
         // Set up async calls
         var calls = {};
 
@@ -270,7 +270,7 @@ UserSchema.methods.updateContent = function(done) {
             
             // Sort posts by timestamp
             newPosts.sort(function(a, b) {
-                return new Date(a.timestamp) - new Date(b.timestamp)
+                return new Date(a.timestamp) - new Date(b.timestamp);
             });
 
             if (newPosts.length > 0)

@@ -1,8 +1,10 @@
+/*jshint esversion: 6 */
+
 // --------- Environment Setup ---------
 process.env.NODE_ENV = (process.argv[2] == 'dev' || process.argv[2] == 'development') ? 'dev' : 'prod';
 var debug = (process.env.NODE_ENV == 'dev');
 var config = require('./config/settings')[process.env.NODE_ENV];
-config.connections = require('./config/settings')['connections'];
+config.connections = require('./config/settings').connections;
 
 // --------- Dependencies ---------
 var express = require('express');

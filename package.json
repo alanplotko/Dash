@@ -4,7 +4,7 @@
   "description": "Dash is a central dashboard for keeping you updated with the information you care about.",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jshint config/ models/ routes/ app.js"
   },
   "repository": {
     "type": "git",
@@ -44,5 +44,8 @@
     "request": "^2.67.0",
     "validator": "^4.4.0",
     "xss": "^0.2.10"
+  },
+  "devDependencies": {
+    "jshint": "^2.9.1"
   }
 }

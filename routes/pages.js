@@ -26,7 +26,7 @@ module.exports = function(app, passport, isLoggedIn) {
         var connectionUpdateTime = 'lastUpdateTime.' + connectionNameLower;
 
         var pullQuery = {}, unsetQuery = {};
-        pullQuery['connection'] = connectionNameLower;
+        pullQuery.connection = connectionNameLower;
         unsetQuery[connectionUpdateTime] = 1;
 
         User.findByIdAndUpdate(req.user._id, {

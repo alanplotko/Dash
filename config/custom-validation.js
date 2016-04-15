@@ -8,4 +8,4 @@ module.exports = function(validator) {
     validator.extend('isValidDisplayName', function (str) {
         return /^[a-zA-Z\d\ _-]{3,15}$/.test(str);
     });
-}
+};

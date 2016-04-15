@@ -103,4 +103,4 @@ module.exports = function(app, passport, isLoggedIn) {
             res.redirect('/connect');
         });
     });
-}
+};

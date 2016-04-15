@@ -1,6 +1,6 @@
 // --------- Environment Setup ---------
 var config = require.main.require('./config/settings')[process.env.NODE_ENV];
-config.connections = require.main.require('./config/settings')['connections'];
+config.connections = require.main.require('./config/settings').connections;
 
 // --------- Dependencies ---------
 var mongoose = require('mongoose');
@@ -21,7 +21,7 @@ module.exports = function(UserSchema) {
 
     // Populate user's YouTube identifiers and tokens
     UserSchema.statics.addYouTube = function(id, connection, done) {
-        mongoose.models['User'].findById(id, function(err, user) {
+        mongoose.models.User.findById(id, function(err, user) {
             // Database Error
             if (err) return done(err);
 
@@ -45,7 +45,7 @@ module.exports = function(UserSchema) {
 
     // Remove user's YouTube identifiers and tokens; deauthorize Dash app from account
     UserSchema.statics.removeYouTube = function(id, done) {
-        mongoose.models['User'].findById(id, function(err, user) {
+        mongoose.models.User.findById(id, function(err, user) {
             // Database Error
             if (err) return done(err);
 
@@ -94,7 +94,7 @@ module.exports = function(UserSchema) {
                         'id': element.snippet.resourceId.channelId,
                         'thumbnail': element.snippet.thumbnails.high.url || element.snippet.thumbnails.default.url,
                         'description': element.snippet.description || 'No description provided.'
-                    }
+                    };
                 });
             }
 
@@ -115,7 +115,7 @@ module.exports = function(UserSchema) {
 
     // Retrieve YouTube subscriptions to display on setup page
     UserSchema.statics.setUpYouTubeSubs = function(id, done) {
-        mongoose.models['User'].findById(id, function(err, user) {
+        mongoose.models.User.findById(id, function(err, user) {
             // Database Error
             if (err) return done(err);
 
@@ -167,7 +167,7 @@ module.exports = function(UserSchema) {
 
     // Save selected subscriptions to user's account
     UserSchema.statics.saveYouTubeSubs = function(id, subscriptions, done) {
-        mongoose.models['User'].findById(id, function(err, user) {
+        mongoose.models.User.findById(id, function(err, user) {
             // Database Error
             if (err) return done(err);
 
@@ -183,7 +183,7 @@ module.exports = function(UserSchema) {
                     name: info[1],
                     thumbnail: info[2]
                 });
-            })
+            });
 
             user.save(function (err) {
                 // Database Error

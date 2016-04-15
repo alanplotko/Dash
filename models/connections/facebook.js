@@ -1,6 +1,6 @@
 // --------- Environment Setup ---------
 var config = require.main.require('./config/settings')[process.env.NODE_ENV];
-config.connections = require.main.require('./config/settings')['connections'];
+config.connections = require.main.require('./config/settings').connections;
 
 // --------- Dependencies ---------
 var mongoose = require('mongoose');
@@ -21,7 +21,7 @@ module.exports = function(UserSchema) {
 
     // Populate user's Facebook identifiers and tokens
     UserSchema.statics.addFacebook = function(id, connection, done) {
-        mongoose.models['User'].findById(id, function(err, user) {
+        mongoose.models.User.findById(id, function(err, user) {
             // Database Error
             if (err) return done(err);
 
@@ -45,7 +45,7 @@ module.exports = function(UserSchema) {
 
     // Remove user's Facebook identifiers and tokens; deauthorize Dash app from account
     UserSchema.statics.removeFacebook = function(id, done) {
-        mongoose.models['User'].findById(id, function(err, user) {
+        mongoose.models.User.findById(id, function(err, user) {
             // Database Error
             if (err) return done(err);
 
@@ -87,7 +87,7 @@ module.exports = function(UserSchema) {
             if (body.data && body.data.length > 0)
             {
                 body.data.forEach(function(element) {
-                    var coverImage = undefined;
+                    var coverImage;
                     if (element.cover) coverImage = element.cover.source;
 
                     content[element.name] = {
@@ -96,7 +96,7 @@ module.exports = function(UserSchema) {
                         'description': element.description || 'No description provided.',
                         'is_verified': element.is_verified || false,
                         'link': element.link || 'https://www.facebook.com/groups/' + element.id
-                    }
+                    };
                 });
             }
 
@@ -173,7 +173,7 @@ module.exports = function(UserSchema) {
 
     // Retrieve Facebook groups to display on setup page
     UserSchema.statics.setUpFacebookGroups = function(id, done) {
-        mongoose.models['User'].findById(id, function(err, user) {
+        mongoose.models.User.findById(id, function(err, user) {
             // Database Error
             if (err) return done(err);
 
@@ -195,7 +195,7 @@ module.exports = function(UserSchema) {
 
     // Save selected groups to user's account
     UserSchema.statics.saveFacebookGroups = function(id, groups, done) {
-        mongoose.models['User'].findById(id, function(err, user) {
+        mongoose.models.User.findById(id, function(err, user) {
             // Database Error
             if (err) return done(err);
 
@@ -209,7 +209,7 @@ module.exports = function(UserSchema) {
                     groupId: group.substring(0, group.indexOf(':')),
                     name: group.substring(group.indexOf(':') + 1)
                 });
-            })
+            });
 
             user.save(function (err) {
                 // Database Error
@@ -225,7 +225,7 @@ module.exports = function(UserSchema) {
 
     // Retrieve Facebook pages to display on setup page
     UserSchema.statics.setUpFacebookPages = function(id, done) {
-        mongoose.models['User'].findById(id, function(err, user) {
+        mongoose.models.User.findById(id, function(err, user) {
             // Database Error
             if (err) return done(err);
 
@@ -247,7 +247,7 @@ module.exports = function(UserSchema) {
 
     // Save selected pages to user's account
     UserSchema.statics.saveFacebookPages = function(id, pages, done) {
-        mongoose.models['User'].findById(id, function(err, user) {
+        mongoose.models.User.findById(id, function(err, user) {
             // Database Error
             if (err) return done(err);
 
@@ -261,7 +261,7 @@ module.exports = function(UserSchema) {
                     pageId: page.substring(0, page.indexOf(':')),
                     name: page.substring(page.indexOf(':') + 1)
                 });
-            })
+            });
 
             user.save(function (err) {
                 // Database Error
@@ -280,7 +280,7 @@ module.exports = function(UserSchema) {
         var user = this;
 
         // Set up call for update time
-        calls['facebookUpdateTime'] = function(callback) {
+        calls.facebookUpdateTime = function(callback) {
             callback(null, Date.now());
         };
 
@@ -288,7 +288,7 @@ module.exports = function(UserSchema) {
         var lastUpdateTime = user.lastUpdateTime.facebook ? user.lastUpdateTime.facebook : moment().add(-1, 'days').toDate();
 
         // Retrieve page posts
-        calls['facebookPages'] = function(callback) {
+        calls.facebookPages = function(callback) {
             var pagePosts = [];
             var progress = 0;
             if (user.facebook.pages.length > 0)
@@ -316,7 +316,7 @@ module.exports = function(UserSchema) {
         };
 
         // Retrieve group posts
-        calls['facebookGroups'] = function(callback) {
+        calls.facebookGroups = function(callback) {
             var groupPosts = [];
             var progress = 0;
             if (user.facebook.groups.length > 0)
