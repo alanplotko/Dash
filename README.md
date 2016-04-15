@@ -1,6 +1,8 @@
 # Dash
 
 [![Build Status](https://travis-ci.org/alanplotko/Dash.svg?branch=master)](https://travis-ci.org/alanplotko/Dash)
+[![Dependency Status](https://img.shields.io/david/alanplotko/Dash.svg?style=flat)](https://david-dm.org/alanplotko/Dash)
+[![devDependencies Status](https://img.shields.io/david/dev/alanplotko/Dash.svg?style=flat)](https://david-dm.org/alanplotko/Dash#info=devDependencies)
 
 Dash highlights the information and news you care about. Rather than opening up various tabs to catch up on what's going on, Dash will bring the information to you. Users will be able to connect various social media sites and opt to highlight specific content (e.g. Facebook pages, Facebook group posts, subreddits, Twitter users, emails, etc.) Users will also have the option to sort sources into custom catagories. The interface design will be minimal and will potentially follow material design standards.
 
