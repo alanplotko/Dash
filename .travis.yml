@@ -2,4 +2,5 @@ language: node_js
 node_js:
     - "5"
 before_install:
-    - npm config set python python2.7
+    - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 20
+    - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 20
