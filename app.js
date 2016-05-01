@@ -1,7 +1,8 @@
 /*jshint esversion: 6 */
 
 // --------- Environment Setup ---------
-process.env.NODE_ENV = (process.argv[2] == 'dev' || process.argv[2] == 'development') ? 'dev' : 'prod';
+process.env.NODE_ENV = (process.argv[2] == 'dev' ||
+    process.argv[2] == 'development') ? 'dev' : 'prod';
 var debug = (process.env.NODE_ENV == 'dev');
 var config = require('./config/settings')[process.env.NODE_ENV];
 config.connections = require('./config/settings').connections;
@@ -25,7 +26,9 @@ require('./models/user');
 
 // --------- Support bodies ---------
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
 
 // --------- MongoDB & Mongoose Setup ---------
 mongoose.connect(config.MONGO_URI, function(err) {
@@ -36,9 +39,11 @@ mongoose.connect(config.MONGO_URI, function(err) {
 // --------- Authentication Setup ---------
 require('./config/passport')(passport);
 app.use(cookieParser());
-app.use(session({ 
+app.use(session({
     secret: '#ofi!af8_1b_edlif6h=o8b)f&)hc!8kx=w*$f2pi%hm)(@yx8',
-    store: new MongoStore({ mongooseConnection: mongoose.connection }),
+    store: new MongoStore({
+        mongooseConnection: mongoose.connection
+    }),
     resave: true,
     saveUninitialized: true
 }));
@@ -48,7 +53,8 @@ app.use(flash());
 
 // --------- Assets Setup ---------
 app.use('/static', express.static(path.join(__dirname, '/assets')));
-app.use('/fonts', express.static(path.join(__dirname, '/node_modules/materialize-css/dist/font')));
+app.use('/fonts', express.static(path.join(__dirname,
+    '/node_modules/materialize-css/dist/font')));
 app.set('view engine', 'pug');
 require('./routes/assets')(app);
 
@@ -61,11 +67,10 @@ app.locals.ucfirst = function(value) {
 app.locals.moment = require('moment');
 
 // Pass login status for use in views
-app.use(function (req, res, next) {
+app.use(function(req, res, next) {
     // Set up login status and variables
     res.locals.login = req.isAuthenticated();
-    if (req.user)
-    {
+    if (req.user) {
         // Get display name
         res.locals.displayName = req.user.displayName;
 
@@ -74,16 +79,11 @@ app.use(function (req, res, next) {
         var hour = date.getHours();
         var greeting = 'Hi';
 
-        if (hour < 12)
-        {
+        if (hour < 12) {
             greeting = 'Good morning';
-        }
-        else if (hour < 18)
-        {
+        } else if (hour < 18) {
             greeting = 'Good afternoon';
-        }
-        else
-        {
+        } else {
             greeting = 'Good evening';
         }
 
@@ -112,7 +112,7 @@ require('./routes/facebook')(app, passport, isLoggedIn);
 require('./routes/youtube')(app, passport, isLoggedIn);
 
 /*================================================================
- *  If the route does not exist (error 404), go to the error 
+ *  If the route does not exist (error 404), go to the error
  *  page. This route must remain as the last defined route, so
  *  that other routes are not overridden!
 ==================================================================*/
@@ -120,7 +120,10 @@ app.all('*', function(req, res, next) {
     var err = new Error();
     err.status = 404;
     err.message = 'Page Not Found';
-    err.description = 'That\'s strange... we couldn\'t find what you were looking for.<br /><br />If you\'re sure that you\'re in the right place, let the team know.<br /><br />Otherwise, if you\'re lost, you can find your way back to the front page using the button below.';
+    err.description = 'That\'s strange... we couldn\'t find what you were ' +
+    'looking for.<br /><br />If you\'re sure that you\'re in the right ' +
+    'place, let the team know.<br /><br />Otherwise, if you\'re lost, you ' +
+    'can find your way back to the front page using the button below.';
     next(err);
 });
 
@@ -130,30 +133,33 @@ app.use(function(err, req, res, next) {
     if (!err.status) err.status = 500;
 
     // If in dev env, pass all information on error
-    if (debug)
-    {
+    if (debug) {
         res.render('error', {
             title: err.name || 'Error ' + err.status,
             message: err.message,
-            fullError: JSON.stringify(err, null, '<br />').replace('}', '<br />}'),
+            fullError: JSON.stringify(err, null, '<br />').replace('}',
+                '<br />}'),
             stack: err.stack
         });
-    }
     // If in prod env, pass a user-friendly message
-    else
-    {
+    } else {
         res.render('error', {
             title: 'Error ' + err.status,
             message: 'Internal Server Error',
-            description: err.description || 'An error occurred! Click the button below to return to the front page.<br /><br />If you were in the middle of trying to do something, then try again after a few minutes.<br /><br />If you\'re still experiencing problems, then let the team know!'
+            description: err.description || 'An error occurred! Click the ' +
+            'button below to return to the front page.<br /><br />If you ' +
+            'were in the middle of trying to do something, then try again ' +
+            'after a few minutes.<br /><br />If you\'re still experiencing ' +
+            'problems, then let the team know!'
         });
     }
 });
 
 // Run App
-var server = app.listen(3000, function () {
+var server = app.listen(3000, function() {
     if (debug) {
-        var host = (server.address().address == '::') ? 'localhost' : server.address().address;
+        var host = (server.address().address == '::') ? 'localhost' :
+            server.address().address;
         var port = server.address().port;
         console.log('Listening on %s:%s', host, port);
     }

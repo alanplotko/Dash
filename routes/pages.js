@@ -6,7 +6,7 @@ require.main.require('./config/custom-validation.js')(validator);
 module.exports = function(app, passport, isLoggedIn) {
 
     // --------- Front Page ---------
-    app.get('/', function (req, res) {
+    app.get('/', function(req, res) {
         if (req.isAuthenticated()) return res.redirect('/dashboard');
         res.render('index');
     });
@@ -25,7 +25,8 @@ module.exports = function(app, passport, isLoggedIn) {
         var connectionNameLower = connectionName.toLowerCase();
         var connectionUpdateTime = 'lastUpdateTime.' + connectionNameLower;
 
-        var pullQuery = {}, unsetQuery = {};
+        var pullQuery = {};
+        var unsetQuery = {};
         pullQuery.connection = connectionNameLower;
         unsetQuery[connectionUpdateTime] = 1;
 
@@ -35,16 +36,15 @@ module.exports = function(app, passport, isLoggedIn) {
             },
             $unset: unsetQuery
         }, function(err, user) {
-            if (err)
-            {
+            if (err) {
                 return res.status(500).send({
-                    message: 'Encountered an error. Please try again in a few minutes.'
+                    message: 'Encountered an error. Please try again in a ' +
+                             'few minutes.'
                 });
-            }
-            else
-            {
+            } else {
                 return res.status(200).send({
-                    message: 'Successfully reset ' + connectionName + ' connection. Refreshing...',
+                    message: 'Successfully reset ' + connectionName +
+                             ' connection. Refreshing...',
                     refresh: true
                 });
             }
@@ -53,21 +53,17 @@ module.exports = function(app, passport, isLoggedIn) {
 
     app.post('/refresh', isLoggedIn, function(req, res) {
         req.user.updateContent(function(err, posts) {
-            if (err)
-            {
+            if (err) {
                 return res.status(500).send({
-                    message: 'Encountered an error. Please try again in a few minutes.'
+                    message: 'Encountered an error. Please try again in a ' +
+                             'few minutes.'
                 });
-            }
-            else if (posts)
-            {
+            } else if (posts) {
                 return res.status(200).send({
                     message: 'New posts! Loading them in...',
                     refresh: true
                 });
-            }
-            else
-            {
+            } else {
                 return res.status(200).send({
                     message: 'No new posts.',
                     refresh: false
@@ -110,29 +106,24 @@ module.exports = function(app, passport, isLoggedIn) {
     app.post('/settings', isLoggedIn, function(req, res) {
         var displayName = validator.trim(req.body.displayName);
         var settings = {};
-        
+
         // Validate changes
-        if (validator.isValidDisplayName(displayName))
-        {
+        if (validator.isValidDisplayName(displayName)) {
             settings.displayName = displayName;
         }
 
         // Update user settings
         User.updateUser(req.user._id, settings, function(err, updateSuccess) {
             // An error occurred
-            if (err)
-            {
+            if (err) {
                 req.flash('settingsMessage', err.toString());
-            }
             // Update succeeded
-            else if (updateSuccess)
-            {
+            } else if (updateSuccess) {
                 req.flash('settingsMessage', 'Your changes have been saved.');
-            }
             // An unexpected error occurred
-            else
-            {
-                req.flash('settingsMessage', 'An error occurred. Please try again in a few minutes.');
+            } else {
+                req.flash('settingsMessage',
+                    'An error occurred. Please try again in a few minutes.');
             }
 
             return res.redirect('/settings');
@@ -150,12 +141,9 @@ module.exports = function(app, passport, isLoggedIn) {
 
     // --------- Dash Login/Logout ---------
     app.get('/login', function(req, res) {
-        if (req.isAuthenticated())
-        {
+        if (req.isAuthenticated()) {
             return res.redirect('/dashboard');
-        }
-        else
-        {
+        } else {
             res.render('login', {
                 message: req.flash('loginMessage')
             });
@@ -163,28 +151,29 @@ module.exports = function(app, passport, isLoggedIn) {
     });
 
     app.post('/login', passport.authenticate('local-login', {
-        successRedirect : '/dashboard',
-        failureRedirect : '/login',
-        failureFlash : true
+        successRedirect: '/dashboard',
+        failureRedirect: '/login',
+        failureFlash: true
     }));
 
     // Clear credentials and destroy session upon logout
     app.get('/logout', function(req, res) {
         req.logout();
-        req.session.destroy(function (err) {
+        req.session.destroy(function(err) {
             res.redirect('/');
         });
     });
 
     // --------- Dash Registration ---------
     app.get('/register', function(req, res) {
-        res.render('register', { message: req.flash('registerMessage') });
+        res.render('register', {
+            message: req.flash('registerMessage')
+        });
     });
 
     app.post('/register', passport.authenticate('local-register', {
-        successRedirect : '/dashboard',
-        failureRedirect : '/register',
-        failureFlash : true
+        successRedirect: '/dashboard',
+        failureRedirect: '/register',
+        failureFlash: true
     }));
-
 };

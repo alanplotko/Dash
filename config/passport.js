@@ -15,59 +15,67 @@ var crypto = require('crypto');
 
 module.exports = function(passport) {
 
-    // Let passport use the serialize and deserialize functions defined in the mongoose user schema
+    /**
+     * Let passport use the serialize and deserialize functions defined in
+     * the mongoose user schema
+     */
     passport.serializeUser(User.authSerializer);
     passport.deserializeUser(User.authDeserializer);
 
     // Define local login strategy for passport
     passport.use('local-login', new LocalStrategy({
-        usernameField : 'email',
-        passwordField : 'password',
-        passReqToCallback : true
+        usernameField: 'email',
+        passwordField: 'password',
+        passReqToCallback: true
     }, function(req, emailAddress, password, done) {
 
         // Clean and verify form input
         var email = validator.trim(emailAddress);
 
-        if (!validator.isEmail(email) || email.length === 0 || password.length === 0)
-        {
-            return done(null, false, req.flash('loginMessage', 'An error occurred. Please check if you\'ve typed in your credentials.'));
+        if (!validator.isEmail(email) || email.length === 0 ||
+            password.length === 0) {
+            return done(null, false, req.flash('loginMessage',
+                'An error occurred. Please check if you\'ve ' +
+                'typed in your credentials.'));
         }
 
         // Authenticate the provided credentials
         User.authenticateUser(email, password, function(err, user, reason) {
             // An error occurred
-            if (err) return done(null, false, req.flash('loginMessage', err.toString()));
+            if (err) return done(null, false, req.flash('loginMessage',
+                err.toString()));
 
             // Login succeeded
             if (user) return done(null, user, req.flash('loginMessage', ''));
 
             // Login failed
-            if (reason !== null)
-            {
+            if (reason !== null) {
                 var reasons = User.failedLogin;
 
-                switch (reason)
-                {
+                switch (reason) {
                     case reasons.NOT_FOUND:
                     case reasons.PASSWORD_INCORRECT:
-                        return done(null, false, req.flash('loginMessage', 'Error: The email address or password is incorrect.'));
+                        return done(null, false, req.flash('loginMessage',
+                            'Error: The email address or password is ' +
+                            'incorrect.'));
                     case reasons.MAX_ATTEMPTS:
                         // To Do: Send email about account being locked
-                        return done(null, false, req.flash('loginMessage', 'Error: The account is temporarily locked.'));
+                        return done(null, false, req.flash('loginMessage',
+                            'Error: The account is temporarily locked.'));
                 }
             }
 
             // An unexpected error occurred
-            return done(null, false, req.flash('loginMessage', 'An error occurred. Please try again in a few minutes.'));
+            return done(null, false, req.flash('loginMessage',
+                'An error occurred. Please try again in a few minutes.'));
         });
     }));
 
     // Define local register strategy for passport
     passport.use('local-register', new LocalStrategy({
-        usernameField : 'email',
-        passwordField : 'password',
-        passReqToCallback : true
+        usernameField: 'email',
+        passwordField: 'password',
+        passReqToCallback: true
     },
     function(req, emailAddress, password, done) {
 
@@ -76,24 +84,27 @@ module.exports = function(passport) {
         var displayName = email.split('@')[0];
         var gravatar = crypto.createHash('md5').update(email).digest('hex');
 
-        if (!validator.isValidDisplayName(displayName))
-        {
+        if (!validator.isValidDisplayName(displayName)) {
             displayName = 'New_User';
         }
 
-        if (!validator.isEmail(email) || email.length === 0 || password.length === 0)
-        {
-            return done(null, false, req.flash('registerMessage', 'An error occurred. Please check if you\'ve typed in your credentials.'));
+        if (!validator.isEmail(email) || email.length === 0 ||
+            password.length === 0) {
+            return done(null, false, req.flash('registerMessage',
+                'An error occurred. Please check if you\'ve typed in ' +
+                'your credentials.'));
         }
 
-        if (!validator.isEmail(email) || !validator.isValidPassword(password))
-        {
-            return done(null, false, req.flash('registerMessage', 'Error: Email address or password did not meet criteria. Please try again.'));
+        if (!validator.isEmail(email) || !validator.isValidPassword(password)) {
+            return done(null, false, req.flash('registerMessage',
+                'Error: Email address or password did not meet criteria. ' +
+                'Please try again.'));
         }
 
-        if (password !== req.body.passwordVerify)
-        {
-            return done(null, false, req.flash('registerMessage', 'Error: Password confirmation failed. Please check if you\'ve typed in your password correctly.'));
+        if (password !== req.body.passwordVerify) {
+            return done(null, false, req.flash('registerMessage',
+                'Error: Password confirmation failed. Please check ' +
+                'if you\'ve typed in your password correctly.'));
         }
 
         // If validation passes, proceed to register user
@@ -107,8 +118,9 @@ module.exports = function(passport) {
 
             newUser.save(function(err) {
                 // An error occurred
-                if (err) return done(null, false, req.flash('registerMessage', err.toString()));
-                
+                if (err) return done(null, false, req.flash('registerMessage',
+                    err.toString()));
+
                 // Registration succeeded
                 return done(null, newUser);
             });
@@ -134,10 +146,13 @@ module.exports = function(passport) {
         process.nextTick(function() {
             User.addFacebook(req.user.id, connection, function(err, user) {
                 // An error occurred
-                if (err) return done(null, false, req.flash('connectMessage', err.toString()));
+                if (err) return done(null, false, req.flash('connectMessage',
+                    err.toString()));
 
                 // Connection added successfully
-                if (connection) return done(null, user, req.flash('connectMessage', 'You are now connected with Facebook.'));
+                if (connection) return done(null, user,
+                    req.flash('connectMessage',
+                        'You are now connected with Facebook.'));
             });
         });
     });
@@ -162,10 +177,13 @@ module.exports = function(passport) {
         process.nextTick(function() {
             User.addYouTube(req.user.id, connection, function(err, user) {
                 // An error occurred
-                if (err) return done(null, false, req.flash('connectMessage', err.toString()));
+                if (err) return done(null, false, req.flash('connectMessage',
+                    err.toString()));
 
                 // Connection added successfully
-                if (connection) return done(null, user, req.flash('connectMessage', 'You are now connected with YouTube.'));
+                if (connection) return done(null, user,
+                    req.flash('connectMessage',
+                        'You are now connected with YouTube.'));
             });
         });
     });

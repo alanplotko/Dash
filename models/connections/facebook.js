@@ -26,14 +26,17 @@ module.exports = function(UserSchema) {
             if (err) return done(err);
 
             // Unexpected Error: User not found
-            if (!user) return done(null, null, new Error('An error occurred. Please try again in a few minutes.'));
+            if (!user) return done(null, null,
+                new Error('An error occurred. Please try again in a ' +
+                    'few minutes.'));
 
             // Defined Error: Connection already exists
-            if(user.hasFacebook) return done(new Error('You\'re already connected with Facebook.'));
+            if (user.hasFacebook) return done(new Error('You\'re already ' +
+                'connected with Facebook.'));
 
             // Save connection information to account
             user.facebook = connection;
-            user.save(function (err) {
+            user.save(function(err) {
                 // Database Error
                 if (err) return done(err);
 
@@ -43,30 +46,44 @@ module.exports = function(UserSchema) {
         });
     };
 
-    // Remove user's Facebook identifiers and tokens; deauthorize Dash app from account
+    /**
+     * Remove user's Facebook identifiers and tokens;
+     * deauthorize Dash app from account
+     */
     UserSchema.statics.removeFacebook = function(id, done) {
         mongoose.models.User.findById(id, function(err, user) {
             // Database Error
             if (err) return done(err);
 
             // Unexpected Error: User not found
-            if (!user) return done(new Error('An error occurred. Please try again in a few minutes.'));
+            if (!user) return done(new Error('An error occurred. Please ' +
+                'try again in a few minutes.'));
 
             // Defined Error: Connection does not exist
-            if(!user.hasFacebook) return done(new Error('You\'re not connected with Facebook.'));
-        
-            var appSecretProof = '&appsecret_proof=' + crypto.createHmac('sha256', config.connections.facebook.clientSecret).update(user.facebook.accessToken).digest('hex');
-            var url = 'https://graph.facebook.com/v2.5/' + user.facebook.profileId + '/permissions?access_token=' + user.facebook.accessToken + appSecretProof;
-            request.del({ 'url': url, 'json': true }, function(err, res, body) {
+            if (!user.hasFacebook) return done(new Error('You\'re not ' +
+                'connected with Facebook.'));
+
+            var appSecretProof = '&appsecret_proof=' +
+                crypto.createHmac('sha256',
+                    config.connections.facebook.clientSecret).
+                    update(user.facebook.accessToken).digest('hex');
+
+            var url = 'https://graph.facebook.com/v2.5/' +
+                      user.facebook.profileId + '/permissions?access_token=' +
+                      user.facebook.accessToken + appSecretProof;
+
+            request.del({
+                'url': url,
+                'json': true
+            }, function(err, res, body) {
                 // Request Error
                 if (err) return done(err);
 
                 // Success: Deauthorized Dash app
-                if (body.success)
-                {
+                if (body.success) {
                     // Remove relevant Facebook data
                     user.facebook = user.lastUpdateTime.facebook = undefined;
-                    user.save(function (err) {
+                    user.save(function(err) {
                         // Database Error
                         if (err) return done(err);
 
@@ -80,65 +97,73 @@ module.exports = function(UserSchema) {
 
     // Retrieve Facebook content for user to select from
     function getFacebookContent(url, content, appSecretProof, done) {
-        request({ 'url': url + appSecretProof, 'json': true }, function(err, res, body) {
-            // Request Error
-            if (err) return done(err);
+        request({
+            'url': url + appSecretProof,
+            'json': true
+        },
+            function(err, res, body) {
+                // Request Error
+                if (err) return done(err);
 
-            if (body.data && body.data.length > 0)
-            {
-                body.data.forEach(function(element) {
-                    var coverImage;
-                    if (element.cover) coverImage = element.cover.source;
+                if (body.data && body.data.length > 0) {
+                    body.data.forEach(function(element) {
+                        var coverImage;
+                        if (element.cover) coverImage = element.cover.source;
 
-                    content[element.name] = {
-                        'id': element.id,
-                        'cover': coverImage || '/static/img/no-image.png',
-                        'description': element.description || 'No description provided.',
-                        'is_verified': element.is_verified || false,
-                        'link': element.link || 'https://www.facebook.com/groups/' + element.id
-                    };
-                });
-            }
+                        content[element.name] = {
+                            'id': element.id,
+                            'cover': coverImage || '/static/img/no-image.png',
+                            'description': element.description ||
+                                           'No description provided.',
+                            'is_verified': element.is_verified || false,
+                            'link': element.link ||
+                                    'https://www.facebook.com/groups/' +
+                                    element.id
+                        };
+                    });
+                }
 
-            // Go to next page
-            if (body.paging && body.paging.next)
-            {
-                getFacebookContent(body.paging.next, content, appSecretProof, done);
+                // Go to next page
+                if (body.paging && body.paging.next) {
+                    getFacebookContent(body.paging.next, content,
+                        appSecretProof, done);
+                // Success: Retrieved all available content
+                } else {
+                    return done(null, content);
+                }
             }
-            // Success: Retrieved all available content
-            else
-            {
-                return done(null, content);
-            }
-        });
+        );
     }
 
     // Retrieve Facebook posts for selected pages
     function getFacebookPosts(url, content, name, type, appSecretProof, done) {
-        request({ 'url': url + appSecretProof, 'json': true }, function(err, res, body) {
+        request({
+            'url': url + appSecretProof,
+            'json': true
+        }, function(err, res, body) {
             // Request Error
             if (err) return done(err);
 
-            if (body.data && body.data.length > 0)
-            {
+            if (body.data && body.data.length > 0) {
                 body.data.forEach(function(element) {
                     var idInfo = element.id.split('_');
                     var permalink;
 
-                    if (type === 'page')
-                    {
-                        permalink = 'https://www.facebook.com/' + idInfo[0] + '/posts/' + idInfo[1];
-                    }
-                    else
-                    {
-                        permalink = 'https://www.facebook.com/groups' + idInfo[0] + '/permalink/' + idInfo[1];
+                    if (type === 'page') {
+                        permalink = 'https://www.facebook.com/' +
+                                    idInfo[0] + '/posts/' + idInfo[1];
+                    } else {
+                        permalink = 'https://www.facebook.com/groups' +
+                                    idInfo[0] + '/permalink/' + idInfo[1];
                     }
 
-                    if (element.message)
-                    {
-                        if (element.story && element.story.indexOf(name) > -1)
-                        {
-                            element.story = element.story.replace(name, '').trim().replace(/[.?!,:;]$/g, '');
+                    if (element.message) {
+                        if (element.story &&
+                            element.story.indexOf(name) > -1) {
+                            element.story = element.story.
+                                            replace(name, '').
+                                            trim().
+                                            replace(/[.?!,:;]$/g, '');
                         }
 
                         content.push({
@@ -157,13 +182,11 @@ module.exports = function(UserSchema) {
             }
 
             // Go to next page
-            if (body.paging && body.paging.next)
-            {
-                getFacebookPosts(body.paging.next, content, name, type, appSecretProof, done);
-            }
+            if (body.paging && body.paging.next) {
+                getFacebookPosts(body.paging.next, content, name, type,
+                    appSecretProof, done);
             // Success: Retrieved all available posts meeting criteria
-            else
-            {
+            } else {
                 return done(null, content);
             }
         });
@@ -178,18 +201,28 @@ module.exports = function(UserSchema) {
             if (err) return done(err);
 
             // Unexpected Error: User not found
-            if (!user) return done(null, null, new Error('An error occurred. Please try again in a few minutes.'));
+            if (!user) return done(null, null, new Error('An error occurred. ' +
+                'Please try again in a few minutes.'));
 
-            var appSecretProof = '&appsecret_proof=' + crypto.createHmac('sha256', config.connections.facebook.clientSecret).update(user.facebook.accessToken).digest('hex');
-            var url = 'https://graph.facebook.com/v2.5/' + user.facebook.profileId + '/groups?fields=cover,name,id,description,is_verified&access_token=' + user.facebook.accessToken;
+            var appSecretProof = '&appsecret_proof=' +
+                crypto.createHmac('sha256',
+                    config.connections.facebook.clientSecret).
+                    update(user.facebook.accessToken).digest('hex');
 
-            var content = getFacebookContent(url, {}, appSecretProof, function(err, content) {
-                // Error while retrieving content
-                if (err) return done(err);
+            var url = 'https://graph.facebook.com/v2.5/' +
+                      user.facebook.profileId + '/groups?fields=cover,name,' +
+                      'id,description,is_verified&access_token=' +
+                      user.facebook.accessToken;
 
-                // Success: Retrieved groups
-                return done(null, content, user.facebook.groups);
-            });
+            var content = getFacebookContent(url, {}, appSecretProof,
+                function(err, content) {
+                    // Error while retrieving content
+                    if (err) return done(err);
+
+                    // Success: Retrieved groups
+                    return done(null, content, user.facebook.groups);
+                }
+            );
         });
     };
 
@@ -200,7 +233,8 @@ module.exports = function(UserSchema) {
             if (err) return done(err);
 
             // Unexpected Error: User not found
-            if (!user) return done(null, null, new Error('An error occurred. Please try again in a few minutes.'));
+            if (!user) return done(null, null, new Error('An error occurred. ' +
+                'Please try again in a few minutes.'));
 
             user.facebook.groups = [];
 
@@ -211,7 +245,7 @@ module.exports = function(UserSchema) {
                 });
             });
 
-            user.save(function (err) {
+            user.save(function(err) {
                 // Database Error
                 if (err) return done(err);
 
@@ -230,18 +264,28 @@ module.exports = function(UserSchema) {
             if (err) return done(err);
 
             // Unexpected Error: User not found
-            if (!user) return done(null, null, new Error('An error occurred. Please try again in a few minutes.'));
+            if (!user) return done(null, null, new Error('An error occurred. ' +
+                'Please try again in a few minutes.'));
 
-            var appSecretProof = '&appsecret_proof=' + crypto.createHmac('sha256', config.connections.facebook.clientSecret).update(user.facebook.accessToken).digest('hex');
-            var url = 'https://graph.facebook.com/v2.5/' + user.facebook.profileId + '/likes?fields=cover,name,id,description,link,is_verified&access_token=' + user.facebook.accessToken;
+            var appSecretProof = '&appsecret_proof=' +
+                crypto.createHmac('sha256',
+                    config.connections.facebook.clientSecret).
+                    update(user.facebook.accessToken).digest('hex');
 
-            var content = getFacebookContent(url, {}, appSecretProof, function(err, content) {
-                // Error while retrieving content
-                if (err) return done(err);
+            var url = 'https://graph.facebook.com/v2.5/' +
+                      user.facebook.profileId + '/likes?fields=cover,name,id,' +
+                      'description,link,is_verified&access_token=' +
+                      user.facebook.accessToken;
 
-                // Success: Retrieved pages
-                return done(null, content, user.facebook.pages); 
-            });
+            var content = getFacebookContent(url, {}, appSecretProof,
+                function(err, content) {
+                    // Error while retrieving content
+                    if (err) return done(err);
+
+                    // Success: Retrieved pages
+                    return done(null, content, user.facebook.pages);
+                }
+            );
         });
     };
 
@@ -252,8 +296,9 @@ module.exports = function(UserSchema) {
             if (err) return done(err);
 
             // Unexpected Error: User not found
-            if (!user) return done(null, null, new Error('An error occurred. Please try again in a few minutes.'));
-            
+            if (!user) return done(null, null, new Error('An error occurred. ' +
+                'Please try again in a few minutes.'));
+
             user.facebook.pages = [];
 
             pages.forEach(function(page) {
@@ -263,7 +308,7 @@ module.exports = function(UserSchema) {
                 });
             });
 
-            user.save(function (err) {
+            user.save(function(err) {
                 // Database Error
                 if (err) return done(err);
 
@@ -284,33 +329,41 @@ module.exports = function(UserSchema) {
             callback(null, Date.now());
         };
 
-        var appSecretProof = '&appsecret_proof=' + crypto.createHmac('sha256', config.connections.facebook.clientSecret).update(user.facebook.accessToken).digest('hex');
-        var lastUpdateTime = user.lastUpdateTime.facebook ? user.lastUpdateTime.facebook : moment().add(-1, 'days').toDate();
+        var appSecretProof = '&appsecret_proof=' + crypto.createHmac('sha256',
+                             config.connections.facebook.clientSecret).
+                             update(user.facebook.accessToken).digest('hex');
+
+        var lastUpdateTime = user.lastUpdateTime.facebook ?
+                             user.lastUpdateTime.facebook :
+                             moment().add(-1, 'days').toDate();
 
         // Retrieve page posts
         calls.facebookPages = function(callback) {
             var pagePosts = [];
             var progress = 0;
-            if (user.facebook.pages.length > 0)
-            {
+            if (user.facebook.pages.length > 0) {
                 user.facebook.pages.forEach(function(page) {
-                    var feedUrl = 'https://graph.facebook.com/v2.5/' + page.pageId + '/posts?fields=id,story,message,link,full_picture,created_time&since=' + lastUpdateTime + '&access_token=' + user.facebook.accessToken;
-                    var content = getFacebookPosts(feedUrl, [], page.name, 'page', appSecretProof, function(err, content) {
-                        // An error occurred
-                        if (err) return callback(err);
+                    var feedUrl = 'https://graph.facebook.com/v2.5/' +
+                                  page.pageId + '/posts?fields=id,story,' +
+                                  'message,link,full_picture,created_time' +
+                                  '&since=' + lastUpdateTime +
+                                  '&access_token=' + user.facebook.accessToken;
 
-                        // Retrieved posts successfully
-                        Array.prototype.push.apply(pagePosts, content);
-                        progress++;
-                        if (progress == user.facebook.pages.length)
-                        {
-                            callback(null, pagePosts);
+                    var content = getFacebookPosts(feedUrl, [], page.name,
+                        'page', appSecretProof, function(err, content) {
+                            // An error occurred
+                            if (err) return callback(err);
+
+                            // Retrieved posts successfully
+                            Array.prototype.push.apply(pagePosts, content);
+                            progress++;
+                            if (progress == user.facebook.pages.length) {
+                                callback(null, pagePosts);
+                            }
                         }
-                    });
+                    );
                 });
-            }
-            else
-            {
+            } else {
                 callback(null, []);
             }
         };
@@ -319,26 +372,29 @@ module.exports = function(UserSchema) {
         calls.facebookGroups = function(callback) {
             var groupPosts = [];
             var progress = 0;
-            if (user.facebook.groups.length > 0)
-            {
+            if (user.facebook.groups.length > 0) {
                 user.facebook.groups.forEach(function(group) {
-                    var feedUrl = 'https://graph.facebook.com/v2.5/' + group.groupId + '/feed?fields=id,story,message,link,full_picture,created_time&since=' + lastUpdateTime + '&access_token=' + user.facebook.accessToken;
-                    var content = getFacebookPosts(feedUrl, [], group.name, 'group', appSecretProof, function(err, content) {
-                        // An error occurred
-                        if (err) return callback(err);
+                    var feedUrl = 'https://graph.facebook.com/v2.5/' +
+                                   group.groupId + '/feed?fields=id,story,' +
+                                   'message,link,full_picture,created_time&' +
+                                   'since=' + lastUpdateTime +
+                                   '&access_token=' + user.facebook.accessToken;
 
-                        // Retrieved posts successfully
-                        Array.prototype.push.apply(groupPosts, content);
-                        progress++;
-                        if (progress == user.facebook.groups.length)
-                        {
-                            callback(null, groupPosts);
+                    var content = getFacebookPosts(feedUrl, [], group.name,
+                        'group', appSecretProof, function(err, content) {
+                            // An error occurred
+                            if (err) return callback(err);
+
+                            // Retrieved posts successfully
+                            Array.prototype.push.apply(groupPosts, content);
+                            progress++;
+                            if (progress == user.facebook.groups.length) {
+                                callback(null, groupPosts);
+                            }
                         }
-                    });
+                    );
                 });
-            }
-            else
-            {
+            } else {
                 callback(null, []);
             }
         };

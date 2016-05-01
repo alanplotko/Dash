@@ -19,54 +19,122 @@ var LOCK_TIME = 2 * 60 * 60 * 1000; // 2-hour lock
 var UserSchema = new Schema({
 
     // Username/Email
-    email: { type: String, required: true, index: { unique: true } },
+    email: {
+        type: String,
+        required: true,
+        index: {
+            unique: true
+        }
+    },
 
     // Personal
-    displayName: { type: String, required: true },
-    gravatar: { type: String, required: true },
+    displayName: {
+        type: String,
+        required: true
+    },
+
+    gravatar: {
+        type: String,
+        required: true
+    },
 
     // Password & Security
-    password: { type: String, required: true },
-    loginAttempts: { type: Number, required: true, default: 0 },
-    lockUntil: { type: Number },
-    
+    password: {
+        type: String,
+        required: true
+    },
+
+    loginAttempts: {
+        type: Number,
+        required: true,
+        default: 0
+    },
+
+    lockUntil: {
+        type: Number
+    },
+
     // Posts for all content
     posts: [PostSchema],
 
     // Last time data pulled from connections
-    lastUpdateTime: { 
+    lastUpdateTime: {
         facebook: Date,
         youtube: Date
     },
 
     // Connections
     facebook: {
+
         // Identifiers & Tokens
-        profileId: { type: String, index: { unique: true } },
-        accessToken: { type: String },
-        refreshToken: { type: String },
+        profileId: {
+            type: String,
+            index: {
+                unique: true
+            }
+        },
+
+        accessToken: {
+            type: String
+        },
+
+        refreshToken: {
+            type: String
+        },
 
         // Facebook Content
         groups: [{
-            groupId: { type: String },
-            name: { type: String }
+            groupId: {
+                type: String
+            },
+
+            name: {
+                type: String
+            }
         }],
+
         pages: [{
-            pageId: { type: String },
-            name: { type: String }
+            pageId: {
+                type: String
+            },
+
+            name: {
+                type: String
+            }
         }]
     },
+
     youtube: {
+
         // Identifiers & Tokens
-        profileId: { type: String, index: { unique: true } },
-        accessToken: { type: String },
-        refreshToken: { type: String },
+        profileId: {
+            type: String,
+            index: {
+                unique: true
+            }
+        },
+
+        accessToken: {
+            type: String
+        },
+
+        refreshToken: {
+            type: String
+        },
 
         // YouTube Content
         subscriptions: [{
-            subId: { type: String },
-            name: { type: String },
-            thumbnail: { type: String }
+            subId: {
+                type: String
+            },
+
+            name: {
+                type: String
+            },
+
+            thumbnail: {
+                type: Strinh
+            }
         }]
     }
 });
@@ -85,13 +153,17 @@ UserSchema.pre('save', function(next) {
     var user = this;
 
     // Check if the provided email address already exists
-    mongoose.models.User.findOne({ email: user.email }, function (err, user) {
+    mongoose.models.User.findOne({
+        email: user.email
+    }, function(err, user) {
         // An error occurred
-        if (err) return next(new Error('An error occurred. Please try again in a few minutes.'));
+        if (err) return next(new Error('An error occurred. Please try ' +
+            'again in a few minutes.'));
 
         // Email address already exists
         if (user) {
-            return next(new Error('Registration failed. Do you perhaps already have an account?'));
+            return next(new Error('Registration failed. Do you perhaps ' +
+                'already have an account?'));
         }
     });
 
@@ -101,11 +173,13 @@ UserSchema.pre('save', function(next) {
     // Generate salt
     bcrypt.genSalt(SALT_WORK_FACTOR, function(err, salt) {
         // An error occurred
-        if (err) return next(new Error('An error occurred. Please try again in a few minutes.'));
+        if (err) return next(new Error('An error occurred. Please try again ' +
+            'in a few minutes.'));
 
         // Hash password using new salt
-        bcrypt.hash(user.password, salt, function (err, hash) {
-            if (err) return next(new Error('An error occurred. Please try again in a few minutes.'));
+        bcrypt.hash(user.password, salt, function(err, hash) {
+            if (err) return next(new Error('An error occurred. Please try ' +
+                'again in a few minutes.'));
 
             // Set hashed password back on document
             user.password = hash;
@@ -127,17 +201,27 @@ UserSchema.methods.incLoginAttempts = function(done) {
     // If previous lock has expired, restart at 1
     if (this.lockUntil && this.lockUntil < Date.now()) {
         return this.update({
-            $set: { loginAttempts: 1 },
-            $unset: { lockUntil: 1 }
+            $set: {
+                loginAttempts: 1
+            },
+            $unset: {
+                lockUntil: 1
+            }
         }, done);
     }
 
     // Otherwise, increment login attempts count
-    var updates = { $inc: { loginAttempts: 1 } };
+    var updates = {
+        $inc: {
+            loginAttempts: 1
+        }
+    };
 
     // Lock account if max attempts reached and account is not already locked
     if (this.loginAttempts + 1 >= MAX_LOGIN_ATTEMPTS && !this.isLocked) {
-        updates.$set = { lockUntil: Date.now() + LOCK_TIME };
+        updates.$set = {
+            lockUntil: Date.now() + LOCK_TIME
+        };
     }
 
     return this.update(updates, done);
@@ -157,15 +241,20 @@ UserSchema.statics.authSerializer = function(user, done) {
 
 // Deserialize function for use with passport
 UserSchema.statics.authDeserializer = function(id, done) {
-    mongoose.models.User.findById(id, 'email displayName gravatar posts facebook.profileId youtube.profileId', function(err, user) {
-        done(err, user);
-    });
+    mongoose.models.User.findById(id,
+        'email displayName gravatar posts facebook.profileId youtube.profileId',
+        function(err, user) {
+            done(err, user);
+        }
+    );
 };
 
 // Authenticate the provided credentials
 UserSchema.statics.authenticateUser = function(email, password, done) {
     // Search for email address
-    this.findOne({ email: email }, function(err, user) {
+    this.findOne({
+        email: email
+    }, function(err, user) {
         // An error occurred
         if (err) return done(err);
 
@@ -190,12 +279,18 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
             // Check if password matched
             if (isMatch) {
                 // If there's no lock or failed attempts, just return the user
-                if (!user.loginAttempts && !user.lockUntil) return done(null, user);
-                
+                if (!user.loginAttempts && !user.lockUntil) {
+                    return done(null, user);
+                }
+
                 // Reset attempts and lock duration
                 var updates = {
-                    $set: { loginAttempts: 0 },
-                    $unset: { lockUntil: 1 }
+                    $set: {
+                        loginAttempts: 0
+                    },
+                    $unset: {
+                        lockUntil: 1
+                    }
                 };
 
                 return user.update(updates, function(err) {
@@ -205,7 +300,7 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
                 });
             }
 
-            // Password is incorrect, so increment login attempts before responding
+            // Password incorrect, so increment login attempts before responding
             user.incLoginAttempts(function(err) {
                 // An error occurred
                 if (err) return done(err);
@@ -217,7 +312,9 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
 
 // Update user settings
 UserSchema.statics.updateUser = function(id, settings, done) {
-    mongoose.models.User.update({ _id: id }, settings, function(err, numAffected) {
+    mongoose.models.User.update({
+        _id: id
+    }, settings, function(err, numAffected) {
         if (err) return done(err);  // An error occurred
         return done(null, true);    // Update succeeded
     });
@@ -236,12 +333,10 @@ UserSchema.methods.updateContent = function(done) {
         // Set up async calls
         var calls = {};
 
-        if (user.hasFacebook)
-        {
+        if (user.hasFacebook) {
             calls = user.updateFacebook(calls, user);
         }
-        if (user.hasYouTube)
-        {
+        if (user.hasYouTube) {
             calls = user.updateYouTube(calls, user);
         }
 
@@ -251,8 +346,7 @@ UserSchema.methods.updateContent = function(done) {
             var progress = 0;
             var newPosts = [];
 
-            if (user.hasFacebook)
-            {
+            if (user.hasFacebook) {
                 Array.prototype.push.apply(newPosts, results.facebookPages);
                 Array.prototype.push.apply(newPosts, results.facebookGroups);
 
@@ -260,37 +354,35 @@ UserSchema.methods.updateContent = function(done) {
                 user.lastUpdateTime.facebook = results.facebookUpdateTime;
             }
 
-            if (user.hasYouTube)
-            {
+            if (user.hasYouTube) {
                 Array.prototype.push.apply(newPosts, results.youtubeVideos);
 
                 // Set new last update time
                 user.lastUpdateTime.youtube = results.youtubeUpdateTime;
             }
-            
+
             // Sort posts by timestamp
             newPosts.sort(function(a, b) {
                 return new Date(a.timestamp) - new Date(b.timestamp);
             });
 
-            if (newPosts.length > 0)
-            {
+            if (newPosts.length > 0) {
                 newPosts.forEach(function(post) {
                     user.posts.push(post);
                     progress++;
-                    if (progress == newPosts.length)
-                    {
-                        user.save(function (err) {
-                            if (err) return done(err);      // An error occurred
-                            return done(null, user.posts);  // Saved posts and update times; return posts
+                    if (progress == newPosts.length) {
+                        user.save(function(err) {
+                            // An error occurred
+                            if (err) return done(err);
+
+                            // Saved posts and update times; return posts
+                            return done(null, user.posts);
                         });
                     }
                 });
-            }
-            else
-            {
-                // No new posts, set new update time
-                user.save(function (err) {
+            // No new posts, set new update time
+            } else {
+                user.save(function(err) {
                     if (err) return done(err);  // An error occurred
                     return done(null, null);    // Saved update time
                 });
@@ -301,7 +393,8 @@ UserSchema.methods.updateContent = function(done) {
 
 // Set up passport local strategy with mongoose
 UserSchema.plugin(passportLocalMongoose, {
-    usernameField: 'email' // Use 'email' field instead of default 'username' field
+    // Use 'email' field instead of default 'username' field
+    usernameField: 'email'
 });
 
 module.exports = mongoose.model('User', UserSchema);
