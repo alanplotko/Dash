@@ -82,7 +82,7 @@ module.exports = function(passport) {
         // Clean and verify form input
         var email = validator.trim(emailAddress);
         var display = validator.trim(req.body.display_name);
-        if (display.length == 0) display = email.split('@')[0];
+        if (display.length === 0) display = email.split('@')[0];
         var gravatar = crypto.createHash('md5').update(email).digest('hex');
 
         if (!validator.isValidDisplayName(display)) {
