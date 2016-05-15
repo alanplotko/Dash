@@ -46,6 +46,7 @@ h1#heading {
 #contentLoader {
     margin: 0;
     background-color: #d0e0f2;
+    overflow: inherit;
 }
 
 #contentLoader .indeterminate {
