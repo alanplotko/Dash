@@ -70,7 +70,8 @@ var UserSchema = new Schema({
         profileId: {
             type: String,
             index: {
-                unique: true
+                unique: true,
+                sparse: true
             }
         },
 
@@ -110,7 +111,8 @@ var UserSchema = new Schema({
         profileId: {
             type: String,
             index: {
-                unique: true
+                unique: true,
+                sparse: true
             }
         },
 
