@@ -13,7 +13,12 @@ $(document).ready(function() {
     // Regex validations
     $.validator.addMethod('passwordRegex', function(value, element, regexpr) {          
         return regexpr.test(value);
-    }, 'Must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number');
+    }, 'Must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number.');
+
+    $.validator.addMethod('displayNameRegex', function(value, element, regexpr) {          
+        return regexpr.test(value);
+    }, 'Allowed characters: alphanumeric, spaces, underscores, and dashes.');
+    
 
     // Form validation setup
     $('#registerForm').validate({
@@ -21,6 +26,12 @@ $(document).ready(function() {
             email: {
                 required: true,
                 email: true
+            },
+            display_name: {
+                required: false,
+                minlength: 3,
+                maxlength: 15,
+                displayNameRegex: /^[a-zA-Z\d\ _-]{3,15}|$/
             },
             password: {
                 required: true,
@@ -31,14 +42,6 @@ $(document).ready(function() {
             passwordVerify: {
                 required: true,
                 equalTo: '#password'
-            }
-        },
-        message: {
-            password: {
-                minlength: 'Must be at least 8 characters'
-            },
-            passwordVerify: {
-                equalTo: 'Must match password'
             }
         }
     });

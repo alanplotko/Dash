@@ -81,11 +81,12 @@ module.exports = function(passport) {
 
         // Clean and verify form input
         var email = validator.trim(emailAddress);
-        var displayName = email.split('@')[0];
+        var display = validator.trim(req.body.display_name);
+        if (display.length == 0) display = email.split('@')[0];
         var gravatar = crypto.createHash('md5').update(email).digest('hex');
 
-        if (!validator.isValidDisplayName(displayName)) {
-            displayName = 'New_User';
+        if (!validator.isValidDisplayName(display)) {
+            display = 'User';
         }
 
         if (!validator.isEmail(email) || email.length === 0 ||
@@ -111,7 +112,7 @@ module.exports = function(passport) {
         process.nextTick(function() {
             var newUser = new User({
                 email: email,
-                displayName: displayName,
+                displayName: display,
                 password: password,
                 gravatar: gravatar
             });
