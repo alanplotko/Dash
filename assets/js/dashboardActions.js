@@ -11,6 +11,7 @@ function dismiss(id, el) {
 function refresh() {
     $('#refresh').attr('onclick', 'return false;');
     $('#refresh').css('color', '#ffff00');
+    $('#contentLoader').remove();
     $('<div id="contentLoader" class="progress"><div class="indeterminate"></div></div>').insertAfter('nav');
     $.post('/refresh', function(data) {
         $('#contentLoader').fadeOut();
