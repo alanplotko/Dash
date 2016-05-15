@@ -133,7 +133,7 @@ var UserSchema = new Schema({
             },
 
             thumbnail: {
-                type: Strinh
+                type: String
             }
         }]
     }
