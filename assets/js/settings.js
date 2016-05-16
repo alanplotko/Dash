@@ -18,7 +18,7 @@ $(document).ready(function() {
     // Form validation setup
     $('#settingsForm').validate({
         rules: {
-            displayName: {
+            display_name: {
                 required: true,
                 minlength: 3,
                 maxlength: 15,

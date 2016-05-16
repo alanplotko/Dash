@@ -104,12 +104,16 @@ module.exports = function(app, passport, isLoggedIn) {
     });
 
     app.post('/settings', isLoggedIn, function(req, res) {
-        var displayName = validator.trim(req.body.displayName);
+        var displayName = validator.trim(req.body.display_name);
         var settings = {};
 
         // Validate changes
         if (validator.isValidDisplayName(displayName)) {
             settings.displayName = displayName;
+        } else {
+            req.flash('settingsMessage',
+                    'Please enter a valid display name.');
+            return res.redirect('/settings');
         }
 
         // Update user settings

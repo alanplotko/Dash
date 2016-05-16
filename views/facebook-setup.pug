@@ -6,7 +6,7 @@ block additionalStyles
 block content
   div.row
     div.col.s8.offset-s2
-      h1#pageHeading.thin Facebook #{ucfirst(contentName)}
+      h1.page-heading.thin Facebook #{ucfirst(contentName)}
 
   if (message.length > 0)
     div#formMessage.center: p #{message}
@@ -18,10 +18,10 @@ block content
   div.row
     div.col.s12
       form#setupForm.col.s8.offset-s2(action='/setup/facebook/'+contentName, method='POST')
-        input(type='hidden', id='editingMode', name='editingMode', value=editingMode)
+        input(type='hidden', id='editingMode', name='editingMode', value=editingMode+'')
         each val, index in content
           div.col.s4
-            div.card.facebookItem
+            div.card.facebook-item-card
               a(href=val.link, target='_blank')
                 div.card-image
                   img(src=val.cover)

@@ -1,0 +1,2 @@
+--quiet
+--ignore=ids,important,fallback-colors,overqualified-elements,adjoining-classes,font-sizes,box-model

@@ -11,10 +11,10 @@ function dismiss(id, el) {
 function refresh() {
     $('#refresh').attr('onclick', 'return false;');
     $('#refresh').css('color', '#ffff00');
-    $('#contentLoader').remove();
-    $('<div id="contentLoader" class="progress"><div class="indeterminate"></div></div>').insertAfter('nav');
+    $('.refresh-bar').remove();
+    $('<div class="refresh-bar progress"><div class="indeterminate"></div></div>').insertAfter('nav');
     $.post('/refresh', function(data) {
-        $('#contentLoader').fadeOut();
+        $('.refresh-bar').fadeOut();
         Materialize.toast(data.message, 4000, '', function() {
             if (data.refresh)
             {
@@ -24,7 +24,7 @@ function refresh() {
         });
     }).fail(function(data) {
         Materialize.toast(data.responseJSON.message, 4000, '', function() {
-            $('#contentLoader').fadeOut(function() {
+            $('.refresh-bar').fadeOut(function() {
                 $('#refresh').attr('onclick', 'refresh(); return false;').css('color', '#fff');
             });
         });
@@ -33,7 +33,7 @@ function refresh() {
 
 $(document).ready(function() {
     update = function() {
-        var times = $('.card.facebook p.timestamp').toArray();
+        var times = $('.facebook-card p.timestamp').toArray();
         times.forEach(function(time) {
             $(time).hide().html(moment(new Date($(time).attr('data-timestamp')).toISOString()).fromNow()).fadeIn(1000);
         });

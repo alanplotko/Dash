@@ -10,7 +10,7 @@ ul#user-dropdown.dropdown-content
 nav.blue.darken-3
   div.nav-wrapper
     a.brand-logo(href='/') Dash
-    ul#nav-mobile.right.hide-on-med-and-down
+    ul.nav-mobile.right.hide-on-med-and-down
       if (locals.login)
         li: a.dropdown-button(href='#', data-activates='user-dropdown') #{locals.greeting}, #{locals.displayName}!
           i.material-icons.right arrow_drop_down

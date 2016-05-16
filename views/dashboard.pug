@@ -7,15 +7,15 @@ block content
   div.row
     div.col.s12
       if (!connected)
-        h1#heading.center.thin Welcome back, #{locals.displayName}!
+        h1.main-heading.center.thin Welcome back, #{locals.displayName}!
         h2.center.thin: a(href='/connect') Get started by connecting a site!
       else
-        h1#heading.center.thin Welcome back, #{locals.displayName}!
+        h1.main-heading.center.thin Welcome back, #{locals.displayName}!
         if posts.length > 0
           each post in posts.reverse()
             div.row
               div.col.l6.offset-l3.s12
-                div.card.facebook
+                div.card.card-facebook
                   div.card-content
                     a(onclick='dismiss("'+post._id+'", this)'): i.fa.fa-times.close.grey-text.darken-3
                     div.postInfo
