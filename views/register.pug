@@ -6,7 +6,7 @@ block title
 block content
   div.row
     div.col.s12
-      h1#heading.center.thin Register
+      h1.main-heading.center.thin Register
 
   div.row
     
@@ -19,6 +19,11 @@ block content
           i.material-icons.prefix email
           input#email.border-blue(placeholder='Email Address', type='text', name='email')
           label(for='email') Email Address
+      div.row
+        div.input-field.col.s4.offset-s4
+          i.material-icons.prefix person
+          input#display_name.border-blue(placeholder='Display Name', type='text', name='display_name')
+          label(for='display_name') Display Name
       div.row
         div.input-field.col.s4.offset-s4
           i.material-icons.prefix lock

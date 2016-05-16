@@ -70,7 +70,8 @@ var UserSchema = new Schema({
         profileId: {
             type: String,
             index: {
-                unique: true
+                unique: true,
+                sparse: true
             }
         },
 
@@ -110,7 +111,8 @@ var UserSchema = new Schema({
         profileId: {
             type: String,
             index: {
-                unique: true
+                unique: true,
+                sparse: true
             }
         },
 
@@ -133,7 +135,7 @@ var UserSchema = new Schema({
             },
 
             thumbnail: {
-                type: Strinh
+                type: String
             }
         }]
     }
@@ -317,6 +319,14 @@ UserSchema.statics.updateUser = function(id, settings, done) {
     }, settings, function(err, numAffected) {
         if (err) return done(err);  // An error occurred
         return done(null, true);    // Update succeeded
+    });
+};
+
+// Remove user account
+UserSchema.statics.deleteUser = function(id, done) {
+    mongoose.models.User.findByIdAndRemove(id, function(err) {
+        if (err) return done(err);  // An error occurred
+        return done(null, true);    // Deletion succeeded
     });
 };
 

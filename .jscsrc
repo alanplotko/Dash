@@ -3,5 +3,5 @@
 	"maxErrors": 5,
 	"validateIndentation": null,
 	"requireCurlyBraces": null,
-	"requireCamelCaseOrUpperCaseIdentifiers": null,
+	"requireCamelCaseOrUpperCaseIdentifiers": null
 }

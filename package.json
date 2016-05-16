@@ -46,6 +46,7 @@
     "xss": "^0.2.10"
   },
   "devDependencies": {
+    "csslint": "^0.10.0",
     "jscs": "^3.0.2",
     "jshint": "^2.9.1"
   }

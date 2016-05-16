@@ -104,12 +104,16 @@ module.exports = function(app, passport, isLoggedIn) {
     });
 
     app.post('/settings', isLoggedIn, function(req, res) {
-        var displayName = validator.trim(req.body.displayName);
+        var displayName = validator.trim(req.body.display_name);
         var settings = {};
 
         // Validate changes
         if (validator.isValidDisplayName(displayName)) {
             settings.displayName = displayName;
+        } else {
+            req.flash('settingsMessage',
+                    'Please enter a valid display name.');
+            return res.redirect('/settings');
         }
 
         // Update user settings
@@ -127,6 +131,28 @@ module.exports = function(app, passport, isLoggedIn) {
             }
 
             return res.redirect('/settings');
+        });
+    });
+
+    app.post('/delete', isLoggedIn, function(req, res) {
+        User.deleteUser(req.user._id, function(err, deleteSuccess) {
+            if (err) {
+                return res.status(500).send({
+                    message: 'Encountered an error. Please try again in a ' +
+                             'few minutes.'
+                });
+            } else if (deleteSuccess) {
+                return res.status(200).send({
+                    message: 'Account deletion processed... redirecting...',
+                    refresh: true
+                });
+            } else {
+                return res.status(200).send({
+                    message: 'Account deletion failed. Please try again in a ' +
+                             'few minutes.',
+                    refresh: false
+                });
+            }
         });
     });
 
@@ -166,9 +192,13 @@ module.exports = function(app, passport, isLoggedIn) {
 
     // --------- Dash Registration ---------
     app.get('/register', function(req, res) {
-        res.render('register', {
-            message: req.flash('registerMessage')
-        });
+        if (req.isAuthenticated()) {
+            return res.redirect('/dashboard');
+        } else {
+            res.render('register', {
+                message: req.flash('registerMessage')
+            });
+        }
     });
 
     app.post('/register', passport.authenticate('local-register', {

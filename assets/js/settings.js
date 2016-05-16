@@ -13,12 +13,12 @@ $(document).ready(function() {
     // Regex validations
     $.validator.addMethod('displayNameRegex', function(value, element, regexpr) {          
         return regexpr.test(value);
-    }, 'Must contain only alphanumeric characters, dashes, underscores, and spaces');
+    }, 'Allowed characters: alphanumeric, spaces, underscores, and dashes.');
 
     // Form validation setup
     $('#settingsForm').validate({
         rules: {
-            displayName: {
+            display_name: {
                 required: true,
                 minlength: 3,
                 maxlength: 15,

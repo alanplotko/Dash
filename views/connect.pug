@@ -6,15 +6,15 @@ block additionalStyles
 block content
   div.row
     div.col.s8.offset-s2
-      h1#pageHeading.thin Connected Sites
+      h1.page-heading.thin Connected Sites
 
   div.row
     if (message.length > 0)
       div#formMessage.center: p #{message}
     div#connections.col.s8.offset-s2
-      a.waves-effect.waves-light.btn.btn-front.darken-3.left(href=typeof facebook === 'undefined' ? '/connect/auth/facebook' : '#', class=typeof facebook === 'undefined' ? 'grey' : 'facebook dropdown-button', data-activates=typeof facebook === 'undefined' ? '' : 'facebook') Facebook
+      a.waves-effect.waves-light.btn.btn-front.darken-3.left(href=typeof facebook === 'undefined' ? '/connect/auth/facebook' : '#', class=typeof facebook === 'undefined' ? 'grey' : 'btn-facebook dropdown-button', data-activates=typeof facebook === 'undefined' ? '' : 'facebook') Facebook
         i.fa.fa-facebook-official.left
-      a.waves-effect.waves-light.btn.btn-front.darken-3.left(href=typeof youtube === 'undefined' ? '/connect/auth/youtube' : '#', class=typeof youtube === 'undefined' ? 'grey' : 'youtube dropdown-button', data-activates=typeof youtube === 'undefined' ? '' : 'youtube') Youtube
+      a.waves-effect.waves-light.btn.btn-front.darken-3.left(href=typeof youtube === 'undefined' ? '/connect/auth/youtube' : '#', class=typeof youtube === 'undefined' ? 'grey' : 'btn-youtube dropdown-button', data-activates=typeof youtube === 'undefined' ? '' : 'youtube') Youtube
         i.fa.fa-youtube.left
 
       <!-- Facebook Dropdown Structure -->

@@ -6,7 +6,7 @@ block title
 block content
   div.row
     div.col.s12
-      h1#errorHeading.center.thin #{title}: #{message}
+      h1.error-heading.center.thin #{title}: #{message}
     if (message && message.length > 0)
       if (process.env.NODE_ENV == 'dev')
         div.row
