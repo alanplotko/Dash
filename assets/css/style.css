@@ -19,6 +19,10 @@ h1#heading {
     padding: 100px 0 50px 0;
 }
 
+.no-margin {
+    margin: 0;
+}
+
 ::-webkit-scrollbar {
     -webkit-appearance: none;
     width: 14px;
@@ -216,6 +220,14 @@ p.timestamp {
 ul#settings li a {
     color: #000;
     transition: background-color .3s;
+}
+
+ul#settings.tabs {
+    margin-bottom: 75px;
+}
+
+ul#settings.tabs .indicator {
+    background-color: #1565c0;
 }
 
 ul#settings.tabs .tab a:hover {

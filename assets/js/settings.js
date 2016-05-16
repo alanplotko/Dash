@@ -13,7 +13,7 @@ $(document).ready(function() {
     // Regex validations
     $.validator.addMethod('displayNameRegex', function(value, element, regexpr) {          
         return regexpr.test(value);
-    }, 'Must contain only alphanumeric characters, dashes, underscores, and spaces');
+    }, 'Allowed characters: alphanumeric, spaces, underscores, and dashes.');
 
     // Form validation setup
     $('#settingsForm').validate({

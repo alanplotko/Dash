@@ -322,6 +322,14 @@ UserSchema.statics.updateUser = function(id, settings, done) {
     });
 };
 
+// Remove user account
+UserSchema.statics.deleteUser = function(id, done) {
+    mongoose.models.User.findByIdAndRemove(id, function(err) {
+        if (err) return done(err);  // An error occurred
+        return done(null, true);    // Deletion succeeded
+    });
+};
+
 /*=======================
  * Set Up Connections
 =========================*/
