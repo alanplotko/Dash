@@ -51,9 +51,9 @@ body {
 }
 
 .refresh-bar {
-    margin: 0;
     background-color: #d0e0f2;
-    overflow: inherit;
+    position: absolute;
+    margin: 0;
 }
 
 .refresh-bar .indeterminate {
