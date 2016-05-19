@@ -18,7 +18,6 @@ block content
   div.row
     div.col.s12
       form#setupForm.col.s8.offset-s2(action='/setup/youtube/'+contentName, method='POST')
-        input(type='hidden', id='editingMode', name='editingMode', value=editingMode+'')
         each val, index in content
           div.col.s3
             div.card.youtube-sub-card

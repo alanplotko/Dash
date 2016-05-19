@@ -153,7 +153,8 @@ module.exports = function(passport) {
                 // Connection added successfully
                 if (connection) return done(null, user,
                     req.flash('connectMessage',
-                        'You are now connected with Facebook.'));
+                        'You are now connected with Facebook. Facebook ' +
+                        'settings are now available for configuration.'));
             });
         });
     });
@@ -184,7 +185,8 @@ module.exports = function(passport) {
                 // Connection added successfully
                 if (connection) return done(null, user,
                     req.flash('connectMessage',
-                        'You are now connected with YouTube.'));
+                        'You are now connected with YouTube. YouTube ' +
+                        'settings are now available for configuration.'));
             });
         });
     });
