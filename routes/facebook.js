@@ -64,6 +64,10 @@ module.exports = function(app, passport, isLoggedIn) {
                     res.redirect('/setup/facebook/groups');
                 // Saved groups
                 } else {
+                    if (!req.session.flash.connectMessage) {
+                        req.flash('connectMessage',
+                            'Your Facebook settings have been updated.');
+                    }
                     res.redirect('/setup/facebook/pages');
                 }
             }
@@ -95,6 +99,12 @@ module.exports = function(app, passport, isLoggedIn) {
                             }
                         }
                     }
+
+                    res.render('facebook-setup', {
+                        message: req.flash('setupMessage'),
+                        content: allPages,
+                        contentName: 'pages'
+                    });
                 // No pages found; proceed to connect page
                 } else {
                     res.redirect('/connect');
@@ -112,8 +122,10 @@ module.exports = function(app, passport, isLoggedIn) {
                     res.redirect('/setup/facebook/pages');
                 // Saved pages; return to connect page
                 } else {
-                    req.flash('connectMessage',
-                        'Your Facebook settings have been updated.');
+                    if (!req.session.flash.connectMessage) {
+                        req.flash('connectMessage',
+                            'Your Facebook settings have been updated.');
+                    }
                     res.redirect('/connect');
                 }
             }
