@@ -16,7 +16,7 @@ module.exports = function(app, passport, isLoggedIn) {
     app.get('/connect/auth/youtube/callback', isLoggedIn,
         passport.authenticate('youtube', {
             failureRedirect: '/connect',
-            successRedirect: '/setup/youtube/subscriptions'
+            successRedirect: '/connect'
     }));
 
     app.get('/setup/youtube/subscriptions', isLoggedIn, function(req, res) {
@@ -29,7 +29,6 @@ module.exports = function(app, passport, isLoggedIn) {
                 // Found subscriptions
                 } else if (allSubscriptions &&
                     Object.keys(allSubscriptions).length > 0) {
-                    var editingMode = false;
 
                     // Fill in checkboxes for existing subscriptions
                     if (existingSubscriptions.length > 0) {
@@ -52,15 +51,13 @@ module.exports = function(app, passport, isLoggedIn) {
                     res.render('youtube-setup', {
                         message: req.flash('setupMessage'),
                         content: allSubscriptions,
-                        contentName: 'subscriptions',
-                        editingMode: editingMode
+                        contentName: 'subscriptions'
                     });
-                // No subscriptions found; proceed to pages
+                // No subscriptions found; return to connect page
                 } else {
                     req.flash('connectMessage',
-                        'Error: Either no YouTube subscriptions were found ' +
-                        'or a connection was not possible. Please try again ' +
-                        'in a few minutes.');
+                        'You do not have any configurable YouTube ' +
+                        'subscriptions groups at this time.');
                     res.redirect('/connect');
                 }
             }
@@ -68,10 +65,6 @@ module.exports = function(app, passport, isLoggedIn) {
     });
 
     app.post('/setup/youtube/subscriptions', isLoggedIn, function(req, res) {
-        // Determine whether user is editing their settings
-        var editingMode = validator.escape(req.body.editingMode);
-        delete req.body.editingMode;
-
         User.saveYouTubeSubs(req.user._id, Object.keys(req.body),
             function(err, data) {
                 // An error occurred
@@ -80,11 +73,8 @@ module.exports = function(app, passport, isLoggedIn) {
                     res.redirect('/setup/youtube/subscriptions');
                 // Saved subscriptions; return to connect page
                 } else {
-                    if (editingMode && editingMode === 'true' &&
-                        !req.session.flash.connectMessage) {
-                        req.flash('connectMessage',
-                            'Your YouTube settings have been updated.');
-                    }
+                    req.flash('connectMessage',
+                        'Your YouTube subscriptions have been updated.');
                     res.redirect('/connect');
                 }
             }
