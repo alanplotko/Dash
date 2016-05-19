@@ -13,7 +13,7 @@ module.exports = function(app, passport, isLoggedIn) {
     app.get('/connect/auth/facebook/callback', isLoggedIn,
         passport.authenticate('facebook', {
             failureRedirect: '/connect',
-            successRedirect: '/setup/facebook/groups'
+            successRedirect: '/connect'
     }));
 
     app.get('/setup/facebook/groups', isLoggedIn, function(req, res) {
@@ -47,9 +47,12 @@ module.exports = function(app, passport, isLoggedIn) {
                         content: allGroups,
                         contentName: 'groups'
                     });
-                // No groups found; proceed to pages
+                // No groups found; return to connect page
                 } else {
-                    res.redirect('/setup/facebook/pages');
+                    req.flash('connectMessage',
+                        'You do not have any configurable Facebook groups ' +
+                        'at this time.');
+                    res.redirect('/connect');
                 }
             }
         );
@@ -62,13 +65,11 @@ module.exports = function(app, passport, isLoggedIn) {
                 if (err) {
                     req.flash('setupMessage', err.toString());
                     res.redirect('/setup/facebook/groups');
-                // Saved groups
+                // Saved groups; return to connect page
                 } else {
-                    if (!req.session.flash.connectMessage) {
-                        req.flash('connectMessage',
-                            'Your Facebook settings have been updated.');
-                    }
-                    res.redirect('/setup/facebook/pages');
+                    req.flash('connectMessage',
+                        'Your Facebook groups have been updated.');
+                    res.redirect('/connect');
                 }
             }
         );
@@ -105,8 +106,11 @@ module.exports = function(app, passport, isLoggedIn) {
                         content: allPages,
                         contentName: 'pages'
                     });
-                // No pages found; proceed to connect page
+                // No pages found; return to connect page
                 } else {
+                    req.flash('connectMessage',
+                        'You do not have any configurable Facebook pages ' +
+                        'at this time.');
                     res.redirect('/connect');
                 }
             }
@@ -122,10 +126,8 @@ module.exports = function(app, passport, isLoggedIn) {
                     res.redirect('/setup/facebook/pages');
                 // Saved pages; return to connect page
                 } else {
-                    if (!req.session.flash.connectMessage) {
-                        req.flash('connectMessage',
-                            'Your Facebook settings have been updated.');
-                    }
+                    req.flash('connectMessage',
+                        'Your Facebook pages have been updated.');
                     res.redirect('/connect');
                 }
             }

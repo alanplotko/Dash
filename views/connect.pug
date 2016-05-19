@@ -19,7 +19,9 @@ block content
 
       <!-- Facebook Dropdown Structure -->
       ul#facebook.dropdown-content
-        li: a(href='/setup/facebook/groups') Settings
+        li: a(href='/setup/facebook/groups') Groups
+          i.material-icons.left settings
+        li: a(href='/setup/facebook/pages') Pages
           i.material-icons.left settings
         li: a.modal-trigger(href='#', onclick='resetModal("Facebook"); return false;') Reset
           i.material-icons.left sync
