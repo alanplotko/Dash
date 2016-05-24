@@ -218,9 +218,117 @@ module.exports = function(UserSchema) {
         });
     };
 
+    // Retrieve YouTube video posts for selected subscriptions
+    function getYouTubeUploads(url, nextPageToken, content, name, done) {
+        request({
+            'url': url + ((nextPageToken !== null) ? '&pageToken=' +
+                nextPageToken : ''),
+            'json': true
+        }, function(err, res, body) {
+            // Request Error
+            if (err) return done(err);
+
+            if (body.items && body.items.length > 0) {
+                body.items.forEach(function(element) {
+                    // Continue with next iteration if activity is not an upload
+                    if (!element.snippet || element.snippet.type !== 'upload') {
+                        return;
+                    }
+
+                    var url = 'https://www.youtube.com/watch?v=' +
+                        element.contentDetails.upload.videoId;
+                    var permalink = 'https://www.youtube.com/channel/' +
+                        element.snippet.channelId;
+
+                    var picture = '';
+                    var thumbnails = element.snippet.thumbnails;
+                    if (thumbnails.maxres) {
+                        picture = thumbnails.maxres.url;
+                    } else if (thumbnails.standard) {
+                        picture = thumbnails.standard.url;
+                    } else {
+                        picture = thumbnails.high.url;
+                    }
+
+                    var videoDesc = element.snippet.description.replace('\n',
+                        '<br /><br />');
+                    videoDesc = videoDesc.split(/\s+/, 200);
+                    if (videoDesc.length === 200) {
+                        videoDesc = videoDesc.join(' ') + '...';
+                    } else {
+                        videoDesc = videoDesc.join(' ');
+                    }
+
+                    content.push({
+                        connection: 'youtube',
+                        title: element.snippet.title,
+                        actionDescription: element.snippet.channelTitle +
+                                           ' uploaded a new video!',
+                        content: videoDesc || '',
+                        timestamp: element.snippet.publishedAt,
+                        permalink: permalink,
+                        picture: picture,
+                        url: url,
+                        postType: element.snippet.type
+                    });
+                });
+            }
+
+            // Go to next page
+            if (body.nextPageToken) {
+                getYouTubeUploads(url, body.nextPageToken, content, name, done);
+            // Success: Retrieved all available posts meeting criteria
+            } else {
+                return done(null, content);
+            }
+        });
+    }
+
     // Get YouTube updates
     UserSchema.methods.updateYouTube = function(calls) {
-        // To do: get subscriber updates
+        var user = this;
+
+        // Set up call for update time
+        calls.youtubeUpdateTime = function(callback) {
+            callback(null, Date.now());
+        };
+
+        var lastUpdateTime = user.lastUpdateTime.youtube ?
+                             user.lastUpdateTime.youtube :
+                             moment().add(-1, 'days').toDate();
+
+        // Retrieve video posts
+        calls.youtubeVideos = function(callback) {
+            var videoPosts = [];
+            var progress = 0;
+            if (user.youtube.subscriptions.length > 0) {
+                user.youtube.subscriptions.forEach(function(account) {
+                    var feedUrl = 'https://www.googleapis.com/youtube/v3/' +
+                                  'activities?part=snippet%2CcontentDetails' +
+                                  '&channelId=' + account.subId +
+                                  '&maxResults=50&' + 'publishedAfter=' +
+                                  lastUpdateTime.toISOString() +
+                                  '&access_token=' + user.youtube.accessToken;
+
+                    var content = getYouTubeUploads(feedUrl, null, [],
+                        account.name, function(err, content) {
+                            // An error occurred
+                            if (err) return callback(err);
+
+                            // Retrieved posts successfully
+                            Array.prototype.push.apply(videoPosts, content);
+                            progress++;
+                            if (progress == user.youtube.subscriptions.length) {
+                                callback(null, videoPosts);
+                            }
+                        }
+                    );
+                });
+            } else {
+                callback(null, []);
+            }
+        };
+
         return calls;
     };
 
