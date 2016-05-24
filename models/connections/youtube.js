@@ -338,7 +338,7 @@ module.exports = function(UserSchema) {
         mongoose.models.User.findById(this._id, function(err, user) {
             var calls = {};
 
-            if (user.hasYouTube) {
+            if (user.hasYouTube && user.youtube.acceptUpdates) {
                 calls = user.updateYouTube(calls, user);
             }
 
@@ -348,7 +348,7 @@ module.exports = function(UserSchema) {
                 var progress = 0;
                 var newPosts = [];
 
-                if (user.hasYouTube) {
+                if (user.hasYouTube && user.youtube.acceptUpdates) {
                     Array.prototype.push.apply(newPosts, results.youtubeVideos);
 
                     // Set new last update time
@@ -381,6 +381,29 @@ module.exports = function(UserSchema) {
                         return done(null, null);    // Saved update time
                     });
                 }
+            });
+        });
+    };
+
+    // Enable or disable updates for YouTube
+    UserSchema.methods.toggleYouTube = function(done) {
+        mongoose.models.User.findById(this._id, function(err, user) {
+            var message = 'YouTube is not currently configured.';
+            if (user.hasYouTube) {
+                if (user.youtube.acceptUpdates) {
+                    user.youtube.acceptUpdates = false;
+                    message = 'YouTube updates have been disabled. ' +
+                              'Refreshing...';
+                } else {
+                    user.youtube.acceptUpdates = true;
+                    message = 'YouTube updates have been enabled. ' +
+                              'Refreshing...';
+                }
+            }
+
+            user.save(function(err) {
+                if (err) return done(err);  // An error occurred
+                return done(null, message); // Saved update preference
             });
         });
     };

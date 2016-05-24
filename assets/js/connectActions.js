@@ -19,6 +19,21 @@ function resetModal(connection) {
     $('#resetModal').openModal();
 }
 
+function toggleModal(connection, isEnable) {
+    var toggleOption = isEnable ? 'Enable' : 'Disable';
+    var description = isEnable ? 'Enabling will include ' + connection +
+        ' in future updates. You can always return here to disable updates ' +
+        'for this connection.' : 'Disabling will exclude ' + connection +
+        ' from future updates. You can always return here to enable updates ' +
+        'for this connection.';
+    $('#toggleTitle').html(toggleOption + ' ' + connection + ' Connection?');
+    $('#toggleDescription').html(description);
+    $('#toggleConfirm').html(toggleOption + ' ' + connection);
+    $('#toggleConfirm').attr('onclick', 'toggleUpdates("' + connection +
+        '"); return false;');
+    $('#toggleModal').openModal();
+}
+
 function reset(connection) {
     $('.refresh-bar').remove();
     $('<div class="refresh-bar progress">'+
@@ -43,6 +58,25 @@ function update(connection) {
     $('<div class="refresh-bar progress">'+
         '<div class="indeterminate"></div></div>').insertAfter('nav');
     $.post('/refresh/' + connection.toLowerCase(), function(data) {
+        $('.refresh-bar').fadeOut();
+        Materialize.toast(data.message, 4000, '', function() {
+            if (data.refresh)
+            {
+                window.location.reload();
+            }
+        });
+    }).fail(function(data) {
+        Materialize.toast(data.responseJSON.message, 4000, '', function() {
+            $('.refresh-bar').fadeOut();
+        });
+    });
+}
+
+function toggleUpdates(connection) {
+    $('.refresh-bar').remove();
+    $('<div class="refresh-bar progress">'+
+        '<div class="indeterminate"></div></div>').insertAfter('nav');
+    $.post('/toggleUpdates/' + connection.toLowerCase(), function(data) {
         $('.refresh-bar').fadeOut();
         Materialize.toast(data.message, 4000, '', function() {
             if (data.refresh)

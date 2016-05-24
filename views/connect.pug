@@ -23,10 +23,16 @@ block content
           i.material-icons.left settings
         li: a(href='/setup/facebook/pages') Pages
           i.material-icons.left settings
-        li: a.modal-trigger(href='#', onclick='updateModal("Facebook"); return false;') Update
-          i.material-icons.left update
-        li: a.modal-trigger(href='#', onclick='resetModal("Facebook"); return false;') Reset
-          i.material-icons.left sync
+        if facebook_on
+          li: a.modal-trigger(href='#', onclick='updateModal("Facebook"); return false;') Update
+            i.material-icons.left update
+          li: a.modal-trigger(href='#', onclick='resetModal("Facebook"); return false;') Reset
+            i.material-icons.left sync_problem
+          li: a.modal-trigger(href='#', onclick='toggleModal("Facebook", false); return false;') Disable
+            i.material-icons.left sync_disabled
+        else
+          li: a.modal-trigger(href='#', onclick='toggleModal("Facebook", true); return false;') Enable
+            i.material-icons.left sync
         li: a(href='/connect/remove/facebook') Remove
           i.material-icons.left clear
 
@@ -34,10 +40,16 @@ block content
       ul#youtube.dropdown-content
         li: a(href='/setup/youtube/subscriptions') Subscriptions
           i.material-icons.left settings
-        li: a.modal-trigger(href='#', onclick='updateModal("YouTube"); return false;') Update
-          i.material-icons.left update
-        li: a.modal-trigger(href='#', onclick='resetModal("YouTube"); return false;') Reset
-          i.material-icons.left sync
+        if youtube_on
+          li: a.modal-trigger(href='#', onclick='updateModal("YouTube"); return false;') Update
+            i.material-icons.left update
+          li: a.modal-trigger(href='#', onclick='resetModal("YouTube"); return false;') Reset
+            i.material-icons.left sync_problem
+          li: a.modal-trigger(href='#', onclick='toggleModal("YouTube", false); return false;') Disable
+            i.material-icons.left sync_disabled
+        else
+          li: a.modal-trigger(href='#', onclick='toggleModal("YouTube", true); return false;') Enable
+            i.material-icons.left sync
         li: a(href='/connect/remove/youtube') Remove
           i.material-icons.left clear
 
@@ -58,6 +70,15 @@ block content
         div.modal-footer
           a.modal-action.modal-close.waves-effect.waves-blue.btn-flat Cancel
           a#resetConfirm.modal-action.modal-close.waves-effect.waves-blue.btn-flat(href='#', onclick='')
+
+      <!-- Toggle Modal Structure -->
+      div#toggleModal.modal
+        div.modal-content
+          h4#toggleTitle
+          p#toggleDescription
+        div.modal-footer
+          a.modal-action.modal-close.waves-effect.waves-blue.btn-flat Cancel
+          a#toggleConfirm.modal-action.modal-close.waves-effect.waves-blue.btn-flat(href='#', onclick='')
 
 block additionalScripts
   script(src='/static/js/connectActions.js')

@@ -409,7 +409,7 @@ module.exports = function(UserSchema) {
             // Set up async calls
             var calls = {};
 
-            if (user.hasFacebook) {
+            if (user.hasFacebook && user.facebook.acceptUpdates) {
                 calls = user.updateFacebook(calls, user);
             }
 
@@ -419,7 +419,7 @@ module.exports = function(UserSchema) {
                 var progress = 0;
                 var newPosts = [];
 
-                if (user.hasFacebook) {
+                if (user.hasFacebook && user.facebook.acceptUpdates) {
                     Array.prototype.push.apply(newPosts, results.facebookPages);
                     Array.prototype.push.apply(newPosts,
                         results.facebookGroups);
@@ -454,6 +454,29 @@ module.exports = function(UserSchema) {
                         return done(null, null);    // Saved update time
                     });
                 }
+            });
+        });
+    };
+
+    // Enable or disable updates for Facebook
+    UserSchema.methods.toggleFacebook = function(done) {
+        mongoose.models.User.findById(this._id, function(err, user) {
+            var message = 'Facebook is not currently configured.';
+            if (user.hasFacebook) {
+                if (user.facebook.acceptUpdates) {
+                    user.facebook.acceptUpdates = false;
+                    message = 'Facebook updates have been disabled. ' +
+                              'Refreshing...';
+                } else {
+                    user.facebook.acceptUpdates = true;
+                    message = 'Facebook updates have been enabled. ' +
+                              'Refreshing...';
+                }
+            }
+
+            user.save(function(err) {
+                if (err) return done(err);  // An error occurred
+                return done(null, message); // Saved update preference
             });
         });
     };

@@ -115,6 +115,49 @@ module.exports = function(app, passport, isLoggedIn) {
         }
     });
 
+    app.post('/toggleUpdates/:service', isLoggedIn, function(req, res) {
+        var connectionName = req.params.service;
+        if (connectionName === 'facebook') {
+            req.user.toggleFacebook(function(err, result) {
+                if (err) {
+                    return res.status(500).send({
+                        message: 'Encountered an error. Please try again in ' +
+                                 'a few minutes.'
+                    });
+                } else if (result) {
+                    return res.status(200).send({
+                        message: result,
+                        refresh: true
+                    });
+                } else {
+                    return res.status(200).send({
+                        message: result,
+                        refresh: false
+                    });
+                }
+            });
+        } else if (connectionName === 'youtube') {
+            req.user.toggleYouTube(function(err, result) {
+                if (err) {
+                    return res.status(500).send({
+                        message: 'Encountered an error. Please try again in ' +
+                                 'a few minutes.'
+                    });
+                } else if (result) {
+                    return res.status(200).send({
+                        message: result,
+                        refresh: true
+                    });
+                } else {
+                    return res.status(200).send({
+                        message: result,
+                        refresh: false
+                    });
+                }
+            });
+        }
+    });
+
     app.post('/dismiss/all', isLoggedIn, function(req, res) {
         User.findByIdAndUpdate(req.user._id, {
             $set: {
@@ -204,7 +247,9 @@ module.exports = function(app, passport, isLoggedIn) {
         res.render('connect', {
             message: req.flash('connectMessage'),
             facebook: req.user.facebook.profileId,
-            youtube: req.user.youtube.profileId
+            facebook_on: req.user.facebook.acceptUpdates,
+            youtube: req.user.youtube.profileId,
+            youtube_on: req.user.youtube.acceptUpdates
         });
     });
 
