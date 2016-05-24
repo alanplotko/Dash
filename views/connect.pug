@@ -23,6 +23,8 @@ block content
           i.material-icons.left settings
         li: a(href='/setup/facebook/pages') Pages
           i.material-icons.left settings
+        li: a.modal-trigger(href='#', onclick='updateModal("Facebook"); return false;') Update
+          i.material-icons.left update
         li: a.modal-trigger(href='#', onclick='resetModal("Facebook"); return false;') Reset
           i.material-icons.left sync
         li: a(href='/connect/remove/facebook') Remove
@@ -32,10 +34,21 @@ block content
       ul#youtube.dropdown-content
         li: a(href='/setup/youtube/subscriptions') Subscriptions
           i.material-icons.left settings
+        li: a.modal-trigger(href='#', onclick='updateModal("YouTube"); return false;') Update
+          i.material-icons.left update
         li: a.modal-trigger(href='#', onclick='resetModal("YouTube"); return false;') Reset
           i.material-icons.left sync
         li: a(href='/connect/remove/youtube') Remove
           i.material-icons.left clear
+
+      <!-- Update Modal Structure -->
+      div#updateModal.modal
+        div.modal-content
+          h4#updateTitle
+          p#updateDescription
+        div.modal-footer
+          a.modal-action.modal-close.waves-effect.waves-blue.btn-flat Cancel
+          a#updateConfirm.modal-action.modal-close.waves-effect.waves-blue.btn-flat(href='#', onclick='')
 
       <!-- Reset Modal Structure -->
       div#resetModal.modal

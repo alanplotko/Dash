@@ -7,6 +7,7 @@ var mongoose = require('mongoose');
 var moment = require('moment');
 var crypto = require('crypto');
 var request = require('request');
+var async = require('async');
 
 module.exports = function(UserSchema) {
 
@@ -400,5 +401,60 @@ module.exports = function(UserSchema) {
         };
 
         return calls;
+    };
+
+    // Retrieve only new content from Facebook on the connections page
+    UserSchema.methods.refreshFacebook = function(done) {
+        mongoose.models.User.findById(this._id, function(err, user) {
+            // Set up async calls
+            var calls = {};
+
+            if (user.hasFacebook) {
+                calls = user.updateFacebook(calls, user);
+            }
+
+            async.parallel(calls, function(err, results) {
+                if (err) return done(err);
+
+                var progress = 0;
+                var newPosts = [];
+
+                if (user.hasFacebook) {
+                    Array.prototype.push.apply(newPosts, results.facebookPages);
+                    Array.prototype.push.apply(newPosts,
+                        results.facebookGroups);
+
+                    // Set new last update time
+                    user.lastUpdateTime.facebook = results.facebookUpdateTime;
+                }
+
+                // Sort posts by timestamp
+                newPosts.sort(function(a, b) {
+                    return new Date(a.timestamp) - new Date(b.timestamp);
+                });
+
+                if (newPosts.length > 0) {
+                    newPosts.forEach(function(post) {
+                        user.posts.push(post);
+                        progress++;
+                        if (progress == newPosts.length) {
+                            user.save(function(err) {
+                                // An error occurred
+                                if (err) return done(err);
+
+                                // Saved posts and update times; return posts
+                                return done(null, user.posts);
+                            });
+                        }
+                    });
+                // No new posts, set new update time
+                } else {
+                    user.save(function(err) {
+                        if (err) return done(err);  // An error occurred
+                        return done(null, null);    // Saved update time
+                    });
+                }
+            });
+        });
     };
 };

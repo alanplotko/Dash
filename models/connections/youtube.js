@@ -7,6 +7,7 @@ var mongoose = require('mongoose');
 var moment = require('moment');
 var request = require('request');
 var refresh = require('passport-oauth2-refresh');
+var async = require('async');
 
 module.exports = function(UserSchema) {
 
@@ -332,4 +333,55 @@ module.exports = function(UserSchema) {
         return calls;
     };
 
+    // Retrieve only new content from YouTube on the connections page
+    UserSchema.methods.refreshYouTube = function(done) {
+        mongoose.models.User.findById(this._id, function(err, user) {
+            var calls = {};
+
+            if (user.hasYouTube) {
+                calls = user.updateYouTube(calls, user);
+            }
+
+            async.parallel(calls, function(err, results) {
+                if (err) return done(err);
+
+                var progress = 0;
+                var newPosts = [];
+
+                if (user.hasYouTube) {
+                    Array.prototype.push.apply(newPosts, results.youtubeVideos);
+
+                    // Set new last update time
+                    user.lastUpdateTime.youtube = results.youtubeUpdateTime;
+                }
+
+                // Sort posts by timestamp
+                newPosts.sort(function(a, b) {
+                    return new Date(a.timestamp) - new Date(b.timestamp);
+                });
+
+                if (newPosts.length > 0) {
+                    newPosts.forEach(function(post) {
+                        user.posts.push(post);
+                        progress++;
+                        if (progress == newPosts.length) {
+                            user.save(function(err) {
+                                // An error occurred
+                                if (err) return done(err);
+
+                                // Saved posts and update times; return posts
+                                return done(null, user.posts);
+                            });
+                        }
+                    });
+                // No new posts, set new update time
+                } else {
+                    user.save(function(err) {
+                        if (err) return done(err);  // An error occurred
+                        return done(null, null);    // Saved update time
+                    });
+                }
+            });
+        });
+    };
 };
