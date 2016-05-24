@@ -101,7 +101,7 @@ nav img.avatar {
  *  Dashboard
 ==================*/
 
-.card-facebook .card-content a i.close {
+.card-dashboard .card-content a i.close {
     position: absolute;
     top: 21px;
     right: 20px;
@@ -109,29 +109,40 @@ nav img.avatar {
     cursor: pointer;
 }
 
-.card-facebook {
+.card-dashboard {
     position: relative;
     border: 2px solid #3b5998;
 }
 
-.card-facebook .card-content:before {
+.card-dashboard .card-content:before {
     position: absolute;
-    content: '\f082';
-    font-family: FontAwesome;
-    font-size: 44px;
-    color: #3b5998;
     top: 13px;
     left: 20px;
 }
 
-.card-facebook .card-content .postInfo {
+.card-facebook .card-content:before {
+    content: '\f082';
+    font-family: FontAwesome;
+    color: #3b5998;
+    font-size: 44px;
+}
+
+.card-youtube .card-content:before {
+    content: '\f16a';
+    font-family: FontAwesome;
+    color: #b31217;
+    font-size: 40px;
+}
+
+.card-dashboard .card-content .postInfo {
     padding-left: 52px;
 }
 
-.card-facebook .card-content .card-title {
+.card-dashboard .card-content .card-title {
     font-size: 20px;
     font-weight: normal;
     line-height: inherit;
+    width: 90%;
 }
 
 p.timestamp {
@@ -140,11 +151,11 @@ p.timestamp {
     color: #444!important;
 }
 
-.card-facebook .card-content p.content {
+.card .card-content p.content {
     padding: 30px 0 10px 0;
 }
 
-.card-facebook .card-image {
+.card-dashboard .card-image {
     width: inherit;
     height: 200px;
     overflow: hidden;

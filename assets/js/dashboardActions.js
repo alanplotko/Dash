@@ -33,7 +33,7 @@ function refresh() {
 
 $(document).ready(function() {
     update = function() {
-        var times = $('.facebook-card p.timestamp').toArray();
+        var times = $('.card p.timestamp').toArray();
         times.forEach(function(time) {
             $(time).hide().html(moment(new Date($(time).attr('data-timestamp')).toISOString()).fromNow()).fadeIn(1000);
         });

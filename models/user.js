@@ -66,6 +66,12 @@ var UserSchema = new Schema({
     // Connections
     facebook: {
 
+        // Connection status
+        acceptUpdates: {
+            type: Boolean,
+            default: true
+        },
+
         // Identifiers & Tokens
         profileId: {
             type: String,
@@ -106,6 +112,12 @@ var UserSchema = new Schema({
     },
 
     youtube: {
+
+        // Connection status
+        acceptUpdates: {
+            type: Boolean,
+            default: true
+        },
 
         // Identifiers & Tokens
         profileId: {
@@ -244,7 +256,8 @@ UserSchema.statics.authSerializer = function(user, done) {
 // Deserialize function for use with passport
 UserSchema.statics.authDeserializer = function(id, done) {
     mongoose.models.User.findById(id,
-        'email displayName gravatar posts facebook.profileId youtube.profileId',
+        'email displayName gravatar posts facebook.profileId ' +
+        'facebook.acceptUpdates youtube.profileId youtube.acceptUpdates',
         function(err, user) {
             done(err, user);
         }
@@ -343,10 +356,10 @@ UserSchema.methods.updateContent = function(done) {
         // Set up async calls
         var calls = {};
 
-        if (user.hasFacebook) {
+        if (user.hasFacebook && user.facebook.acceptUpdates) {
             calls = user.updateFacebook(calls, user);
         }
-        if (user.hasYouTube) {
+        if (user.hasYouTube && user.youtube.acceptUpdates) {
             calls = user.updateYouTube(calls, user);
         }
 
@@ -356,7 +369,7 @@ UserSchema.methods.updateContent = function(done) {
             var progress = 0;
             var newPosts = [];
 
-            if (user.hasFacebook) {
+            if (user.hasFacebook && user.facebook.acceptUpdates) {
                 Array.prototype.push.apply(newPosts, results.facebookPages);
                 Array.prototype.push.apply(newPosts, results.facebookGroups);
 
@@ -364,7 +377,7 @@ UserSchema.methods.updateContent = function(done) {
                 user.lastUpdateTime.facebook = results.facebookUpdateTime;
             }
 
-            if (user.hasYouTube) {
+            if (user.hasYouTube && user.youtube.acceptUpdates) {
                 Array.prototype.push.apply(newPosts, results.youtubeVideos);
 
                 // Set new last update time
