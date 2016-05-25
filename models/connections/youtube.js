@@ -146,45 +146,38 @@ module.exports = function(UserSchema) {
                       'part=snippet&maxResults=50&mine=true&order=' +
                       'alphabetical&access_token=' + user.youtube.accessToken;
 
-            var retries = 2;
-            var content = function() {
-                if (retries > 0) {
-                    retries--;
-                    getYouTubeContent(url, '', {}, function(err, content) {
-                        // Error while retrieving content
-                        if (err) {
-                            if (err.message === 'Invalid Credentials') {
-                                refresh.requestNewAccessToken('youtube',
-                                    user.youtube.refreshToken,
-                                    function(err, accessToken, refreshToken) {
-                                        user.youtube.accessToken = accessToken;
-                                        user.save(function(err) {
-                                            // Database Error
-                                            if (err) return done(err);
-
-                                            /**
-                                             * Success: Saved new YouTube access
-                                             * token
-                                             */
-                                            content();
-                                        });
+            getYouTubeContent(url, '', {}, function(err, content) {
+                // Error while retrieving content
+                if (err) {
+                    if (err.message === 'Invalid Credentials') {
+                        refresh.requestNewAccessToken('youtube',
+                            user.youtube.refreshToken,
+                            function(err, accessToken, refreshToken) {
+                                /*console.log(err);
+                                console.log(accessToken);
+                                console.log(refreshToken);*/
+                                user.youtube.accessToken = accessToken;
+                                user.save(function(err) {
+                                    // Database Error
+                                    if (err) return done(err);
                                 });
-                            } else {
-                                return done(err);
-                            }
-                        }
-
-                        // Success: Retrieved subscriptions
-                        return done(null, content, user.youtube.subscriptions);
-                    });
+                                // Get content
+                                getYouTubeContent(url, '', {}, function(err,
+                                    content) {
+                                    if (err) {
+                                        return done(err);
+                                    } else {
+                                        // Success: Retrieved subscriptions
+                                        return done(null, content,
+                                            user.youtube.subscriptions);
+                                    }
+                                });
+                        });
+                    }
                 } else {
-                    return done(new Error('An error occurred while ' +
-                        'refreshing credentials. Please try again in ' +
-                        'a few minutes.'));
+                    return done(null, content, user.youtube.subscriptions);
                 }
-            };
-
-            content();
+            });
         });
     };
 

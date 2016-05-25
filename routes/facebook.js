@@ -21,8 +21,8 @@ module.exports = function(app, passport, isLoggedIn) {
             existingGroups) {
                 // An error occurred
                 if (err) {
-                    req.flash('setupMessage', err.toString());
-                    res.redirect('/setup/facebook/groups');
+                    req.flash('connectMessage', err.toString());
+                    res.redirect('/connect');
                 // Found groups
                 } else if (Object.keys(allGroups).length > 0) {
                     // Fill in checkboxes for existing groups
@@ -80,8 +80,8 @@ module.exports = function(app, passport, isLoggedIn) {
             existingPages) {
                 // An error occurred
                 if (err) {
-                    req.flash('setupMessage', err.toString());
-                    res.redirect('/setup/facebook/groups');
+                    req.flash('connectMessage', err.toString());
+                    res.redirect('/connect');
                 // Found pages
                 } else if (Object.keys(allPages).length > 0) {
                     // Fill in checkboxes for existing pages

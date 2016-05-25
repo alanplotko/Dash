@@ -24,8 +24,8 @@ module.exports = function(app, passport, isLoggedIn) {
             existingSubscriptions) {
                 // An error occurred
                 if (err) {
-                    req.flash('setupMessage', err.toString());
-                    res.redirect('/setup/youtube/subscriptions');
+                    req.flash('connectMessage', err.toString());
+                    res.redirect('/connect');
                 // Found subscriptions
                 } else if (allSubscriptions &&
                     Object.keys(allSubscriptions).length > 0) {
