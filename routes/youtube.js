@@ -57,7 +57,10 @@ module.exports = function(app, passport, isLoggedIn) {
                 } else {
                     req.flash('connectMessage',
                         'You do not have any configurable YouTube ' +
-                        'subscriptions at this time.');
+                        'subscriptions at this time. It is possible you ' +
+                        'may be missing required permissions. ' +
+                        '<a href="/connect/reauth/youtube">Reauthenticate ' +
+                        'just in case?</a>');
                     res.redirect('/connect');
                 }
             }
