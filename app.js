@@ -135,7 +135,7 @@ app.use(function(err, req, res, next) {
     // If in dev env, pass all information on error
     if (debug) {
         res.render('error', {
-            title: 'Error ' + err.status || err.name,
+            title: 'Error ' + err.status,
             message: err.message,
             fullError: JSON.stringify(err, null, '<br />').replace('}',
                 '<br />}'),
