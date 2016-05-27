@@ -5,15 +5,25 @@ require.main.require('./config/custom-validation.js')(validator);
 
 module.exports = function(app, passport, isLoggedIn) {
 
-    app.get('/connect/auth/facebook', isLoggedIn,
-        passport.authenticate('facebook', {
-            scope: ['user_managed_groups', 'user_likes']
+    app.get('/connect/auth/facebook', isLoggedIn, function(req, res, next) {
+        req.session.reauth = false;
+        next();
+    }, passport.authenticate('facebook', {
+        scope: ['user_managed_groups', 'user_likes']
     }));
 
     app.get('/connect/auth/facebook/callback', isLoggedIn,
         passport.authenticate('facebook', {
             failureRedirect: '/connect',
             successRedirect: '/connect'
+    }));
+
+    app.get('/connect/reauth/facebook/', isLoggedIn, function(req, res, next) {
+        req.session.reauth = true;
+        next();
+    }, passport.authenticate('facebook', {
+        authType: 'rerequest',
+        scope: ['user_managed_groups', 'user_likes']
     }));
 
     app.get('/setup/facebook/groups', isLoggedIn, function(req, res) {
@@ -51,7 +61,10 @@ module.exports = function(app, passport, isLoggedIn) {
                 } else {
                     req.flash('connectMessage',
                         'You do not have any configurable Facebook groups ' +
-                        'at this time.');
+                        'at this time. It is possible you may be missing ' +
+                        'required permissions. ' +
+                        '<a href="/connect/reauth/facebook">Reauthenticate ' +
+                        'just in case?</a>');
                     res.redirect('/connect');
                 }
             }
@@ -110,7 +123,10 @@ module.exports = function(app, passport, isLoggedIn) {
                 } else {
                     req.flash('connectMessage',
                         'You do not have any configurable Facebook pages ' +
-                        'at this time.');
+                        'at this time. It is possible you may be missing ' +
+                        'required permissions. ' +
+                        '<a href="/connect/reauth/facebook">Reauthenticate ' +
+                        'just in case?</a>');
                     res.redirect('/connect');
                 }
             }

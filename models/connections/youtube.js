@@ -153,9 +153,6 @@ module.exports = function(UserSchema) {
                         refresh.requestNewAccessToken('youtube',
                             user.youtube.refreshToken,
                             function(err, accessToken, refreshToken) {
-                                /*console.log(err);
-                                console.log(accessToken);
-                                console.log(refreshToken);*/
                                 user.youtube.accessToken = accessToken;
                                 user.save(function(err) {
                                     // Database Error

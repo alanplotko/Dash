@@ -141,7 +141,8 @@ module.exports = function(passport) {
         connection = {
             profileId: profile.id,
             accessToken: accessToken,
-            refreshToken: refreshToken
+            refreshToken: refreshToken,
+            reauth: req.session.reauth
         };
 
         process.nextTick(function() {
@@ -156,6 +157,7 @@ module.exports = function(passport) {
                         'You are now connected with Facebook. Facebook ' +
                         'settings are now available for configuration.'));
             });
+            delete req.session.reauth;
         });
     });
     passport.use(fbStrategy);

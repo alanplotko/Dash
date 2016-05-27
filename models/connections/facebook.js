@@ -31,11 +31,17 @@ module.exports = function(UserSchema) {
                 new Error('An error occurred. Please try again in a ' +
                     'few minutes.'));
 
-            // Defined Error: Connection already exists
-            if (user.hasFacebook) return done(new Error('You\'re already ' +
-                'connected with Facebook.'));
+            if (connection.reauth) {
+                return done('Missing permissions for Facebook have been ' +
+                    'regranted.');
+            } else if (user.hasFacebook) {
+                // Defined Error: Connection already exists
+                return done(new Error('You\'re already ' +
+                    'connected with Facebook.'));
+            }
 
-            // Save connection information to account
+            // Save connection information (excluding reauth state) to account
+            delete connection.reauth;
             user.facebook = connection;
             user.save(function(err) {
                 // Database Error
@@ -108,14 +114,18 @@ module.exports = function(UserSchema) {
 
                 if (body.data && body.data.length > 0) {
                     body.data.forEach(function(element) {
+                        // Skip non-Facebook pages and merged pages
+                        if ((element.link &&
+                            element.link.indexOf("https://www.facebook.com")
+                            === -1) || element.best_page) return;
                         var coverImage;
                         if (element.cover) coverImage = element.cover.source;
 
                         content[element.name] = {
                             'id': element.id,
                             'cover': coverImage || '/static/img/no-image.png',
-                            'description': element.description ||
-                                           'No description provided.',
+                            'description': element.description || element.about 
+                                           || 'No description provided.',
                             'is_verified': element.is_verified || false,
                             'link': element.link ||
                                     'https://www.facebook.com/groups/' +
@@ -275,7 +285,7 @@ module.exports = function(UserSchema) {
 
             var url = 'https://graph.facebook.com/v2.5/' +
                       user.facebook.profileId + '/likes?fields=cover,name,id,' +
-                      'description,link,is_verified&access_token=' +
+                      'description,link,is_verified,best_page,about&access_token=' +
                       user.facebook.accessToken;
 
             var content = getFacebookContent(url, {}, appSecretProof,
