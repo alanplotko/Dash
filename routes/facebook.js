@@ -1,3 +1,5 @@
+/*jshint esversion: 6 */
+
 // --------- Dependencies ---------
 var User = require.main.require('./models/user');
 var validator = require('validator');
@@ -166,7 +168,8 @@ module.exports = function(app, passport, isLoggedIn) {
             // Get new access token if current token was deemed invalid
             if (err) {
                 if (err.toString() === '400-Facebook') {
-                    req.flash('connectMessage', error_messages.Facebook.refresh);
+                    req.flash('connectMessage',
+                        error_messages.Facebook.refresh);
                 }
             } else {
                 req.flash('connectMessage',

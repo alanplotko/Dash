@@ -1,3 +1,5 @@
+/*jshint esversion: 6 */
+
 // --------- Dependencies ---------
 var User = require.main.require('./models/user');
 var validator = require('validator');
