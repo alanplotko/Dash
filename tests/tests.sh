@@ -1,5 +1,5 @@
 #!/bin/bash
 
-jshint config/ models/ routes/ app.js
-jscs config/ models/ routes/ app.js
+jshint assets/js config/ models/ routes/ app.js
+jscs assets/js config/ models/ routes/ app.js
 csslint assets/css/

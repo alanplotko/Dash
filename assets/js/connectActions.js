@@ -36,7 +36,7 @@ function toggleModal(connection, isEnable) {
 
 function reset(connection) {
     $('.refresh-bar').remove();
-    $('<div class="refresh-bar progress">'+
+    $('<div class="refresh-bar progress">' +
         '<div class="indeterminate"></div></div>').insertAfter('nav');
     $.post('/reset/' + connection, function(data) {
         $('.refresh-bar').fadeOut();
@@ -57,7 +57,7 @@ function reset(connection) {
 
 function update(connection) {
     $('.refresh-bar').remove();
-    $('<div class="refresh-bar progress">'+
+    $('<div class="refresh-bar progress">' +
         '<div class="indeterminate"></div></div>').insertAfter('nav');
     $.post('/refresh/' + connection.toLowerCase(), function(data) {
         $('.refresh-bar').fadeOut();
@@ -78,7 +78,7 @@ function update(connection) {
 
 function toggleUpdates(connection) {
     $('.refresh-bar').remove();
-    $('<div class="refresh-bar progress">'+
+    $('<div class="refresh-bar progress">' +
         '<div class="indeterminate"></div></div>').insertAfter('nav');
     $.post('/toggleUpdates/' + connection.toLowerCase(), function(data) {
         $('.refresh-bar').fadeOut();

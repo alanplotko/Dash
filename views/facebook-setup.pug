@@ -15,6 +15,9 @@ block content
     div.col.s8.offset-s2
       h5 Select the #{contentName} you'd like to be updated on below!
 
+      input(id='selectAll', type='checkbox')
+      label(for='selectAll') Select All #{ucfirst(contentName)}
+
   div.row
     div.col.s12
       form#setupForm.col.s8.offset-s2(action='/setup/facebook/'+contentName, method='POST')
@@ -42,3 +45,4 @@ block content
 
 block additionalScripts
   script(src='/static/js/facebookHashFix.js')
+  script(src='/static/js/select.js')
