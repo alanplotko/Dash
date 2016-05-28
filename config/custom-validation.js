@@ -4,8 +4,13 @@ module.exports = function(validator) {
         return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%^&*}{><~`:;?|,.\]\[\)(+=._-]{8,128}$/.test(str);
     };
 
-    // Define custom validation function for a password
+    // Define custom validation function for a display name
     validator.isValidDisplayName = function(str) {
         return /^[a-zA-Z\d\ _-]{3,15}$/.test(str);
+    };
+
+    // Define custom validation function for an avatar
+    validator.isValidAvatar = function(str) {
+        return /^https?:\/\/(?:[a-z0-9\-]+\.)+[a-z]{2,6}(?:\/[^/#?]+)+\.(?:jp(e?)g|png)$/i.test(str);
     };
 };

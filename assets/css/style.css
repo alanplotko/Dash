@@ -218,7 +218,7 @@ p.timestamp {
     word-wrap: break-word;
     -ms-word-break: break-word;
     -epub-word-break: break-word;
-    word-break: break-word;
+    word-break: normal;
     -webkit-hyphens: auto;
     -moz-hyphens: auto;
     -epub-hyphens: auto;
@@ -244,6 +244,48 @@ ul#settings.tabs .indicator {
 
 ul#settings.tabs .tab a:hover {
     background-color: #e3f2fd; /* blue lighten-5 */
+}
+
+div.card-settings p {
+    font-size: 16px;
+    margin: 0;
+}
+
+div.card-settings span.card-title {
+    padding-bottom: 10px;
+}
+
+div.card-settings.card .card-action a:not(.btn):not(.btn-large):not(.btn-floating) {
+    color: #1565C0;  /* blue darken-3 */
+}
+
+div.card-settings.card .card-action a:not(.btn):not(.btn-large):not(.btn-floating):hover {
+    color: #42a5f5; /* blue lighten-1 */
+}
+
+div#profile p {
+    margin-bottom: 16px;
+}
+
+div.gravatar-section {
+    margin: 10px 0;
+}
+
+div#settings-section {
+    margin-bottom: 100px;
+}
+
+div#account ul {
+    font-size: 16px;
+    padding-left: 40px;
+}
+
+div#account ul li {
+    list-style-type: circle;
+}
+
+div.card-action a {
+    cursor: pointer;
 }
 
 /*================

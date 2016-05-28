@@ -18,7 +18,8 @@ module.exports = function(app, passport, isLoggedIn) {
     app.get('/dashboard', isLoggedIn, function(req, res) {
         res.render('dashboard', {
             // Add other connection fields here
-            connected: req.user.facebook.profileId !== undefined,
+            connected: req.user.facebook.profileId !== undefined ||
+                req.user.youtube.profileId !== undefined,
             posts: req.user.posts
         });
     });
@@ -48,7 +49,7 @@ module.exports = function(app, passport, isLoggedIn) {
             } else {
                 return res.status(200).send({
                     message: 'Successfully reset ' + connectionName +
-                             ' connection. Refreshing...',
+                             ' connection. Reloading...',
                     refresh: true
                 });
             }
@@ -63,8 +64,8 @@ module.exports = function(app, passport, isLoggedIn) {
                     req.flash('connectMessage',
                         error_messages[service].refresh);
                     return res.status(500).send({
-                        message: 'Encountered an error. ' + service +
-                                 ' access privileges must be renewed...',
+                        message: service + ' access privileges must be ' +
+                                 'renewed. Reloading...',
                         toConnect: true
                     });
                 } else {
@@ -76,7 +77,7 @@ module.exports = function(app, passport, isLoggedIn) {
                 }
             } else if (posts) {
                 return res.status(200).send({
-                    message: 'New posts! Loading them in...',
+                    message: 'New posts! Reloading...',
                     refresh: true
                 });
             } else {
@@ -97,8 +98,8 @@ module.exports = function(app, passport, isLoggedIn) {
                         req.flash('connectMessage',
                             error_messages.Facebook.refresh);
                         return res.status(500).send({
-                            message: 'Encountered an error. Facebook access ' +
-                                     'privileges must be renewed...',
+                            message: 'Facebook access privileges must be ' +
+                                     'renewed. Reloading...',
                             refresh: true
                         });
                     } else {
@@ -110,7 +111,7 @@ module.exports = function(app, passport, isLoggedIn) {
                     }
                 } else if (posts) {
                     return res.status(200).send({
-                        message: 'New posts! Loading them in...',
+                        message: 'New posts! Reloading...',
                         refresh: true
                     });
                 } else {
@@ -127,8 +128,8 @@ module.exports = function(app, passport, isLoggedIn) {
                         req.flash('connectMessage',
                             error_messages.YouTube.refresh);
                         return res.status(500).send({
-                            message: 'Encountered an error. YouTube access ' +
-                                     'privileges must be renewed...',
+                            message: 'YouTube access privileges must be ' +
+                                     'renewed. Reloading...',
                             refresh: true
                         });
                     } else {
@@ -140,7 +141,7 @@ module.exports = function(app, passport, isLoggedIn) {
                     }
                 } else if (posts) {
                     return res.status(200).send({
-                        message: 'New posts! Loading them in...',
+                        message: 'New posts! Reloading...',
                         refresh: true
                     });
                 } else {
@@ -229,7 +230,7 @@ module.exports = function(app, passport, isLoggedIn) {
         });
     });
 
-    app.post('/settings', isLoggedIn, function(req, res) {
+    app.post('/settings/profile/display_name', isLoggedIn, function(req, res) {
         var displayName = validator.trim(req.body.display_name);
         var settings = {};
 
@@ -237,30 +238,111 @@ module.exports = function(app, passport, isLoggedIn) {
         if (validator.isValidDisplayName(displayName)) {
             settings.displayName = displayName;
         } else {
-            req.flash('settingsMessage',
-                    'Please enter a valid display name.');
-            return res.redirect('/settings');
+            return res.status(200).send({
+                message: 'Please enter a valid display name.',
+                refresh: false
+            });
         }
 
         // Update user settings
         User.updateUser(req.user._id, settings, function(err, updateSuccess) {
-            // An error occurred
             if (err) {
-                req.flash('settingsMessage', err.toString());
-            // Update succeeded
+                return res.status(500).send({
+                    message: 'Encountered an error. Please try again in a ' +
+                             'few minutes.',
+                    refresh: false
+                });
             } else if (updateSuccess) {
-                req.flash('settingsMessage', 'Your changes have been saved.');
-            // An unexpected error occurred
+                return res.status(200).send({
+                    message: 'New display name set. Reloading...',
+                    refresh: true
+                });
             } else {
-                req.flash('settingsMessage',
-                    'An error occurred. Please try again in a few minutes.');
+                return res.status(200).send({
+                    message: 'Settings update failed. Please try again in a ' +
+                             'few minutes.',
+                    refresh: false
+                });
             }
-
-            return res.redirect('/settings');
         });
     });
 
-    app.post('/delete', isLoggedIn, function(req, res) {
+    app.post('/settings/profile/avatar', isLoggedIn, function(req, res) {
+        var avatarUrl = validator.trim(req.body.avatar);
+        var settings = {};
+
+        // Validate changes
+        if (validator.isValidAvatar(avatarUrl)) {
+            settings.avatar = avatarUrl;
+        } else {
+            return res.status(200).send({
+                message: 'Avatar URL invalid. Please select a valid avatar ' +
+                         'URL.',
+                refresh: false
+            });
+        }
+
+        // Update user settings
+        User.updateUser(req.user._id, settings, function(err, updateSuccess) {
+            if (err) {
+                return res.status(500).send({
+                    message: 'Encountered an error. Please try again in a ' +
+                             'few minutes.',
+                    refresh: false
+                });
+            } else if (updateSuccess) {
+                return res.status(200).send({
+                    message: 'Avatar updated. Reloading...',
+                    refresh: true
+                });
+            } else {
+                return res.status(200).send({
+                    message: 'Avatar update failed. Please try again in a ' +
+                             'few minutes.',
+                    refresh: false
+                });
+            }
+        });
+    });
+
+    app.post('/settings/profile/avatar/reset', isLoggedIn, function(req, res) {
+        // Reset user's avatar to use Gravatar
+        User.resetAvatar(req.user._id, req.user.email, function(err,
+            updateSuccess) {
+            if (err) {
+                return res.status(500).send({
+                    message: 'Encountered an error. Please try again in a ' +
+                             'few minutes.',
+                    refresh: false
+                });
+            } else if (updateSuccess) {
+                return res.status(200).send({
+                    message: 'Your avatar has been reverted to using ' +
+                             'Gravatar. Reloading...',
+                    refresh: true
+                });
+            } else {
+                return res.status(200).send({
+                    message: 'Avatar reset failed. Please try again in a ' +
+                             'few minutes.',
+                    refresh: false
+                });
+            }
+        });
+    });
+
+    app.post('/settings/account/delete', isLoggedIn, function(req, res) {
+        var connected = req.user.facebook.profileId !== undefined ||
+            req.user.youtube.profileId !== undefined;
+
+        if (connected) {
+            return res.status(200).send({
+                message: 'Account deletion failed. Please remove all ' +
+                         'connections beforehand.',
+                refresh: false
+            });
+        }
+
         User.deleteUser(req.user._id, function(err, deleteSuccess) {
             if (err) {
                 return res.status(500).send({
@@ -270,7 +352,7 @@ module.exports = function(app, passport, isLoggedIn) {
                 });
             } else if (deleteSuccess) {
                 return res.status(200).send({
-                    message: 'Account deletion processed... redirecting...',
+                    message: 'Account deletion processed. Reloading...',
                     refresh: true
                 });
             } else {

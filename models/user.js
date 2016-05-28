@@ -9,6 +9,7 @@ var async = require('async');
 var PostSchema = mongoose.model('Post').schema;
 var passportLocalMongoose = require('passport-local-mongoose');
 var bcrypt = require('bcrypt');
+var crypto = require('crypto');
 
 // Define constants for account
 var SALT_WORK_FACTOR = 10;
@@ -33,7 +34,7 @@ var UserSchema = new Schema({
         required: true
     },
 
-    gravatar: {
+    avatar: {
         type: String,
         required: true
     },
@@ -256,7 +257,7 @@ UserSchema.statics.authSerializer = function(user, done) {
 // Deserialize function for use with passport
 UserSchema.statics.authDeserializer = function(id, done) {
     mongoose.models.User.findById(id,
-        'email displayName gravatar posts facebook.profileId ' +
+        'email displayName avatar posts facebook.profileId ' +
         'facebook.acceptUpdates youtube.profileId youtube.acceptUpdates',
         function(err, user) {
             done(err, user);
@@ -327,6 +328,21 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
 
 // Update user settings
 UserSchema.statics.updateUser = function(id, settings, done) {
+    mongoose.models.User.update({
+        _id: id
+    }, settings, function(err, numAffected) {
+        if (err) return done(err);  // An error occurred
+        return done(null, true);    // Update succeeded
+    });
+};
+
+// Reset user's avatar to using Gravatar
+UserSchema.statics.resetAvatar = function(id, email, done) {
+    var settings = {};
+    var gravatar = crypto.createHash('md5').update(email).digest('hex');
+    var avatarUrl = 'https://gravatar.com/avatar/' + gravatar;
+    settings.avatar = avatarUrl;
+
     mongoose.models.User.update({
         _id: id
     }, settings, function(err, numAffected) {

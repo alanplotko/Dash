@@ -89,8 +89,8 @@ app.use(function(req, res, next) {
 
         res.locals.greeting = greeting;
 
-        // Get gravatar url
-        res.locals.gravatar = 'http://gravatar.com/avatar/' + req.user.gravatar;
+        // Get avatar url
+        res.locals.avatar = req.user.avatar;
     }
     next();
 });

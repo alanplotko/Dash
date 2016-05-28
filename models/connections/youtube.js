@@ -405,11 +405,11 @@ module.exports = function(UserSchema) {
                 if (user.youtube.acceptUpdates) {
                     user.youtube.acceptUpdates = false;
                     message = 'YouTube updates have been disabled. ' +
-                              'Refreshing...';
+                              'Reloading...';
                 } else {
                     user.youtube.acceptUpdates = true;
                     message = 'YouTube updates have been enabled. ' +
-                              'Refreshing...';
+                              'Reloading...';
                 }
             }
 
