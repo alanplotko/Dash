@@ -11,9 +11,10 @@ $(document).ready(function() {
     });
 
     // Regex validations
-    $.validator.addMethod('passwordRegex', function(value, element, regexpr) {          
+    $.validator.addMethod('passwordRegex', function(value, element, regexpr) {
         return regexpr.test(value);
-    }, 'Must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number');
+    }, 'Must contain at least 1 uppercase letter, 1 lowercase letter, ' +
+       'and 1 number');
 
     // Form validation setup
     $('#loginForm').validate({
@@ -35,5 +36,5 @@ $(document).ready(function() {
             }
         }
     });
-    
+
 });

@@ -11,7 +11,8 @@ $(document).ready(function() {
     });
 
     // Regex validations
-    $.validator.addMethod('displayNameRegex', function(value, element, regexpr) {          
+    $.validator.addMethod('displayNameRegex', function(value, element,
+        regexpr) {
         return regexpr.test(value);
     }, 'Allowed characters: alphanumeric, spaces, underscores, and dashes.');
 
@@ -26,5 +27,5 @@ $(document).ready(function() {
             }
         }
     });
-    
+
 });

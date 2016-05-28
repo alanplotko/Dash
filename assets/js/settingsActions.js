@@ -6,12 +6,15 @@ function deleteModal() {
 function deleteAccount() {
     $.post('/delete', function(data) {
         Materialize.toast(data.message, 4000, '', function() {
-            if (data.refresh)
-            {
+            if (data.refresh) {
                 window.location.reload();
             }
         });
     }).fail(function(data) {
-        Materialize.toast(data.responseJSON.message, 4000);
+        Materialize.toast(data.responseJSON.message, 4000, '', function() {
+            if (data.responseJSON.refresh) {
+                window.location.reload();
+            }
+        });
     });
 }
