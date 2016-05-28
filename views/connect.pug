@@ -10,7 +10,7 @@ block content
 
   div.row
     if (message.length > 0)
-      div#formMessage.center: p #{message}
+      div#formMessage.center: p !{message}
     div#connections.col.s8.offset-s2
       a.waves-effect.waves-light.btn.btn-front.darken-3.left(href=typeof facebook === 'undefined' ? '/connect/auth/facebook' : '#', class=typeof facebook === 'undefined' ? 'grey' : 'btn-facebook dropdown-button', data-activates=typeof facebook === 'undefined' ? '' : 'facebook') Facebook
         i.fa.fa-facebook-official.left
@@ -82,3 +82,4 @@ block content
 
 block additionalScripts
   script(src='/static/js/connectActions.js')
+  script(src='/static/js/facebookHashFix.js')

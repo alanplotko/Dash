@@ -135,7 +135,7 @@ app.use(function(err, req, res, next) {
     // If in dev env, pass all information on error
     if (debug) {
         res.render('error', {
-            title: err.name || 'Error ' + err.status,
+            title: 'Error ' + err.status,
             message: err.message,
             fullError: JSON.stringify(err, null, '<br />').replace('}',
                 '<br />}'),
@@ -145,7 +145,7 @@ app.use(function(err, req, res, next) {
     } else {
         res.render('error', {
             title: 'Error ' + err.status,
-            message: 'Internal Server Error',
+            message: err.message,
             description: err.description || 'An error occurred! Click the ' +
             'button below to return to the front page.<br /><br />If you ' +
             'were in the middle of trying to do something, then try again ' +

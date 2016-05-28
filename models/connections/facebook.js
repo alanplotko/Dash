@@ -31,11 +31,29 @@ module.exports = function(UserSchema) {
                 new Error('An error occurred. Please try again in a ' +
                     'few minutes.'));
 
-            // Defined Error: Connection already exists
-            if (user.hasFacebook) return done(new Error('You\'re already ' +
-                'connected with Facebook.'));
+            if (connection.reauth) {
+                return done('Missing permissions for Facebook have been ' +
+                    'regranted.');
+            } else if (connection.refreshAccessToken) {
+                delete connection.refreshAccessToken;
+                user.facebook = connection;
+                user.save(function(err) {
+                    // Database Error
+                    if (err) return done(err);
 
-            // Save connection information to account
+                    // Success: Refreshed access token for Facebook connection
+                    return done('Access privileges for Facebook have been ' +
+                        'renewed.');
+                });
+            } else if (user.hasFacebook) {
+                // Defined Error: Connection already exists
+                return done(new Error('You\'re already ' +
+                    'connected with Facebook.'));
+            }
+
+            // Save connection information (excluding other states) to account
+            delete connection.reauth;
+            delete connection.refreshAccessToken;
             user.facebook = connection;
             user.save(function(err) {
                 // Database Error
@@ -80,6 +98,11 @@ module.exports = function(UserSchema) {
                 // Request Error
                 if (err) return done(err);
 
+                // Access Token Error
+                if (body.error && body.error.code == 190) {
+                    return done('400-Facebook');
+                }
+
                 // Success: Deauthorized Dash app
                 if (body.success) {
                     // Remove relevant Facebook data
@@ -106,8 +129,18 @@ module.exports = function(UserSchema) {
                 // Request Error
                 if (err) return done(err);
 
+                // Access Token Error
+                if (body.error && body.error.code == 190) {
+                    return done('400-Facebook');
+                }
+
                 if (body.data && body.data.length > 0) {
                     body.data.forEach(function(element) {
+                        // Skip non-Facebook pages and merged pages
+                        if ((element.link &&
+                            element.link.indexOf(
+                                'https://www.facebook.com') === -1) ||
+                                element.best_page) return;
                         var coverImage;
                         if (element.cover) coverImage = element.cover.source;
 
@@ -115,6 +148,7 @@ module.exports = function(UserSchema) {
                             'id': element.id,
                             'cover': coverImage || '/static/img/no-image.png',
                             'description': element.description ||
+                                           element.about ||
                                            'No description provided.',
                             'is_verified': element.is_verified || false,
                             'link': element.link ||
@@ -144,6 +178,11 @@ module.exports = function(UserSchema) {
         }, function(err, res, body) {
             // Request Error
             if (err) return done(err);
+
+            // Access Token Error
+            if (body.error && body.error.code == 190) {
+                return done('400-Facebook');
+            }
 
             if (body.data && body.data.length > 0) {
                 body.data.forEach(function(element) {
@@ -215,15 +254,13 @@ module.exports = function(UserSchema) {
                       'id,description,is_verified&access_token=' +
                       user.facebook.accessToken;
 
-            var content = getFacebookContent(url, {}, appSecretProof,
-                function(err, content) {
-                    // Error while retrieving content
-                    if (err) return done(err);
+            getFacebookContent(url, {}, appSecretProof, function(err, content) {
+                // Error while retrieving content
+                if (err) return done(err);
 
-                    // Success: Retrieved groups
-                    return done(null, content, user.facebook.groups);
-                }
-            );
+                // Success: Retrieved groups
+                return done(null, content, user.facebook.groups);
+            });
         });
     };
 
@@ -275,18 +312,16 @@ module.exports = function(UserSchema) {
 
             var url = 'https://graph.facebook.com/v2.5/' +
                       user.facebook.profileId + '/likes?fields=cover,name,id,' +
-                      'description,link,is_verified&access_token=' +
-                      user.facebook.accessToken;
+                      'description,link,is_verified,best_page,about&' +
+                      'access_token=' + user.facebook.accessToken;
 
-            var content = getFacebookContent(url, {}, appSecretProof,
-                function(err, content) {
-                    // Error while retrieving content
-                    if (err) return done(err);
+            getFacebookContent(url, {}, appSecretProof, function(err, content) {
+                // Error while retrieving content
+                if (err) return done(err);
 
-                    // Success: Retrieved pages
-                    return done(null, content, user.facebook.pages);
-                }
-            );
+                // Success: Retrieved pages
+                return done(null, content, user.facebook.pages);
+            });
         });
     };
 

@@ -1,7 +1,10 @@
+/*jshint esversion: 6 */
+
 // --------- Dependencies ---------
 var User = require.main.require('./models/user');
 var validator = require('validator');
 require.main.require('./config/custom-validation.js')(validator);
+const error_messages = require.main.require('./config/error-messages.js');
 
 module.exports = function(app, passport, isLoggedIn) {
 
@@ -39,7 +42,8 @@ module.exports = function(app, passport, isLoggedIn) {
             if (err) {
                 return res.status(500).send({
                     message: 'Encountered an error. Please try again in a ' +
-                             'few minutes.'
+                             'few minutes.',
+                    refresh: false
                 });
             } else {
                 return res.status(200).send({
@@ -54,10 +58,22 @@ module.exports = function(app, passport, isLoggedIn) {
     app.post('/refresh', isLoggedIn, function(req, res) {
         req.user.updateContent(function(err, posts) {
             if (err) {
-                return res.status(500).send({
-                    message: 'Encountered an error. Please try again in a ' +
-                             'few minutes.'
-                });
+                if (err.toString().indexOf('400') !== -1) {
+                    var service = err.toString().split('-')[1];
+                    req.flash('connectMessage',
+                        error_messages[service].refresh);
+                    return res.status(500).send({
+                        message: 'Encountered an error. ' + service +
+                                 ' access privileges must be renewed...',
+                        toConnect: true
+                    });
+                } else {
+                    return res.status(500).send({
+                        message: 'Encountered an error. Please try again ' +
+                        'in a few minutes.',
+                        refresh: false
+                    });
+                }
             } else if (posts) {
                 return res.status(200).send({
                     message: 'New posts! Loading them in...',
@@ -77,10 +93,21 @@ module.exports = function(app, passport, isLoggedIn) {
         if (connectionName === 'facebook') {
             req.user.refreshFacebook(function(err, posts) {
                 if (err) {
-                    return res.status(500).send({
-                        message: 'Encountered an error. Please try again in ' +
-                                 'a few minutes.'
-                    });
+                    if (err.toString() === '400-Facebook') {
+                        req.flash('connectMessage',
+                            error_messages.Facebook.refresh);
+                        return res.status(500).send({
+                            message: 'Encountered an error. Facebook access ' +
+                                     'privileges must be renewed...',
+                            refresh: true
+                        });
+                    } else {
+                        return res.status(500).send({
+                            message: 'Encountered an error. Please try again ' +
+                            'in a few minutes.',
+                            refresh: false
+                        });
+                    }
                 } else if (posts) {
                     return res.status(200).send({
                         message: 'New posts! Loading them in...',
@@ -96,10 +123,21 @@ module.exports = function(app, passport, isLoggedIn) {
         } else if (connectionName === 'youtube') {
             req.user.refreshYouTube(function(err, posts) {
                 if (err) {
-                    return res.status(500).send({
-                        message: 'Encountered an error. Please try again in ' +
-                                 'a few minutes.'
-                    });
+                    if (err.toString() === '400-YouTube') {
+                        req.flash('connectMessage',
+                            error_messages.YouTube.refresh);
+                        return res.status(500).send({
+                            message: 'Encountered an error. YouTube access ' +
+                                     'privileges must be renewed...',
+                            refresh: true
+                        });
+                    } else {
+                        return res.status(500).send({
+                            message: 'Encountered an error. Please try again ' +
+                            'in a few minutes.',
+                            refresh: false
+                        });
+                    }
                 } else if (posts) {
                     return res.status(200).send({
                         message: 'New posts! Loading them in...',
@@ -122,7 +160,8 @@ module.exports = function(app, passport, isLoggedIn) {
                 if (err) {
                     return res.status(500).send({
                         message: 'Encountered an error. Please try again in ' +
-                                 'a few minutes.'
+                                 'a few minutes.',
+                        refresh: false
                     });
                 } else if (result) {
                     return res.status(200).send({
@@ -141,7 +180,8 @@ module.exports = function(app, passport, isLoggedIn) {
                 if (err) {
                     return res.status(500).send({
                         message: 'Encountered an error. Please try again in ' +
-                                 'a few minutes.'
+                                 'a few minutes.',
+                        refresh: false
                     });
                 } else if (result) {
                     return res.status(200).send({
@@ -225,7 +265,8 @@ module.exports = function(app, passport, isLoggedIn) {
             if (err) {
                 return res.status(500).send({
                     message: 'Encountered an error. Please try again in a ' +
-                             'few minutes.'
+                             'few minutes.',
+                        refresh: false
                 });
             } else if (deleteSuccess) {
                 return res.status(200).send({
