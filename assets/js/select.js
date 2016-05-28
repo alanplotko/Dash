@@ -1,21 +1,21 @@
 $(document).ready(function() {
-    var numSubs = $('#setupForm .youtube-sub-card').
+    var numItems = $('#setupForm .card').
         find('.card-action :checkbox').size();
-    var numChecked = $('#setupForm .youtube-sub-card').
+    var numChecked = $('#setupForm .card').
         find('.card-action :checkbox:checked').size();
-    if (numChecked == numSubs) {
+    if (numChecked == numItems) {
         $('#selectAll').prop('checked', true);
     }
 
     $('#selectAll').change(function() {
         var checkedStatus = this.checked;
         if (checkedStatus) {
-            $('#setupForm .youtube-sub-card').
+            $('#setupForm .card').
                 find('.card-action :checkbox').each(function() {
                 $(this).prop('checked', checkedStatus);
             });
         } else {
-            $('#setupForm .youtube-sub-card')
+            $('#setupForm .card')
                 .find('.card-action :checkbox').each(function() {
                 $(this).prop('checked', null);
             });
