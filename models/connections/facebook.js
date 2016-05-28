@@ -501,11 +501,11 @@ module.exports = function(UserSchema) {
                 if (user.facebook.acceptUpdates) {
                     user.facebook.acceptUpdates = false;
                     message = 'Facebook updates have been disabled. ' +
-                              'Refreshing...';
+                              'Reloading...';
                 } else {
                     user.facebook.acceptUpdates = true;
                     message = 'Facebook updates have been enabled. ' +
-                              'Refreshing...';
+                              'Reloading...';
                 }
             }
 

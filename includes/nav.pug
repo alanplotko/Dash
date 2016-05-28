@@ -14,7 +14,7 @@ nav.blue.darken-3
       if (locals.login)
         li: a.dropdown-button(href='#', data-activates='user-dropdown') #{locals.greeting}, #{locals.displayName}!
           i.material-icons.right arrow_drop_down
-          img.avatar.left(src=locals.gravatar)
+          img.avatar.left(src=locals.avatar)
         if connected
           li: a#refresh(href='#', onclick='refresh(); return false;')
             i.material-icons refresh

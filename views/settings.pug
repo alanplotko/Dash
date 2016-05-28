@@ -9,39 +9,72 @@ block content
   if (message.length > 0)
     div#formMessage.center: p #{message}
 
-  div.row
+  div.row#settings-section
     div.col.s8.offset-s2
       ul#settings.tabs
-        li.tab.col.s4: a.active(href='#general') General Settings
-        li.tab.col.s4: a(href='#account') Account Settings
+        li.tab.col.s4: a.active(href='#profile') Manage Profile
+        li.tab.col.s4: a(href='#account') Manage Account
 
-  div.row.no-margin
-    div#general.col.s6.offset-s3
-      form#settingsForm(action='/settings', method='POST')
-        div.row
-          div.input-field.col.s12
-            i.material-icons.prefix assignment_ind
-            input#display_name.border-blue(value=locals.displayName, type='text', name='display_name')
-            label(for='display_name') Display Name
-        div.row
-          div#controls.input-field.blue-text.text-darken-3.col.s12
-            button.waves-effect.waves-dark.btn.btn-front.blue.darken-3.right(type='submit') Update
-              i.material-icons.right send
+      div.row.no-margin
+        div#profile.col.s10.offset-s1
+          div.col.s12
+            div.card.card-settings
+              div.card-content
+                span.card-title Display Name Settings
+                div.row.no-margin
+                  p Customize your display name across Dash. How should we refer to you?
+                  form#displayNameForm(action='/settings/profile/display_name', method='POST')
+                    div.row
+                      div.input-field.col.s12
+                        i.material-icons.prefix assignment_ind
+                        input#display_name.border-blue(value=locals.displayName, type='text', name='display_name')
+                        label(for='display_name') Display Name
+              div.card-action
+                a(href='#', onclick='updateDisplayName(); return false;') Update Display Name
+          div.col.s12
+            div.card.card-settings
+              div.card-content
+                span.card-title Avatar Settings
+                div.avatar-section.row.valign-wrapper
+                  div.col.s1
+                    img(src=locals.avatar).circle.responsive-img
+                  div.col.s11
+                    p We use Gravatar for your Dash avatar. You can create a Gravatar account using the same email address as what you've used to register with Dash.
+                span.card-title Upload Custom Avatar
+                div.row.no-margin
+                  p You can specify a custom avatar as an alternative to using Gravatar. We recommend an equal width and height for consistent resizing. The following criteria must be met:
+                  ul
+                    li The file extension must be .png or .jpg/.jpeg
+                  form#avatarForm(action='/settings/profile/avatar', method='POST')
+                    div.row
+                      div.input-field.col.s12
+                        i.material-icons.prefix photo
+                        input#avatar.border-blue(value=locals.avatar, type='text', name='avatar')
+                        label(for='avatar') Custom Avatar URL
+              div.card-action
+                a(href='https://en.gravatar.com/', target='_blank') Visit Gravatar
+                a(href='#', onclick='updateAvatar(); return false;') Set Custom Avatar
+                a(href='#', onclick='resetAvatar(); return false;') Revert to Gravatar
 
-  div.row.no-margin
-    div#account.col.s6.offset-s3
-      <!-- Account Removal Modal Trigger -->
-      p Delete Dash Account (and all stored preferences)
-      a.modal-trigger.waves-effect.waves-light.blue.darken-3.btn(href='#', onclick='deleteModal(); return false;') Delete Account
-      <!-- Account Removal Modal Structure -->
-      div#deleteModal.modal
-        div.modal-content
-          h4 WARNING: Account Deletion
-            p By proceeding with the account deletion, all preferences and data will be lost. You will be required to start from scratch with a new account if you change your mind after deletion. There is no restoration process - once deleted, your account is gone forever.
-            p NOTE: If your goal is to reset your connection-specific preferences, a reset option exists on the connections page. You may reset the connection or remove the connection from the connections page. There is no need to delete your account unless you no longer want one.
-        div.modal-footer
-          a.modal-action.modal-close.waves-effect.waves-green.btn-flat Cancel
-          a#deleteConfirm.modal-action.modal-close.waves-effect.waves-blue.btn-flat Delete Account
+      div.row.no-margin
+        div#account.col.s10.offset-s1
+          div.col.s12
+            div.card.card-settings
+              div.card-content
+                span.card-title Delete Account
+                p After deletion, your account cannot be restored. We do not retain any information or preferences upon account deletion. There is no turning back once done.
+              div.card-action
+                a.modal-trigger(href='#', onclick='deleteModal(); return false;') Delete Account
+
+  <!-- Account Removal Modal Structure -->
+  div#deleteModal.modal
+    div.modal-content
+      h4 WARNING: Account Deletion
+        p By proceeding with the account deletion, all preferences and data will be lost. You will be required to start from scratch with a new account if you change your mind after deletion. There is no restoration process - once deleted, your account is gone forever.
+        p NOTE: If your goal is to reset your connection-specific preferences, a reset option exists on the connections page. You may reset the connection or remove the connection from the connections page. There is no need to delete your account unless you no longer want one.
+    div.modal-footer
+      a.modal-action.modal-close.waves-effect.waves-blue.btn-flat Cancel
+      a#deleteConfirm.modal-action.modal-close.waves-effect.waves-blue.btn-flat Delete Account
 
 block additionalScripts
   script(src='/jquery/jquery.validate.js')

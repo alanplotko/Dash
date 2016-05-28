@@ -114,7 +114,7 @@ module.exports = function(passport) {
                 email: email,
                 displayName: display,
                 password: password,
-                gravatar: gravatar
+                avatar: 'https://gravatar.com/avatar/' + gravatar
             });
 
             newUser.save(function(err) {
