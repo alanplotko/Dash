@@ -142,7 +142,8 @@ module.exports = function(passport) {
             profileId: profile.id,
             accessToken: accessToken,
             refreshToken: refreshToken,
-            reauth: req.session.reauth
+            reauth: req.session.reauth,
+            refreshAccessToken: req.session.refreshAccessToken
         };
 
         process.nextTick(function() {
@@ -158,6 +159,7 @@ module.exports = function(passport) {
                         'settings are now available for configuration.'));
             });
             delete req.session.reauth;
+            delete req.session.refreshAccessToken;
         });
     });
     passport.use(fbStrategy);
@@ -175,7 +177,9 @@ module.exports = function(passport) {
         connection = {
             profileId: profile.id,
             accessToken: accessToken,
-            refreshToken: refreshToken
+            refreshToken: refreshToken,
+            reauth: req.session.reauth,
+            refreshAccessToken: req.session.refreshAccessToken
         };
 
         process.nextTick(function() {
@@ -190,6 +194,8 @@ module.exports = function(passport) {
                         'You are now connected with YouTube. YouTube ' +
                         'settings are now available for configuration.'));
             });
+            delete req.session.reauth;
+            delete req.session.refreshAccessToken;
         });
     });
     passport.use(ytStrategy);

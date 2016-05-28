@@ -2,6 +2,7 @@
 var User = require.main.require('./models/user');
 var validator = require('validator');
 require.main.require('./config/custom-validation.js')(validator);
+const error_messages = require.main.require('./config/error-messages.js');
 
 module.exports = function(app, passport, isLoggedIn) {
 
@@ -19,13 +20,34 @@ module.exports = function(app, passport, isLoggedIn) {
             successRedirect: '/connect'
     }));
 
+    app.get('/connect/reauth/youtube', isLoggedIn, function(req, res, next) {
+        req.session.reauth = true;
+        next();
+    }, passport.authenticate('youtube', {
+        scope: [
+            'https://www.googleapis.com/auth/youtube.force-ssl',
+            'https://www.googleapis.com/auth/youtube.readonly'
+        ]
+    }));
+
+    app.get('/connect/refresh_token/youtube', isLoggedIn, function(req,
+        res, next) {
+        req.session.refreshAccessToken = true;
+        next();
+    }, passport.authenticate('youtube'));
+
     app.get('/setup/youtube/subscriptions', isLoggedIn, function(req, res) {
         User.setUpYouTubeSubs(req.user._id, function(err, allSubscriptions,
             existingSubscriptions) {
                 // An error occurred
                 if (err) {
-                    req.flash('connectMessage', err.toString());
-                    res.redirect('/connect');
+                    // Retry request if access token was refreshed successfully
+                    if (err.toString() === 'Error: Refreshed Access Token') {
+                        res.redirect('/setup/youtube/subscriptions');
+                    } else {
+                        req.flash('connectMessage', err.toString());
+                        res.redirect('/connect');
+                    }
                 // Found subscriptions
                 } else if (allSubscriptions &&
                     Object.keys(allSubscriptions).length > 0) {
@@ -56,11 +78,7 @@ module.exports = function(app, passport, isLoggedIn) {
                 // No subscriptions found; return to connect page
                 } else {
                     req.flash('connectMessage',
-                        'You do not have any configurable YouTube ' +
-                        'subscriptions at this time. It is possible you ' +
-                        'may be missing required permissions. ' +
-                        '<a href="/connect/reauth/youtube">Reauthenticate ' +
-                        'just in case?</a>');
+                        error_messages.YouTube.reauth.subscriptions);
                     res.redirect('/connect');
                 }
             }
@@ -86,8 +104,11 @@ module.exports = function(app, passport, isLoggedIn) {
 
     app.get('/connect/remove/youtube', isLoggedIn, function(req, res) {
         User.removeYouTube(req.user.id, function(err) {
+            // Get new access token if current token was deemed invalid
             if (err) {
-                req.flash('connectMessage', err.toString());
+                if (err.toString() === '400-YouTube') {
+                    req.flash('connectMessage', error_messages.YouTube.refresh);
+                }
             } else {
                 req.flash('connectMessage',
                     'Your YouTube connection has been removed.');

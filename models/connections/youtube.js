@@ -30,11 +30,29 @@ module.exports = function(UserSchema) {
             if (!user) return done(null, null, new Error('An error occurred. ' +
                 'Please try again in a few minutes.'));
 
-            // Defined Error: Connection already exists
-            if (user.hasYouTube) return done(new Error('You\'re already ' +
-                'connected with YouTube.'));
+            if (connection.reauth) {
+                return done('Missing permissions for YouTube have been ' +
+                    'regranted.');
+            } else if (connection.refreshAccessToken) {
+                delete connection.refreshAccessToken;
+                user.youtube = connection;
+                user.save(function(err) {
+                    // Database Error
+                    if (err) return done(err);
 
-            // Save connection information to account
+                    // Success: Refreshed access token for YouTube connection
+                    return done('Access privileges for YouTube have been ' +
+                        'renewed.');
+                });
+            } else if (user.hasYouTube) {
+                // Defined Error: Connection already exists
+                return done(new Error('You\'re already connected with ' +
+                    'YouTube.'));
+            }
+
+            // Save connection information (excluding other states) to account
+            delete connection.reauth;
+            delete connection.refreshAccessToken;
             user.youtube = connection;
             user.save(function(err) {
                 // Database Error
@@ -73,9 +91,13 @@ module.exports = function(UserSchema) {
                 // Request Error
                 if (err) return done(err);
 
+                // Access Token Error
+                if (res.statusCode == 400 && body.error === 'invalid_token') {
+                    return done('400-YouTube');
+                }
+
                 // Success: Deauthorized Dash app (or app already deauthorized)
-                if (res.statusCode == 200 || (res.statusCode == 400 &&
-                    body.error === 'invalid_token')) {
+                if (res.statusCode == 200) {
                     // Remove relevant YouTube data
                     user.youtube = user.lastUpdateTime.youtube = undefined;
                     user.save(function(err) {
@@ -100,9 +122,10 @@ module.exports = function(UserSchema) {
             if (err) return done(err);
 
             // Access Token Error
-            if (body.error && body.error.code == 401 &&
-                body.error.message === 'Invalid Credentials') {
-                return done(new Error('Invalid Credentials'));
+            if (body.error && ((body.error.code == 401 &&
+                body.error.message === 'Invalid Credentials') ||
+                body.error.code == 403)) {
+                return done('400-YouTube');
             }
 
             if (body.items && body.items.length > 0) {
@@ -149,7 +172,7 @@ module.exports = function(UserSchema) {
             getYouTubeContent(url, '', {}, function(err, content) {
                 // Error while retrieving content
                 if (err) {
-                    if (err.message === 'Invalid Credentials') {
+                    if (err === '400-YouTube') {
                         refresh.requestNewAccessToken('youtube',
                             user.youtube.refreshToken,
                             function(err, accessToken, refreshToken) {
@@ -157,17 +180,10 @@ module.exports = function(UserSchema) {
                                 user.save(function(err) {
                                     // Database Error
                                     if (err) return done(err);
-                                });
-                                // Get content
-                                getYouTubeContent(url, '', {}, function(err,
-                                    content) {
-                                    if (err) {
-                                        return done(err);
-                                    } else {
-                                        // Success: Retrieved subscriptions
-                                        return done(null, content,
-                                            user.youtube.subscriptions);
-                                    }
+
+                                    // Successfully refreshed access token
+                                    return done(new Error('Refreshed ' +
+                                        'Access Token'));
                                 });
                         });
                     }
@@ -218,6 +234,12 @@ module.exports = function(UserSchema) {
         }, function(err, res, body) {
             // Request Error
             if (err) return done(err);
+
+            // Access Token Error
+            if (body.error && (body.error.code == 400 ||
+                body.error.code == 403)) {
+                return done('400-YouTube');
+            }
 
             if (body.items && body.items.length > 0) {
                 body.items.forEach(function(element) {

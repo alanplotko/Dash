@@ -2,6 +2,7 @@
 var User = require.main.require('./models/user');
 var validator = require('validator');
 require.main.require('./config/custom-validation.js')(validator);
+const error_messages = require.main.require('./config/error-messages.js');
 
 module.exports = function(app, passport, isLoggedIn) {
 
@@ -26,12 +27,24 @@ module.exports = function(app, passport, isLoggedIn) {
         scope: ['user_managed_groups', 'user_likes']
     }));
 
+    app.get('/connect/refresh_token/facebook', isLoggedIn, function(req,
+        res, next) {
+        req.session.refreshAccessToken = true;
+        next();
+    }, passport.authenticate('facebook'));
+
     app.get('/setup/facebook/groups', isLoggedIn, function(req, res) {
         User.setUpFacebookGroups(req.user._id, function(err, allGroups,
             existingGroups) {
                 // An error occurred
                 if (err) {
-                    req.flash('connectMessage', err.toString());
+                    // Get new access token if current token was deemed invalid
+                    if (err.toString() === '400-Facebook') {
+                        req.flash('connectMessage',
+                            error_messages.Facebook.refresh);
+                    } else {
+                        req.flash('connectMessage', err.toString());
+                    }
                     res.redirect('/connect');
                 // Found groups
                 } else if (Object.keys(allGroups).length > 0) {
@@ -60,11 +73,7 @@ module.exports = function(app, passport, isLoggedIn) {
                 // No groups found; return to connect page
                 } else {
                     req.flash('connectMessage',
-                        'You do not have any configurable Facebook groups ' +
-                        'at this time. It is possible you may be missing ' +
-                        'required permissions. ' +
-                        '<a href="/connect/reauth/facebook">Reauthenticate ' +
-                        'just in case?</a>');
+                        error_messages.Facebook.reauth.groups);
                     res.redirect('/connect');
                 }
             }
@@ -93,7 +102,13 @@ module.exports = function(app, passport, isLoggedIn) {
             existingPages) {
                 // An error occurred
                 if (err) {
-                    req.flash('connectMessage', err.toString());
+                    // Get new access token if current token was deemed invalid
+                    if (err.toString() === '400-Facebook') {
+                        req.flash('connectMessage',
+                            error_messages.Facebook.refresh);
+                    } else {
+                        req.flash('connectMessage', err.toString());
+                    }
                     res.redirect('/connect');
                 // Found pages
                 } else if (Object.keys(allPages).length > 0) {
@@ -122,11 +137,7 @@ module.exports = function(app, passport, isLoggedIn) {
                 // No pages found; return to connect page
                 } else {
                     req.flash('connectMessage',
-                        'You do not have any configurable Facebook pages ' +
-                        'at this time. It is possible you may be missing ' +
-                        'required permissions. ' +
-                        '<a href="/connect/reauth/facebook">Reauthenticate ' +
-                        'just in case?</a>');
+                        error_messages.Facebook.reauth.pages);
                     res.redirect('/connect');
                 }
             }
@@ -152,8 +163,11 @@ module.exports = function(app, passport, isLoggedIn) {
 
     app.get('/connect/remove/facebook', isLoggedIn, function(req, res) {
         User.removeFacebook(req.user.id, function(err) {
+            // Get new access token if current token was deemed invalid
             if (err) {
-                req.flash('connectMessage', err.toString());
+                if (err.toString() === '400-Facebook') {
+                    req.flash('connectMessage', error_messages.Facebook.refresh);
+                }
             } else {
                 req.flash('connectMessage',
                     'Your Facebook connection has been removed.');
