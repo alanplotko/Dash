@@ -64,14 +64,14 @@ block content
                 span.card-title Change Email Address
                 div.row.no-margin
                   p
-                    b Warning: All service preferences will be lost. 
-                    | The following actions must be taken after changing your email address:
+                    b Warning: All service preferences will be lost.
+                    |  The following actions must be taken after changing your email address:
                   ul
-                    li You will need to reconnect to 
-                      b all 
-                      | of your active services
-                    li Preferences will need to be set up again 
-                      b from scratch
+                    li You will need to reconnect to
+                      b  all
+                      |  of your active services
+                    li Preferences will need to be set up again
+                      b  from scratch
                     li You will be required to verify your new email address
                   form#emailForm(action='/settings/account/email', method='POST')
                     div.row
@@ -84,10 +84,35 @@ block content
           div.col.s12
             div.card.card-settings
               div.card-content
+                span.card-title Change Password
+                div.row.no-margin
+                  p Please type in your current password to authorize this change. Then type in your new password twice. The following criteria must be met:
+                  ul
+                    li The new password must be at least 8 characters long
+                    li The new password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number
+                  form#passwordForm(action='/settings/account/password', method='POST')
+                    div.row
+                      div.input-field.col.s12
+                        i.material-icons.prefix security
+                        input#currentPass.border-blue(type='password', name='currentPass')
+                        label(for='currentPass') Current Password
+                      div.input-field.col.s12
+                        i.material-icons.prefix lock
+                        input#newPass.border-blue(type='password', name='newPass')
+                        label(for='newPass') New Password
+                      div.input-field.col.s12
+                        i.material-icons.prefix compare_arrows
+                        input#newPassConfirm.border-blue(type='password', name='newPassConfirm')
+                        label(for='newPassConfirm') Confirm New Password
+              div.card-action
+                a(href='#', onclick='updatePassword(); return false;') Change Password
+          div.col.s12
+            div.card.card-settings
+              div.card-content
                 span.card-title Delete Account
                 p
-                  b Warning: After deletion, your account cannot be restored. 
-                  | We do not retain any information or preferences upon account deletion. There is no turning back once done.
+                  b Warning: After deletion, your account cannot be restored.
+                  |  We do not retain any information or preferences upon account deletion. There is no turning back once done.
               div.card-action
                 a.modal-trigger(href='#', onclick='deleteModal(); return false;') Delete Account
 

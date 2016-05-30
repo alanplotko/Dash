@@ -174,12 +174,6 @@ UserSchema.pre('save', function(next) {
         // An error occurred
         if (err) return next(new Error('An error occurred. Please try ' +
             'again in a few minutes.'));
-
-        // Email address already exists
-        if (user) {
-            return next(new Error('Registration failed. Do you perhaps ' +
-                'already have an account?'));
-        }
     });
 
     // Only hash password if it has been modified or is new

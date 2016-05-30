@@ -259,8 +259,8 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                 });
             } else {
                 return res.status(200).send({
-                    message: 'Settings update failed. Please try again in a ' +
-                             'few minutes.',
+                    message: 'Display name update failed. Please try again ' +
+                             'in a few minutes.',
                     refresh: false
                 });
             }
@@ -424,6 +424,92 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                 });
             }
         });
+    });
+
+    app.post('/settings/account/password', isLoggedIn, function(req, res) {
+        var currentPass = validator.trim(req.body.currentPass);
+        var newPass = validator.trim(req.body.newPass);
+        var newPassConfirm = validator.trim(req.body.newPassConfirm);
+        var settings = {};
+
+        // Validate changes
+        if (newPass !== newPassConfirm) {
+            return res.status(200).send({
+                message: 'Please ensure the passwords match.',
+                refresh: false
+            });
+        } else if (validator.isValidPassword(newPass)) {
+            settings.password = newPass;
+            User.findById(req.user._id, function(err, user) {
+                user.comparePassword(currentPass, function(err, isMatch) {
+                    if (err) {
+                        return res.status(500).send({
+                            message: 'Encountered an error. Please try ' +
+                                     'again in a few minutes.',
+                            refresh: false
+                        });
+                    } else if (isMatch) {
+                        // Update user settings
+                        User.findById(req.user._id, function(err, user) {
+                            if (err) {
+                                return res.status(500).send({
+                                    message: 'Encountered an error. Please ' +
+                                    'try again in a few minutes.',
+                                    refresh: false
+                                });
+                            } else if (user) {
+                                if (currentPass === newPass) {
+                                    return res.status(200).send({
+                                        message: 'New password invalid. ' +
+                                                 'Your new password cannot ' +
+                                                 'be the same as your ' +
+                                                 'current password.',
+                                        refresh: false
+                                    });
+                                }
+                                user.password = newPass;
+                                user.save(function(err) {
+                                    // An error occurred
+                                    if (err) {
+                                        return res.status(500).send({
+                                            message: 'Encountered an error. ' +
+                                                     'Please try again in a ' +
+                                                     'few minutes.',
+                                            refresh: false
+                                        });
+                                    }
+
+                                    // Successfully changed password
+                                    return res.status(200).send({
+                                        message: 'Password updated. ' +
+                                                 'Reloading...',
+                                        refresh: true
+                                    });
+                                });
+                            } else {
+                                return res.status(200).send({
+                                    message: 'Password update failed. Please ' +
+                                             'try again in a few minutes.',
+                                    refresh: false
+                                });
+                            }
+                        });
+                    } else {
+                        return res.status(200).send({
+                            message: 'Please enter your current password ' +
+                                     'correctly to authorize the password ' +
+                                     'change.',
+                            refresh: false
+                        });
+                    }
+                });
+            });
+        } else {
+            return res.status(200).send({
+                message: 'Please enter a valid password.',
+                refresh: false
+            });
+        }
     });
 
     app.post('/settings/account/delete', isLoggedIn, function(req, res) {

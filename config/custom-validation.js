@@ -11,6 +11,6 @@ module.exports = function(validator) {
 
     // Define custom validation function for an avatar
     validator.isValidAvatar = function(str) {
-        return /^https?:\/\/(?:[a-z0-9\-]+\.)+[a-z]{2,6}(?:\/[^/#?]+)+\.(?:jp(e?)g|png)$/i.test(str);
+        return /^(https?:\/\/|www.)(?:[a-z0-9\-]+\.)+[a-z]{2,6}(?:\/[^/#?]+)+\.(?:jp(e?)g|png)$/i.test(str);
     };
 };
