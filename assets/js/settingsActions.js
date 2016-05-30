@@ -34,6 +34,11 @@ $('#emailForm').submit(function(e) {
     e.preventDefault();
 });
 
+$('#passwordForm').submit(function(e) {
+    updatePassword();
+    e.preventDefault();
+});
+
 function updateDisplayName() {
     $.post('/settings/profile/display_name', $('#displayNameForm').serialize(),
         function(data) {
@@ -86,6 +91,23 @@ function resetAvatar() {
 
 function updateEmail() {
     $.post('/settings/account/email', $('#emailForm').serialize(),
+        function(data) {
+        Materialize.toast(data.message, 4000, '', function() {
+            if (data.refresh) {
+                window.location.reload();
+            }
+        });
+    }).fail(function(data) {
+        Materialize.toast(data.responseJSON.message, 4000, '', function() {
+            if (data.responseJSON.refresh) {
+                window.location.reload();
+            }
+        });
+    });
+}
+
+function updatePassword() {
+    $.post('/settings/account/password', $('#passwordForm').serialize(),
         function(data) {
         Materialize.toast(data.message, 4000, '', function() {
             if (data.refresh) {

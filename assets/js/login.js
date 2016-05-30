@@ -29,11 +29,6 @@ $(document).ready(function() {
                 maxlength: 128,
                 passwordRegex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%^&*}{><~`:;?|,.\]\[\)(+=._-]{8,128}$/
             }
-        },
-        message: {
-            password: {
-                minlength: 'Must be at least 8 characters'
-            }
         }
     });
 
