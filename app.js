@@ -18,11 +18,38 @@ var cookieParser = require('cookie-parser');
 var passport = require('passport');
 var flash = require('connect-flash');
 var mongoose = require('mongoose');
+var nev = require('email-verification')(mongoose);
+var smtpTransport = require('nodemailer-smtp-transport');
 require('express-mongoose');
 
 // Require models
-require('./models/post');
-require('./models/user');
+var Post = require('./models/post');
+var User = require('./models/user');
+
+// Configure email verification options
+nev.configure({
+    verificationURL: config.url + '/verify/${URL}',
+ 
+    // MongoDB Model Info
+    persistentUserModel: User,
+    tempUserCollection: 'unverified_users',
+    emailFieldName: 'email',
+    URLFieldName: 'verificationUrl',
+ 
+    // Emailing Options 
+    transportOptions: smtpTransport(config.email_settings),
+    verifyMailOptions: config.verify_email_format,
+    confirmMailOptions: config.confirm_email_format,
+
+    // Log errors on console
+    verifySendMailCallback: function(err, info) {
+        if (err) console.log(err);
+    },
+    confirmSendMailCallback: function(err, info) {
+        if (err) console.log(err);
+    }
+});
+nev.generateTempUserModel(User);
 
 // --------- Support bodies ---------
 app.use(bodyParser.json());
@@ -37,7 +64,7 @@ mongoose.connect(config.MONGO_URI, function(err) {
 });
 
 // --------- Authentication Setup ---------
-require('./config/passport')(passport);
+require('./config/passport')(passport, nev);
 app.use(cookieParser());
 app.use(session({
     secret: '#ofi!af8_1b_edlif6h=o8b)f&)hc!8kx=w*$f2pi%hm)(@yx8',
@@ -91,6 +118,9 @@ app.use(function(req, res, next) {
 
         // Get avatar url
         res.locals.avatar = req.user.avatar;
+
+        // Get email address
+        res.locals.email = req.user.email;
     }
     next();
 });
@@ -107,7 +137,7 @@ function isLoggedIn(req, res, next) {
 }
 
 // Set up app routes
-require('./routes/pages')(app, passport, isLoggedIn);
+require('./routes/pages')(app, passport, isLoggedIn, nev);
 require('./routes/facebook')(app, passport, isLoggedIn);
 require('./routes/youtube')(app, passport, isLoggedIn);
 

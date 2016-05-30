@@ -183,7 +183,7 @@ UserSchema.pre('save', function(next) {
     });
 
     // Only hash password if it has been modified or is new
-    if (!user.isModified('password')) return next();
+    if (user.isNew || !user.isModified('password')) return next();
 
     // Generate salt
     bcrypt.genSalt(SALT_WORK_FACTOR, function(err, salt) {

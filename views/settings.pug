@@ -61,8 +61,33 @@ block content
           div.col.s12
             div.card.card-settings
               div.card-content
+                span.card-title Change Email Address
+                div.row.no-margin
+                  p
+                    b Warning: All service preferences will be lost. 
+                    | The following actions must be taken after changing your email address:
+                  ul
+                    li You will need to reconnect to 
+                      b all 
+                      | of your active services
+                    li Preferences will need to be set up again 
+                      b from scratch
+                    li You will be required to verify your new email address
+                  form#emailForm(action='/settings/account/email', method='POST')
+                    div.row
+                      div.input-field.col.s12
+                        i.material-icons.prefix person
+                        input#email.border-blue(value=locals.email, type='text', name='email')
+                        label(for='email') Email Address
+              div.card-action
+                a(href='#', onclick='updateEmail(); return false;') Change Email Address
+          div.col.s12
+            div.card.card-settings
+              div.card-content
                 span.card-title Delete Account
-                p After deletion, your account cannot be restored. We do not retain any information or preferences upon account deletion. There is no turning back once done.
+                p
+                  b Warning: After deletion, your account cannot be restored. 
+                  | We do not retain any information or preferences upon account deletion. There is no turning back once done.
               div.card-action
                 a.modal-trigger(href='#', onclick='deleteModal(); return false;') Delete Account
 

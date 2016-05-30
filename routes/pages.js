@@ -6,7 +6,7 @@ var validator = require('validator');
 require.main.require('./config/custom-validation.js')(validator);
 const error_messages = require.main.require('./config/error-messages.js');
 
-module.exports = function(app, passport, isLoggedIn) {
+module.exports = function(app, passport, isLoggedIn, nev) {
 
     // --------- Front Page ---------
     app.get('/', function(req, res) {
@@ -331,6 +331,100 @@ module.exports = function(app, passport, isLoggedIn) {
         });
     });
 
+    app.post('/settings/account/email', isLoggedIn, function(req, res) {
+        // Clean and verify form input
+        var email = validator.trim(req.body.email);
+        var settings = {};
+
+        // Validate changes
+        if (validator.isEmail(email) & email.length > 0) {
+            settings.email = email;
+        } else {
+            return res.status(200).send({
+                message: 'Email address invalid. Please enter a valid email ' +
+                         'address.',
+                refresh: false
+            });
+        }
+
+        // Update user settings
+        User.updateUser(req.user._id, settings, function(err, updateSuccess) {
+            if (err) {
+                return res.status(500).send({
+                    message: 'Encountered an error. Please try again in a ' +
+                             'few minutes.',
+                    refresh: false
+                });
+            } else if (updateSuccess) {
+                User.findOne({ '_id': req.user._id }, function (err,
+                    returnedUser) {
+                    if (err) {
+                        return res.status(500).send({
+                            message: 'An error occurred. Please try again in ' +
+                                     'a few minutes.',
+                            refresh: false
+                        });
+                    }
+                    nev.createTempUser(returnedUser, function(err,
+                        newTempUser) {
+                        // An error occurred
+                        if (err) {
+                            return res.status(500).send({
+                                message: 'An error occurred. Please try ' +
+                                         'again in a few minutes.',
+                                refresh: false
+                            });
+                        }
+                     
+                        // Update succeeded; next step is email verification
+                        if (newTempUser) {
+                            delete newTempUser.posts;
+                            nev.registerTempUser(newTempUser, function(err) {
+                                if (err) {
+                                    return res.status(500).send({
+                                        message: 'An error occurred. ' +
+                                                 'Please try again in a ' +
+                                                 'few minutes.',
+                                        refresh: false
+                                    });
+                                }
+                                User.deleteUser(req.user._id, function(err,
+                                    deleteSuccess) {
+                                    // An error occurred
+                                    if (err) {
+                                        return res.status(500).send({
+                                            message: 'An error occurred. ' +
+                                                     'Please try again in a ' +
+                                                     'few minutes.',
+                                            refresh: false
+                                        });
+                                    } else if (deleteSuccess) {
+                                        req.logout();
+                                        req.session.destroy(function(err) {
+                                            return res.status(200).send({
+                                                message: 'Email address ' +
+                                                    'updated. Remember to ' +
+                                                    'verify your email ' +
+                                                    'address! Logging out... ',
+                                                refresh: true
+                                            });
+                                        });
+                                    }
+                                });
+                            });
+                        }
+                    });
+                });
+            } else {
+                return res.status(200).send({
+                    message: 'Email address update failed. Please try again ' +
+                    'in a few minutes.',
+                    refresh: false
+                });
+            }
+        });
+    });
+
     app.post('/settings/account/delete', isLoggedIn, function(req, res) {
         var connected = req.user.facebook.profileId !== undefined ||
             req.user.youtube.profileId !== undefined;
@@ -413,8 +507,62 @@ module.exports = function(app, passport, isLoggedIn) {
     });
 
     app.post('/register', passport.authenticate('local-register', {
-        successRedirect: '/dashboard',
-        failureRedirect: '/register',
-        failureFlash: true
+        successRedirect: '/login',
+        failureRedirect: '/register'
     }));
+
+    // --------- Dash Email Verification ---------
+    app.get('/verify/:token', function(req, res) {
+        nev.confirmTempUser(req.params.token, function(err, user) {
+            // An error occurred
+            if (err) {
+                req.flash('registerMessage', err.toString());
+                return res.redirect('/register');
+            }
+            // Redirect to login
+            if (user) {
+                req.flash('loginMessage', 'Email address verification ' +
+                    'complete! You may now login.');
+                return res.redirect('/login');
+            } else {
+                // Redirect to register page
+                req.flash('registerMessage', 'Incorrect verification token. ' +
+                    'You need to create an account first, before you can ' +
+                    'proceed with the verification process.');
+                return res.redirect('/register');
+            }
+        });
+    });
+
+    app.get('/resend/:email', function(req, res) {
+        // Clean and verify form input
+        var email = validator.trim(req.params.email);
+        if (!validator.isEmail(email) || email.length === 0) {
+            req.flash('registerMessage', 'Incorrect email address. ' +
+                'You need to create an account first, before you can ' +
+                'proceed with the verification process.');
+            return res.redirect('/register');
+        }
+
+        nev.resendVerificationEmail(email, function(err, userFound) {
+            // An error occurred
+            if (err) {
+                req.flash('registerMessage', err.toString());
+                return res.redirect('/register');
+            }
+            // Redirect to login
+            if (userFound) {
+                req.flash('loginMessage', 'Email address verification ' +
+                    'resent! Please wait a few minutes for the email to ' +
+                    'arrive.');
+                return res.redirect('/login');
+            } else {
+                // Redirect to register page
+                req.flash('registerMessage', 'Incorrect email address. ' +
+                    'You need to create an account first, before you can ' +
+                    'proceed with the verification process.');
+                return res.redirect('/register');
+            }
+        });
+    });
 };

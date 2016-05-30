@@ -11,7 +11,7 @@ block content
   div.row
     
     if (message.length > 0)
-      div#formMessage.center: p #{message}
+      div#formMessage.center: p !{message}
 
     form#registerForm.col.s12(action='/register', method='POST')
       div.row
