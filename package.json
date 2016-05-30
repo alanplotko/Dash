@@ -1,5 +1,5 @@
 {
-  "name": "dash",
+  "name": "dash-project",
   "version": "0.1.0",
   "description": "Dash is a central dashboard for keeping you updated with the information you care about.",
   "main": "app.js",
