@@ -4,7 +4,10 @@
   "description": "Dash is a central dashboard for keeping you updated with the information you care about.",
   "main": "app.js",
   "scripts": {
-    "test": "./tests/tests.sh"
+    "test": "npm run test-jshint && npm run test-jscs && npm run test-csslint",
+    "test-jshint": "jshint assets/js config/ models/ routes/ app.js",
+    "test-jscs": "jscs assets/js config/ models/ routes/ app.js",
+    "test-csslint": "csslint assets/css/"
   },
   "repository": {
     "type": "git",
