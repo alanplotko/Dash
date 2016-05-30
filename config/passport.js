@@ -12,8 +12,12 @@ var validator = require('validator');
 require.main.require('./config/custom-validation.js')(validator);
 var xss = require('xss');
 var crypto = require('crypto');
+var bcrypt = require('bcrypt');
 
-module.exports = function(passport) {
+// Define constants for account
+var SALT_WORK_FACTOR = 10;
+
+module.exports = function(passport, nev) {
 
     /**
      * Let passport use the serialize and deserialize functions defined in
@@ -78,7 +82,6 @@ module.exports = function(passport) {
         passReqToCallback: true
     },
     function(req, emailAddress, password, done) {
-
         // Clean and verify form input
         var email = validator.trim(emailAddress);
         var display = validator.trim(req.body.display_name);
@@ -108,23 +111,85 @@ module.exports = function(passport) {
                 'if you\'ve typed in your password correctly.'));
         }
 
-        // If validation passes, proceed to register user
-        process.nextTick(function() {
-            var newUser = new User({
-                email: email,
-                displayName: display,
-                password: password,
-                avatar: 'https://gravatar.com/avatar/' + gravatar
-            });
+        User.findOne({
+            'email': email
+        }, function(err, returnedUser) {
+            // An error occurred
+            if (err) return done(new Error('An error occurred. Please ' +
+                'try again in a few minutes.'));
 
-            newUser.save(function(err) {
-                // An error occurred
-                if (err) return done(null, false, req.flash('registerMessage',
-                    err.toString()));
+            if (!returnedUser) {
+                // If validation passes, proceed to register user
+                process.nextTick(function() {
+                    // Generate salt
+                    bcrypt.genSalt(SALT_WORK_FACTOR, function(err, salt) {
+                        // An error occurred
+                        if (err) return done(new Error('An error occurred. ' +
+                            'Please try again in a few minutes.'));
 
-                // Registration succeeded
-                return done(null, newUser);
-            });
+                        // Hash password using new salt
+                        bcrypt.hash(password, salt, function(err, hash) {
+                            if (err) return done(new Error('An error ' +
+                                'occurred. Please try again in a few ' +
+                                'minutes.'));
+
+                            // Set hashed password back on document
+                            var newUser = new User({
+                                email: email,
+                                displayName: display,
+                                password: hash,
+                                avatar: 'https://gravatar.com/avatar/' +
+                                    gravatar
+                            });
+
+                            nev.createTempUser(newUser, function(err,
+                                newTempUser) {
+                                // An error occurred
+                                if (err) return done(null, false,
+                                    req.flash('registerMessage',
+                                    err.toString()));
+
+                                /**
+                                 * Registration succeeded; next step is email
+                                 * verification
+                                 */
+                                if (newTempUser) {
+                                    nev.registerTempUser(newTempUser,
+                                        function(err) {
+                                        if (err) return done(null, false,
+                                            req.flash('registerMessage',
+                                            err.toString()));
+                                        req.flash('loginMessage',
+                                            'You have successfully ' +
+                                            'registered! You should receive ' +
+                                            'an email momentarily for ' +
+                                            'verifying your email address. ' +
+                                            'Click on the link in that email ' +
+                                            'to proceed.');
+                                        return done(null, newTempUser);
+                                    });
+
+                                /**
+                                 * User already exists in the unverified
+                                 * user collection
+                                 */
+                                } else {
+                                    return done(null, false,
+                                        req.flash('registerMessage',
+                                            'Error: you already have an ' +
+                                            'account. <a href="/resend/' +
+                                            email + '"> Resend verification ' +
+                                            'email?</a>'));
+                                }
+                            });
+                        });
+                    });
+                });
+            } else {
+                return done(null, false,
+                    req.flash('registerMessage', 'Error: you already have an ' +
+                        'account. <a href="/login">Proceed to login?</a>'));
+            }
         });
     }));
 

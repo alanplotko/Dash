@@ -263,7 +263,7 @@ div.card-settings.card .card-action a:not(.btn):not(.btn-large):not(.btn-floatin
     color: #42a5f5; /* blue lighten-1 */
 }
 
-div#profile p {
+div.card-settings.card p {
     margin-bottom: 16px;
 }
 
@@ -275,12 +275,12 @@ div#settings-section {
     margin-bottom: 100px;
 }
 
-div#account ul {
+div.card-settings.card ul {
     font-size: 16px;
     padding-left: 40px;
 }
 
-div#account ul li {
+div.card-settings.card ul li {
     list-style-type: circle;
 }
 
