@@ -120,4 +120,3 @@ For instance, if you'd like to contribute to these contributor guidelines (feel 
 | Label Name | Description |
 | --- | --- |
 | `scheduled` | The `suggestion`-tagged issue has been accepted and is scheduled to be worked on in the future. |
-| `work-in-progress` | The `scheduled`-tagged issue is currently being worked on. |
