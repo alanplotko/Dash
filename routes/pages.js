@@ -356,8 +356,9 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                     refresh: false
                 });
             } else if (updateSuccess) {
-                User.findOne({ '_id': req.user._id }, function (err,
-                    returnedUser) {
+                User.findOne({
+                    '_id': req.user._id
+                }, function(err, returnedUser) {
                     if (err) {
                         return res.status(500).send({
                             message: 'An error occurred. Please try again in ' +
@@ -375,7 +376,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                                 refresh: false
                             });
                         }
-                     
+
                         // Update succeeded; next step is email verification
                         if (newTempUser) {
                             delete newTempUser.posts;

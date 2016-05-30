@@ -111,8 +111,9 @@ module.exports = function(passport, nev) {
                 'if you\'ve typed in your password correctly.'));
         }
 
-
-        User.findOne({ 'email': email }, function (err, returnedUser) {
+        User.findOne({
+            'email': email
+        }, function(err, returnedUser) {
             // An error occurred
             if (err) return done(new Error('An error occurred. Please ' +
                 'try again in a few minutes.'));
@@ -147,7 +148,7 @@ module.exports = function(passport, nev) {
                                 if (err) return done(null, false,
                                     req.flash('registerMessage',
                                     err.toString()));
-                             
+
                                 /**
                                  * Registration succeeded; next step is email
                                  * verification
@@ -167,14 +168,14 @@ module.exports = function(passport, nev) {
                                             'to proceed.');
                                         return done(null, newTempUser);
                                     });
-                             
+
                                 /**
                                  * User already exists in the unverified
                                  * user collection
                                  */
                                 } else {
                                     return done(null, false,
-                                        req.flash('registerMessage', 
+                                        req.flash('registerMessage',
                                             'Error: you already have an ' +
                                             'account. <a href="/resend/' +
                                             email + '"> Resend verification ' +

@@ -29,14 +29,14 @@ var User = require('./models/user');
 // Configure email verification options
 nev.configure({
     verificationURL: config.url + '/verify/${URL}',
- 
+
     // MongoDB Model Info
     persistentUserModel: User,
     tempUserCollection: 'unverified_users',
     emailFieldName: 'email',
     URLFieldName: 'verificationUrl',
- 
-    // Emailing Options 
+
+    // Emailing Options
     transportOptions: smtpTransport(config.email_settings),
     verifyMailOptions: config.verify_email_format,
     confirmMailOptions: config.confirm_email_format,
