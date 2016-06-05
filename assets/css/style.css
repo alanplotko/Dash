@@ -25,6 +25,12 @@ body {
     margin: 0;
 }
 
+p.iconText {
+    font-family: 'Roboto', sans-serif;
+    font-size: 24px;
+    font-weight: 300;
+}
+
 ::-webkit-scrollbar {
     -webkit-appearance: none;
     -moz-appearance: none;

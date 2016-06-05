@@ -19,7 +19,7 @@ block content
                   div.card-content
                     a(onclick='dismiss("'+post._id+'", this)'): i.fa.fa-times.close.grey-text.darken-3
                     div.postInfo
-                      p.card-title.truncate= post.title                        
+                      p.card-title.truncate= post.title
                       p.timestamp.truncate(data-timestamp=post.timestamp)
                         span= moment(new Date(post.timestamp).toISOString()).fromNow()
                         if post.permalink
@@ -49,7 +49,9 @@ block content
                     else
                       div.card-image(style='background-image: url("'+post.picture+'");')
         else
-          h5.center.thin (No updates... check back later!)
+          h5.center.thin
+              i.fa.fa-sun-o.fa-5x.grey-text.darken-2
+              p.iconText.grey-text.darken-2 The dashboard is clear today!
 
 block additionalScripts
   script(src='/static/js/dashboardActions.js')
