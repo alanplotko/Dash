@@ -209,6 +209,9 @@ module.exports = function(app, passport, isLoggedIn, nev) {
             var batch = user.batches.id(req.params.batchId);
             if (batch) {
                 batch.posts.id(req.params.postId).remove();
+                if (batch.posts.length === 0) {
+                    batch.remove();
+                }
                 user.save(function(err) {
                     if (err) return res.sendStatus(500);
                     return res.sendStatus(200);
