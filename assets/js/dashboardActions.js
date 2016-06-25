@@ -1,9 +1,9 @@
-function dismiss(id, el) {
-    $.post('/dismiss/' + id, function(data) {
+function dismiss(batchId, postId, el) {
+    $.post('/dismiss/' + batchId + '/' + postId, function(data) {
         var post = $(el).closest('div.row');
         $.when(post.fadeOut()).then(function() {
             post.remove().delay(1000);
-            if (id === 'all' || $('.card').length === 0) {
+            if (batchId === 'all' || $('.card').length === 0) {
                 window.location.reload();
             }
         });

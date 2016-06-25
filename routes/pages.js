@@ -20,24 +20,18 @@ module.exports = function(app, passport, isLoggedIn, nev) {
             // Add other connection fields here
             connected: req.user.facebook.profileId !== undefined ||
                 req.user.youtube.profileId !== undefined,
-            posts: req.user.posts
+            batches: req.user.batches
         });
     });
 
     app.post('/reset/:service', isLoggedIn, function(req, res) {
-        var connectionName = req.params.service;
-        var connectionNameLower = connectionName.toLowerCase();
-        var connectionUpdateTime = 'lastUpdateTime.' + connectionNameLower;
+        var connectionName = req.params.service.toLowerCase();
+        var connectionUpdateTime = 'lastUpdateTime.' + connectionName;
 
-        var pullQuery = {};
         var unsetQuery = {};
-        pullQuery.connection = connectionNameLower;
         unsetQuery[connectionUpdateTime] = 1;
 
         User.findByIdAndUpdate(req.user._id, {
-            $pull: {
-                posts: pullQuery
-            },
             $unset: unsetQuery
         }, function(err, user) {
             if (err) {
@@ -202,7 +196,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
     app.post('/dismiss/all', isLoggedIn, function(req, res) {
         User.findByIdAndUpdate(req.user._id, {
             $set: {
-                'posts': []
+                'batches': []
             }
         }, function(err, user) {
             if (err) return res.sendStatus(500);
@@ -210,16 +204,21 @@ module.exports = function(app, passport, isLoggedIn, nev) {
         });
     });
 
-    app.post('/dismiss/:id', isLoggedIn, function(req, res) {
-        User.findByIdAndUpdate(req.user._id, {
-            $pull: {
-                'posts': {
-                    _id: req.params.id
+    app.post('/dismiss/:batchId/:postId', isLoggedIn, function(req, res) {
+        User.findById(req.user._id, function(err, user) {
+            var batch = user.batches.id(req.params.batchId);
+            if (batch) {
+                batch.posts.id(req.params.postId).remove();
+                if (batch.posts.length === 0) {
+                    batch.remove();
                 }
+                user.save(function(err) {
+                    if (err) return res.sendStatus(500);
+                    return res.sendStatus(200);
+                });
+            } else {
+                return res.sendStatus(500);
             }
-        }, function(err, user) {
-            if (err) return res.sendStatus(500);
-            return res.sendStatus(200);
         });
     });
 

@@ -2,14 +2,13 @@ extends ./layout.pug
 
 block title
   title Dash | Register
-  
+
 block content
   div.row
     div.col.s12
       h1.main-heading.center.thin Register
 
   div.row
-    
     if (message.length > 0)
       div#formMessage.center: p !{message}
 

@@ -20,9 +20,33 @@ body {
     padding: 100px 0 50px 0;
 }
 
+.batch-heading {
+    border-bottom: 1px dashed #444;
+    margin-bottom: 18px;
+}
+
+.batch-heading p {
+    font-family: 'Roboto', sans-serif;
+    font-size: 18px;
+    color: #444;
+    display: inline-block;
+    margin-bottom: 5px;
+}
+
+.batch-heading i {
+    padding-right: 10px;
+    color: #444;
+}
+
 /* Margin removal */
 .no-margin {
     margin: 0;
+}
+
+p.iconText {
+    font-family: 'Roboto', sans-serif;
+    font-size: 24px;
+    font-weight: 300;
 }
 
 ::-webkit-scrollbar {

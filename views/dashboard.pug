@@ -11,45 +11,52 @@ block content
         h2.center.thin: a(href='/connect') Get started by connecting a site!
       else
         h1.main-heading.center.thin Welcome back, #{locals.displayName}!
-        if posts.length > 0
-          each post in posts.reverse()
-            div.row
-              div.col.l6.offset-l3.s12
-                div(class='card card-dashboard card-'+post.connection)
-                  div.card-content
-                    a(onclick='dismiss("'+post._id+'", this)'): i.fa.fa-times.close.grey-text.darken-3
-                    div.postInfo
-                      p.card-title.truncate= post.title                        
-                      p.timestamp.truncate(data-timestamp=post.timestamp)
-                        span= moment(new Date(post.timestamp).toISOString()).fromNow()
-                        if post.permalink
-                          if (post.connection == 'youtube')
-                            span &nbsp;&bull;&nbsp;
-                              a(href=post.permalink, target='_blank') channel
-                          else
-                            span &nbsp;&bull;&nbsp;
-                              a(href=post.permalink, target='_blank') permalink
+        if batches.length > 0
+          each batch in batches.reverse()
+            if batch.posts.length > 0
+              div.batch-heading.center
+                p #{moment(new Date(batch.updateTime).toISOString()).fromNow()} &bull; #{batch.description}
+                  i.material-icons.pull-left access_time
+              each post in batch.posts
+                div.row
+                  div.col.l6.offset-l3.s12
+                    div(class='card card-dashboard card-'+post.connection)
+                      div.card-content
+                        a(onclick='dismiss("'+batch._id+'", "'+post._id+'", this)'): i.fa.fa-times.close.grey-text.darken-3
+                        div.postInfo
+                          p.card-title.truncate= post.title
+                          p.timestamp.truncate(data-timestamp=post.timestamp)
+                            span= moment(new Date(post.timestamp).toISOString()).fromNow()
+                            if post.permalink
+                              if (post.connection == 'youtube')
+                                span &nbsp;&bull;&nbsp;
+                                  a(href=post.permalink, target='_blank') channel
+                              else
+                                span &nbsp;&bull;&nbsp;
+                                  a(href=post.permalink, target='_blank') permalink
+                            if post.url
+                              if (post.connection == 'youtube')
+                                span &nbsp;&bull;&nbsp;
+                                  a(href=post.url, target='_blank') video
+                              else
+                                span &nbsp;&bull;&nbsp;
+                                  a(href=post.url, target='_blank') shared link
+                            if post.actionDescription
+                              span(title=post.actionDescription) &nbsp;&bull;&nbsp; #{post.actionDescription}
+                        if (post.connection == 'youtube')
+                          p.content!= post.content
+                        else
+                          p.content= post.content
+                      if post.picture
                         if post.url
-                          if (post.connection == 'youtube')
-                            span &nbsp;&bull;&nbsp;
-                              a(href=post.url, target='_blank') video
-                          else
-                            span &nbsp;&bull;&nbsp;
-                              a(href=post.url, target='_blank') shared link
-                        if post.actionDescription
-                          span(title=post.actionDescription) &nbsp;&bull;&nbsp; #{post.actionDescription}
-                    if (post.connection == 'youtube')
-                      p.content!= post.content
-                    else
-                      p.content= post.content
-                  if post.picture
-                    if post.url
-                      a(href=post.url, target='_blank')
-                        div.card-image(style='background-image: url("'+post.picture+'");')
-                    else
-                      div.card-image(style='background-image: url("'+post.picture+'");')
+                          a(href=post.url, target='_blank')
+                            div.card-image(style='background-image: url("'+post.picture+'");')
+                        else
+                          div.card-image(style='background-image: url("'+post.picture+'");')
         else
-          h5.center.thin (No updates... check back later!)
+          h5.center.thin
+              i.fa.fa-sun-o.fa-5x.grey-text.darken-2
+              p.iconText.grey-text.darken-2 The dashboard is clear today!
 
 block additionalScripts
   script(src='/static/js/dashboardActions.js')

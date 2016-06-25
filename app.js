@@ -24,6 +24,7 @@ require('express-mongoose');
 
 // Require models
 var Post = require('./models/post');
+var PostCollection = require('./models/post_collection');
 var User = require('./models/user');
 
 // Configure email verification options
