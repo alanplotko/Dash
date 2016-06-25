@@ -373,19 +373,7 @@ module.exports = function(UserSchema) {
                 });
 
                 if (newPosts.length > 0) {
-                    newPosts.forEach(function(post) {
-                        user.posts.push(post);
-                        progress++;
-                        if (progress == newPosts.length) {
-                            user.save(function(err) {
-                                // An error occurred
-                                if (err) return done(err);
-
-                                // Saved posts and update times; return posts
-                                return done(null, user.posts);
-                            });
-                        }
-                    });
+                    return done(null, newPosts);
                 // No new posts, set new update time
                 } else {
                     user.save(function(err) {

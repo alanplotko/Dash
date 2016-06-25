@@ -6,7 +6,8 @@ config.connections = require.main.require('./config/settings').connections;
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var async = require('async');
-var PostSchema = mongoose.model('Post').schema;
+var PostCollection = mongoose.model('PostCollection');
+var PostCollectionSchema = PostCollection.schema;
 var passportLocalMongoose = require('passport-local-mongoose');
 var bcrypt = require('bcrypt');
 var crypto = require('crypto');
@@ -55,8 +56,8 @@ var UserSchema = new Schema({
         type: Number
     },
 
-    // Posts for all content
-    posts: [PostSchema],
+    // Batches of post updates
+    batches: [PostCollectionSchema],
 
     // Last time data pulled from connections
     lastUpdateTime: {
@@ -251,7 +252,7 @@ UserSchema.statics.authSerializer = function(user, done) {
 // Deserialize function for use with passport
 UserSchema.statics.authDeserializer = function(id, done) {
     mongoose.models.User.findById(id,
-        'email displayName avatar posts facebook.profileId ' +
+        'email displayName avatar batches facebook.profileId ' +
         'facebook.acceptUpdates youtube.profileId youtube.acceptUpdates',
         function(err, user) {
             done(err, user);
@@ -377,47 +378,48 @@ UserSchema.methods.updateContent = function(done) {
             if (err) return done(err);
 
             var progress = 0;
-            var newPosts = [];
+            var newUpdate = {
+                posts: [],
+                description: 'A new update!'
+            };
 
             if (user.hasFacebook && user.facebook.acceptUpdates) {
-                Array.prototype.push.apply(newPosts, results.facebookPages);
-                Array.prototype.push.apply(newPosts, results.facebookGroups);
+                Array.prototype.push.apply(newUpdate.posts,
+                    results.facebookPages);
+                Array.prototype.push.apply(newUpdate.posts,
+                    results.facebookGroups);
 
                 // Set new last update time
                 user.lastUpdateTime.facebook = results.facebookUpdateTime;
             }
 
             if (user.hasYouTube && user.youtube.acceptUpdates) {
-                Array.prototype.push.apply(newPosts, results.youtubeVideos);
+                Array.prototype.push.apply(newUpdate.posts,
+                    results.youtubeVideos);
 
                 // Set new last update time
                 user.lastUpdateTime.youtube = results.youtubeUpdateTime;
             }
 
             // Sort posts by timestamp
-            newPosts.sort(function(a, b) {
+            newUpdate.posts.sort(function(a, b) {
                 return new Date(a.timestamp) - new Date(b.timestamp);
             });
 
-            if (newPosts.length > 0) {
-                newPosts.forEach(function(post) {
-                    user.posts.push(post);
-                    progress++;
-                    if (progress == newPosts.length) {
-                        user.save(function(err) {
-                            // An error occurred
-                            if (err) return done(err);
+            if (newUpdate.posts.length > 0) {
+                user.batches.push(newUpdate);
+                user.save(function(err) {
+                    // An error occurred
+                    if (err) return done(err);
 
-                            // Saved posts and update times; return posts
-                            return done(null, user.posts);
-                        });
-                    }
+                    // Saved posts and update times; return new update
+                    return done(null, newUpdate);
                 });
             // No new posts, set new update time
             } else {
                 user.save(function(err) {
-                    if (err) return done(err);  // An error occurred
-                    return done(null, null);    // Saved update time
+                    if (err) return done(err);
+                    return done(null, null);
                 });
             }
         });

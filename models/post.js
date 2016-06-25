@@ -20,7 +20,7 @@ var PostSchema = new Schema({
         type: String
     },
 
-    // Last updated
+    // Post timestamp
     timestamp: {
         type: Date
     },
