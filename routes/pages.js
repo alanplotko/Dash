@@ -9,32 +9,30 @@ const items_per_page = 10;
 
 module.exports = function(app, passport, isLoggedIn, nev) {
 
-    // --------- Front Page ---------
-    app.get('/', function(req, res) {
-        if (req.isAuthenticated()) return res.redirect('/dashboard');
-        res.render('index');
-    });
-
-    // --------- User Dashboard ---------
-    app.get('/dashboard', isLoggedIn, function(req, res) {
-        return res.redirect('/dashboard/1');
-    });
-    app.get('/dashboard/:page(\\d+)', isLoggedIn, function(req, res) {
+    // --------- Return <= 10 posts for pagination ---------
+    var slicePosts = function(batches, currentPage) {
         var totalPosts = 0;
-        req.user.batches.forEach(function(batch) {
+        var results = {
+            batches: batches,
+            currentPage: null,
+            numPages: null,
+            startPage: null,
+            endPage: null
+        };
+        batches.forEach(function(batch) {
             totalPosts += batch.posts.length;
         });
         if (totalPosts > 0) {
-            var currentPage = parseInt(req.params.page);
-            var numPages = Math.ceil(totalPosts / items_per_page);
-
-            if (currentPage <= 0 || currentPage > numPages) {
-                return res.redirect('/dashboard/1');
+            results.currentPage = currentPage;
+            results.numPages = Math.ceil(totalPosts / items_per_page);
+            if (results.currentPage <= 0 || results.currentPage >
+                results.numPages) {
+                results.currentPage = 1;
             }
 
             var postCount = items_per_page;
-            var skipCount = items_per_page * (currentPage - 1);
-            req.user.batches.reverse().forEach(function(batch) {
+            var skipCount = items_per_page * (results.currentPage - 1);
+            batches.reverse().forEach(function(batch) {
                 batch.posts.slice().forEach(function(post, idx, obj) {
                     if (skipCount > 0) {
                         skipCount--;
@@ -46,21 +44,51 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                     }
                 });
             });
-            var startPage = currentPage - 2 > 0 ? currentPage - 2 : 1;
-            var endPage = startPage + (items_per_page - 1) > numPages ? numPages :
-                startPage + (items_per_page - 1);
-            if (endPage - items_per_page < startPage - 1) {
-                startPage = endPage - items_per_page + 1;
+            results.startPage = results.currentPage - 2 > 0 ?
+                results.currentPage - 2 : 1;
+            results.endPage = results.startPage + (items_per_page - 1) >
+                results.numPages ? results.numPages : results.startPage +
+                (items_per_page - 1);
+            if (results.endPage - results.numPages < results.startPage - 1) {
+                results.startPage = results.endPage - results.numPages + 1;
             }
         }
+        console.log(results);
+        return results;
+    };
+
+    // --------- Front Page ---------
+    app.get('/', function(req, res) {
+        if (req.isAuthenticated()) return res.redirect('/dashboard');
+        res.render('index');
+    });
+
+    // --------- User Dashboard ---------
+    app.get('/dashboard', isLoggedIn, function(req, res) {
+        var results = slicePosts(req.user.batches, 1);
         res.render('dashboard', {
             connected: req.user.facebook.profileId !== undefined ||
                 req.user.youtube.profileId !== undefined,
-            batches: req.user.batches,
-            currentPage: currentPage || null,
-            numPages: numPages || null,
-            startPage: startPage || null,
-            endPage: endPage || null
+            batches: results.batches,
+            currentPage: results.currentPage || null,
+            numPages: results.numPages || null,
+            startPage: results.startPage || null,
+            endPage: results.endPage || null
+        });
+    });
+    app.get('/dashboard/:page(\\d+)', isLoggedIn, function(req, res) {
+        var currentPage = parseInt(req.params.page);
+        if (currentPage === 1) return res.redirect('/dashboard');
+
+        var results = slicePosts(req.user.batches, currentPage);
+        res.render('dashboard', {
+            connected: req.user.facebook.profileId !== undefined ||
+                req.user.youtube.profileId !== undefined,
+            batches: results.batches,
+            currentPage: results.currentPage || null,
+            numPages: results.numPages || null,
+            startPage: results.startPage || null,
+            endPage: results.endPage || null
         });
     });
 
