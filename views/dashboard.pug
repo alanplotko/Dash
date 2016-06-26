@@ -12,7 +12,7 @@ block content
       else
         h1.main-heading.center.thin Welcome back, #{locals.displayName}!
         if batches.length > 0
-          each batch in batches.reverse()
+          each batch in batches
             if batch.posts.length > 0
               div.batch-heading.center
                 p #{moment(new Date(batch.updateTime).toISOString()).fromNow()} &bull; #{batch.description}
@@ -53,28 +53,28 @@ block content
                             div.card-image(style='background-image: url("'+post.picture+'");')
                         else
                           div.card-image(style='background-image: url("'+post.picture+'");')
-              div.row
-                div.col.l6.offset-l3.s12
-                  ul.pagination.center.dashboard-pagination
-                    li(class=currentPage === 1 ? 'disabled' : 'waves-effect')
-                      a(href=currentPage === 1 ? 'javascript:void(0)' : '/dashboard'): i.material-icons fast_rewind
-                    li(class=currentPage === 1 ? 'disabled' : 'waves-effect')
-                      a(href=currentPage === 1 ? 'javascript:void(0)' : '/dashboard/'+(currentPage-1)): i.material-icons chevron_left
-                    if startPage > 1
-                      li.disabled
-                        a.page(href='javascript:void(0)') ...
-                    - var count = startPage
-                      while count <= endPage
-                        li(class=currentPage === count ? 'active' : 'waves-effect')
-                          a.page(href='/dashboard/'+count) #{count}
-                        - count++
-                    if endPage < numPages
-                      li.disabled
-                        a.page(href='javascript:void(0)') ...
-                    li(class=currentPage === numPages ? 'disabled' : 'waves-effect').no-margin
-                      a(href=currentPage === numPages ? 'javascript:void(0)' : '/dashboard/'+(currentPage+1)): i.material-icons chevron_right
-                    li(class=currentPage === numPages ? 'disabled' : 'waves-effect').no-margin
-                      a(href=currentPage === numPages ? 'javascript:void(0)' : '/dashboard/'+numPages): i.material-icons fast_forward
+          div.row
+            div.col.l6.offset-l3.s12
+              ul.pagination.center.dashboard-pagination
+                li(class=currentPage === 1 ? 'disabled' : 'waves-effect')
+                  a(href=currentPage === 1 ? 'javascript:void(0)' : '/dashboard'): i.material-icons fast_rewind
+                li(class=currentPage === 1 ? 'disabled' : 'waves-effect')
+                  a(href=currentPage === 1 ? 'javascript:void(0)' : '/dashboard/'+(currentPage-1)): i.material-icons chevron_left
+                if startPage > 1
+                  li.disabled
+                    a.page(href='javascript:void(0)') ...
+                - var count = startPage
+                  while count <= endPage
+                    li(class=currentPage === count ? 'active' : 'waves-effect')
+                      a.page(href='/dashboard/'+count) #{count}
+                    - count++
+                if endPage < numPages
+                  li.disabled
+                    a.page(href='javascript:void(0)') ...
+                li(class=currentPage === numPages ? 'disabled' : 'waves-effect').no-margin
+                  a(href=currentPage === numPages ? 'javascript:void(0)' : '/dashboard/'+(currentPage+1)): i.material-icons chevron_right
+                li(class=currentPage === numPages ? 'disabled' : 'waves-effect').no-margin
+                  a(href=currentPage === numPages ? 'javascript:void(0)' : '/dashboard/'+numPages): i.material-icons fast_forward
         else
           h5.center.thin
               i.fa.fa-sun-o.fa-5x.grey-text.darken-2

@@ -18,6 +18,7 @@ var cookieParser = require('cookie-parser');
 var passport = require('passport');
 var flash = require('connect-flash');
 var mongoose = require('mongoose');
+mongoose.Promise = require('bluebird');
 var nev = require('email-verification')(mongoose);
 var smtpTransport = require('nodemailer-smtp-transport');
 require('express-mongoose');
