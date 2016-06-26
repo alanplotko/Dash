@@ -41,16 +41,21 @@ nev.configure({
     transportOptions: smtpTransport(config.email_settings),
     verifyMailOptions: config.verify_email_format,
     confirmMailOptions: config.confirm_email_format,
+    shouldSendConfirmation: false,
 
     // Log errors on console
     verifySendMailCallback: function(err, info) {
-        if (err) console.log(err);
+        if (err) console.error(err);
     },
     confirmSendMailCallback: function(err, info) {
-        if (err) console.log(err);
+        if (err) console.error(err);
     }
+}, function(err, options) {
+    if(err) console.error(err);
 });
-nev.generateTempUserModel(User);
+nev.generateTempUserModel(User, function(err, info) {
+    if(err) console.error(err);
+});
 
 // --------- Support bodies ---------
 app.use(bodyParser.json());

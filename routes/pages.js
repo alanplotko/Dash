@@ -599,17 +599,18 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
     // --------- Dash Email Verification ---------
     app.get('/verify/:token', function(req, res) {
-        nev.confirmTempUser(req.params.token, function(err, user) {
+        nev.confirmTempUser(req.params.token, function(err, newPersistentUser) {
             // An error occurred
             if (err) {
                 req.flash('registerMessage', err.toString());
                 return res.redirect('/register');
             }
             // Redirect to login
-            if (user) {
+            if (newPersistentUser) {
+                nev.sendConfirmationEmail(newPersistentUser['email']);
                 req.flash('loginMessage', 'Email address verification ' +
-                    'complete! You may now login.');
-                return res.redirect('/login');
+                        'complete! You may now login.');
+                    return res.redirect('/login');
             } else {
                 // Redirect to register page
                 req.flash('registerMessage', 'Incorrect verification token. ' +
