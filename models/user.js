@@ -377,7 +377,6 @@ UserSchema.methods.updateContent = function(done) {
         async.parallel(calls, function(err, results) {
             if (err) return done(err);
 
-            var progress = 0;
             var newUpdate = {
                 posts: [],
                 description: 'A new update!'

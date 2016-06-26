@@ -451,7 +451,6 @@ module.exports = function(UserSchema) {
             async.parallel(calls, function(err, results) {
                 if (err) return done(err);
 
-                var progress = 0;
                 var newPosts = [];
 
                 if (user.hasFacebook && user.facebook.acceptUpdates) {
@@ -469,7 +468,18 @@ module.exports = function(UserSchema) {
                 });
 
                 if (newPosts.length > 0) {
-                    return done(null, newPosts);
+                    var newUpdate = {
+                        posts: newPosts,
+                        description: 'Checking in with Facebook for updates!'
+                    };
+                    user.batches.push(newUpdate);
+                    user.save(function(err) {
+                        // An error occurred
+                        if (err) return done(err);
+
+                        // Saved posts and update times; return new posts
+                        return done(null, newPosts);
+                    });
                 // No new posts, set new update time
                 } else {
                     user.save(function(err) {

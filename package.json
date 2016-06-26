@@ -31,7 +31,7 @@
     "express": "^4.13.4",
     "express-mongoose": "^0.1.0",
     "express-session": "^1.13.0",
-    "jquery": "^2.2.3",
+    "jquery": "^3.0.0",
     "jquery-validation": "^1.15.0",
     "kerberos": "0.0.21",
     "materialize-css": "^0.97.6",
