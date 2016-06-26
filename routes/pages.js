@@ -56,8 +56,8 @@ module.exports = function(app, passport, isLoggedIn, nev) {
             user.save(function(err) {
                 if (err) {
                     return res.status(500).send({
-                        message: 'Encountered an error. Please try again in a ' +
-                        'few minutes.',
+                        message: 'Encountered an error. Please try again in ' +
+                        'a few minutes.',
                         refresh: false
                     });
                 } else {
@@ -364,7 +364,9 @@ module.exports = function(app, passport, isLoggedIn, nev) {
             });
         }
 
-        User.findOne({ '_id': req.user._id }, function(err, returnedUser) {
+        User.findOne({
+            '_id': req.user._id
+        }, function(err, returnedUser) {
             if (err) {
                 return res.status(500).send({
                     message: 'An error occurred. Please try again in ' +
@@ -405,11 +407,11 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                                     req.session.destroy(function(err) {
                                         return res.status(500).send({
                                             message: 'An error occurred. ' +
-                                                     'Please check your inbox ' +
-                                                     'a verification email and ' +
-                                                     'request a resend if ' +
-                                                     'necessary. Logging ' +
-                                                     'out...',
+                                                     'Please check your ' +
+                                                     'inbox a verification ' +
+                                                     'email and request a ' +
+                                                     'resend if necessary. ' +
+                                                     'Logging out...',
                                             refresh: true
                                         });
                                     });
@@ -634,7 +636,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
             }
             // Redirect to login
             if (newPersistentUser) {
-                nev.sendConfirmationEmail(newPersistentUser['email']);
+                nev.sendConfirmationEmail(newPersistentUser.email);
                 req.flash('loginMessage', 'Email address verification ' +
                         'complete! You may now login.');
                     return res.redirect('/login');
