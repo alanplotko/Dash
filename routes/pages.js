@@ -10,26 +10,15 @@ const items_per_page = 10;
 module.exports = function(app, passport, isLoggedIn, nev) {
 
     // --------- Return <= 10 posts for pagination ---------
-    var slicePosts = function(batches, currentPage) {
-        var totalPosts = 0;
+    var slicePosts = function(batches, currentPage, totalPosts, numPages) {
         var results = {
             batches: batches,
-            currentPage: null,
-            numPages: null,
+            currentPage: currentPage,
+            numPages: numPages,
             startPage: null,
             endPage: null
         };
-        batches.forEach(function(batch) {
-            totalPosts += batch.posts.length;
-        });
         if (totalPosts > 0) {
-            results.currentPage = currentPage;
-            results.numPages = Math.ceil(totalPosts / items_per_page);
-            if (results.currentPage <= 0 || results.currentPage >
-                results.numPages) {
-                results.currentPage = 1;
-            }
-
             var postCount = items_per_page;
             var skipCount = items_per_page * (results.currentPage - 1);
             batches.reverse().forEach(function(batch) {
@@ -53,7 +42,6 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                 results.startPage = results.endPage - results.numPages + 1;
             }
         }
-        console.log(results);
         return results;
     };
 
@@ -65,7 +53,14 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
     // --------- User Dashboard ---------
     app.get('/dashboard', isLoggedIn, function(req, res) {
-        var results = slicePosts(req.user.batches, 1);
+        var currentPage = 1;
+        var totalPosts = 0;
+        req.user.batches.forEach(function(batch) {
+            totalPosts += batch.posts.length;
+        });
+        var numPages = Math.ceil(totalPosts / items_per_page);
+
+        var results = slicePosts(req.user.batches, 1, totalPosts, numPages);
         res.render('dashboard', {
             connected: req.user.facebook.profileId !== undefined ||
                 req.user.youtube.profileId !== undefined,
@@ -78,9 +73,17 @@ module.exports = function(app, passport, isLoggedIn, nev) {
     });
     app.get('/dashboard/:page(\\d+)', isLoggedIn, function(req, res) {
         var currentPage = parseInt(req.params.page);
-        if (currentPage === 1) return res.redirect('/dashboard');
+        var totalPosts = 0;
+        req.user.batches.forEach(function(batch) {
+            totalPosts += batch.posts.length;
+        });
+        var numPages = Math.ceil(totalPosts / items_per_page);
+        if (currentPage === 1 || currentPage <= 0 || currentPage > numPages) {
+            return res.redirect('/dashboard');
+        }
 
-        var results = slicePosts(req.user.batches, currentPage);
+        var results = slicePosts(req.user.batches, currentPage, totalPosts,
+            numPages);
         res.render('dashboard', {
             connected: req.user.facebook.profileId !== undefined ||
                 req.user.youtube.profileId !== undefined,
