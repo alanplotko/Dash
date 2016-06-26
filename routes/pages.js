@@ -24,41 +24,43 @@ module.exports = function(app, passport, isLoggedIn, nev) {
         req.user.batches.forEach(function(batch) {
             totalPosts += batch.posts.length;
         });
-        var currentPage = parseInt(req.params.page);
-        var numPages = Math.ceil(totalPosts / items_per_page);
+        if (totalPosts > 0) {
+            var currentPage = parseInt(req.params.page);
+            var numPages = Math.ceil(totalPosts / items_per_page);
 
-        if (currentPage <= 0 || currentPage > numPages) {
-            return res.redirect('/dashboard/1');
-        }
+            if (currentPage <= 0 || currentPage > numPages) {
+                return res.redirect('/dashboard/1');
+            }
 
-        var postCount = items_per_page;
-        var skipCount = items_per_page * (currentPage - 1);
-        req.user.batches.reverse().forEach(function(batch) {
-            batch.posts.slice().forEach(function(post, idx, obj) {
-                if (skipCount > 0) {
-                    skipCount--;
-                    batch.posts.splice(obj.length - 1 - idx, 1);
-                } else if (postCount > 0) {
-                    postCount--;
-                } else if (postCount === 0) {
-                    batch.posts.splice(obj.length - 1 - idx, 1);
-                }
+            var postCount = items_per_page;
+            var skipCount = items_per_page * (currentPage - 1);
+            req.user.batches.reverse().forEach(function(batch) {
+                batch.posts.slice().forEach(function(post, idx, obj) {
+                    if (skipCount > 0) {
+                        skipCount--;
+                        batch.posts.splice(obj.length - 1 - idx, 1);
+                    } else if (postCount > 0) {
+                        postCount--;
+                    } else if (postCount === 0) {
+                        batch.posts.splice(obj.length - 1 - idx, 1);
+                    }
+                });
             });
-        });
-        var startPage = currentPage - 2 > 0 ? currentPage - 2 : 1;
-        var endPage = startPage + (items_per_page - 1) > numPages ? numPages :
-            startPage + (items_per_page - 1);
-        if (endPage - items_per_page < startPage - 1) {
-            startPage = endPage - items_per_page + 1;
+            var startPage = currentPage - 2 > 0 ? currentPage - 2 : 1;
+            var endPage = startPage + (items_per_page - 1) > numPages ? numPages :
+                startPage + (items_per_page - 1);
+            if (endPage - items_per_page < startPage - 1) {
+                startPage = endPage - items_per_page + 1;
+            }
         }
         res.render('dashboard', {
             connected: req.user.facebook.profileId !== undefined ||
                 req.user.youtube.profileId !== undefined,
             batches: req.user.batches,
-            currentPage: currentPage,
-            numPages: numPages,
-            startPage: startPage,
-            endPage: endPage
+            currentPage: currentPage || null,
+            numPages: numPages || null,
+            startPage: startPage || null,
+            endPage: endPage || null
         });
     });
 
