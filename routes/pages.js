@@ -5,8 +5,45 @@ var User = require.main.require('./models/user');
 var validator = require('validator');
 require.main.require('./config/custom-validation.js')(validator);
 const error_messages = require.main.require('./config/error-messages.js');
+const items_per_page = 10;
 
 module.exports = function(app, passport, isLoggedIn, nev) {
+
+    // --------- Return <= 10 posts for pagination ---------
+    var slicePosts = function(batches, currentPage, totalPosts, numPages) {
+        var results = {
+            batches: batches,
+            currentPage: currentPage,
+            numPages: numPages,
+            startPage: null,
+            endPage: null
+        };
+        if (totalPosts > 0) {
+            var postCount = items_per_page;
+            var skipCount = items_per_page * (results.currentPage - 1);
+            batches.reverse().forEach(function(batch) {
+                batch.posts.slice().forEach(function(post, idx, obj) {
+                    if (skipCount > 0) {
+                        skipCount--;
+                        batch.posts.splice(obj.length - 1 - idx, 1);
+                    } else if (postCount > 0) {
+                        postCount--;
+                    } else if (postCount === 0) {
+                        batch.posts.splice(obj.length - 1 - idx, 1);
+                    }
+                });
+            });
+            results.startPage = results.currentPage - 2 > 0 ?
+                results.currentPage - 2 : 1;
+            results.endPage = results.startPage + (items_per_page - 1) >
+                results.numPages ? results.numPages : results.startPage +
+                (items_per_page - 1);
+            if (results.endPage - results.numPages < results.startPage - 1) {
+                results.startPage = results.endPage - results.numPages + 1;
+            }
+        }
+        return results;
+    };
 
     // --------- Front Page ---------
     app.get('/', function(req, res) {
@@ -16,11 +53,45 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
     // --------- User Dashboard ---------
     app.get('/dashboard', isLoggedIn, function(req, res) {
+        var currentPage = 1;
+        var totalPosts = 0;
+        req.user.batches.forEach(function(batch) {
+            totalPosts += batch.posts.length;
+        });
+        var numPages = Math.ceil(totalPosts / items_per_page);
+
+        var results = slicePosts(req.user.batches, 1, totalPosts, numPages);
         res.render('dashboard', {
-            // Add other connection fields here
             connected: req.user.facebook.profileId !== undefined ||
                 req.user.youtube.profileId !== undefined,
-            batches: req.user.batches
+            batches: results.batches,
+            currentPage: results.currentPage || null,
+            numPages: results.numPages || null,
+            startPage: results.startPage || null,
+            endPage: results.endPage || null
+        });
+    });
+    app.get('/dashboard/:page(\\d+)', isLoggedIn, function(req, res) {
+        var currentPage = parseInt(req.params.page);
+        var totalPosts = 0;
+        req.user.batches.forEach(function(batch) {
+            totalPosts += batch.posts.length;
+        });
+        var numPages = Math.ceil(totalPosts / items_per_page);
+        if (currentPage === 1 || currentPage <= 0 || currentPage > numPages) {
+            return res.redirect('/dashboard');
+        }
+
+        var results = slicePosts(req.user.batches, currentPage, totalPosts,
+            numPages);
+        res.render('dashboard', {
+            connected: req.user.facebook.profileId !== undefined ||
+                req.user.youtube.profileId !== undefined,
+            batches: results.batches,
+            currentPage: results.currentPage || null,
+            numPages: results.numPages || null,
+            startPage: results.startPage || null,
+            endPage: results.endPage || null
         });
     });
 
@@ -433,25 +504,6 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                 }
             });
         });
-
-        // Update user settings
-        /*User.updateUser(req.user._id, settings, function(err, updateSuccess) {
-            if (err) {
-                return res.status(500).send({
-                    message: 'Encountered an error. Please try again in a ' +
-                             'few minutes.',
-                    refresh: false
-                });
-            } else if (updateSuccess) {
-
-            } else {
-                return res.status(200).send({
-                    message: 'Email address update failed. Please try again ' +
-                    'in a few minutes.',
-                    refresh: false
-                });
-            }
-        });*/
     });
 
     app.post('/settings/account/password', isLoggedIn, function(req, res) {
