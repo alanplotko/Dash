@@ -207,6 +207,26 @@ p.timestamp {
     background-color: #cc181e;
 }
 
+.dashboard-pagination {
+    margin: 50px 0;
+}
+
+.dashboard-pagination li {
+    font-size: 1.5rem;
+    padding: 0 12px;
+    line-height: 45px;
+    border-radius: 50px;
+    margin: 0 2px;
+}
+
+.dashboard-pagination li.active {
+    background-color: #1565C0; /* blue darken-3 */
+}
+
+.dashboard-pagination li a.page {
+    padding: 5px;
+}
+
 .truncate {
     width: 100%;
     white-space: nowrap;

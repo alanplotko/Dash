@@ -5,6 +5,7 @@ var User = require.main.require('./models/user');
 var validator = require('validator');
 require.main.require('./config/custom-validation.js')(validator);
 const error_messages = require.main.require('./config/error-messages.js');
+const items_per_page = 10;
 
 module.exports = function(app, passport, isLoggedIn, nev) {
 
@@ -16,11 +17,48 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
     // --------- User Dashboard ---------
     app.get('/dashboard', isLoggedIn, function(req, res) {
+        return res.redirect('/dashboard/1');
+    });
+    app.get('/dashboard/:page(\\d+)', isLoggedIn, function(req, res) {
+        var totalPosts = 0;
+        req.user.batches.forEach(function(batch) {
+            totalPosts += batch.posts.length;
+        });
+        var currentPage = parseInt(req.params.page);
+        var numPages = Math.ceil(totalPosts / items_per_page);
+
+        if (currentPage <= 0 || currentPage > numPages) {
+            return res.redirect('/dashboard/1');
+        }
+
+        var postCount = items_per_page;
+        var skipCount = items_per_page * (currentPage - 1);
+        req.user.batches.reverse().forEach(function(batch) {
+            batch.posts.slice().forEach(function(post, idx, obj) {
+                if (skipCount > 0) {
+                    skipCount--;
+                    batch.posts.splice(obj.length - 1 - idx, 1);
+                } else if (postCount > 0) {
+                    postCount--;
+                } else if (postCount === 0) {
+                    batch.posts.splice(obj.length - 1 - idx, 1);
+                }
+            });
+        });
+        var startPage = currentPage - 2 > 0 ? currentPage - 2 : 1;
+        var endPage = startPage + (items_per_page - 1) > numPages ? numPages :
+            startPage + (items_per_page - 1);
+        if (endPage - items_per_page < startPage - 1) {
+            startPage = endPage - items_per_page + 1;
+        }
         res.render('dashboard', {
-            // Add other connection fields here
             connected: req.user.facebook.profileId !== undefined ||
                 req.user.youtube.profileId !== undefined,
-            batches: req.user.batches
+            batches: req.user.batches,
+            currentPage: currentPage,
+            numPages: numPages,
+            startPage: startPage,
+            endPage: endPage
         });
     });
 
@@ -433,25 +471,6 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                 }
             });
         });
-
-        // Update user settings
-        /*User.updateUser(req.user._id, settings, function(err, updateSuccess) {
-            if (err) {
-                return res.status(500).send({
-                    message: 'Encountered an error. Please try again in a ' +
-                             'few minutes.',
-                    refresh: false
-                });
-            } else if (updateSuccess) {
-
-            } else {
-                return res.status(200).send({
-                    message: 'Email address update failed. Please try again ' +
-                    'in a few minutes.',
-                    refresh: false
-                });
-            }
-        });*/
     });
 
     app.post('/settings/account/password', isLoggedIn, function(req, res) {
