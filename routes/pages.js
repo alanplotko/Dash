@@ -4,7 +4,7 @@
 var User = require.main.require('./models/user');
 var validator = require('validator');
 require.main.require('./config/custom-validation.js')(validator);
-const error_messages = require.main.require('./config/error-messages.js');
+const messages = require.main.require('./config/messages.js');
 const items_per_page = 10;
 
 module.exports = function(app, passport, isLoggedIn, nev) {
@@ -148,7 +148,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                 if (err.toString().indexOf('400') !== -1) {
                     var service = err.toString().split('-')[1];
                     req.flash('connectMessage',
-                        error_messages[service].refresh);
+                        messages.error[service].refresh);
                     return res.status(500).send({
                         message: service + ' access privileges must be ' +
                                  'renewed. Reloading...',
@@ -182,7 +182,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                 if (err) {
                     if (err.toString() === '400-Facebook') {
                         req.flash('connectMessage',
-                            error_messages.Facebook.refresh);
+                            messages.error.Facebook.refresh);
                         return res.status(500).send({
                             message: 'Facebook access privileges must be ' +
                                      'renewed. Reloading...',
@@ -212,7 +212,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                 if (err) {
                     if (err.toString() === '400-YouTube') {
                         req.flash('connectMessage',
-                            error_messages.YouTube.refresh);
+                            messages.error.YouTube.refresh);
                         return res.status(500).send({
                             message: 'YouTube access privileges must be ' +
                                      'renewed. Reloading...',

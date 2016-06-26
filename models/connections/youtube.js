@@ -1,6 +1,7 @@
 // --------- Environment Setup ---------
 var config = require.main.require('./config/settings')[process.env.NODE_ENV];
 config.connections = require.main.require('./config/settings').connections;
+const messages = require.main.require('./config/messages.js');
 
 // --------- Dependencies ---------
 var mongoose = require('mongoose');
@@ -27,27 +28,27 @@ module.exports = function(UserSchema) {
             if (err) return done(err);
 
             // Unexpected Error: User not found
-            if (!user) return done(null, null, new Error('An error occurred. ' +
-                'Please try again in a few minutes.'));
+            if (!user) return done(null, null,
+                new Error(messages.error.general));
 
             if (connection.reauth) {
-                return done('Missing permissions for YouTube have been ' +
-                    'regranted.');
+                return done(messages.status.YouTube.missing_permissions);
             } else if (connection.refreshAccessToken) {
                 delete connection.refreshAccessToken;
                 user.youtube = connection;
                 user.save(function(err) {
                     // Database Error
-                    if (err) return done(err);
+                    if (err) {
+                        return done(err);
+                    }
 
                     // Success: Refreshed access token for YouTube connection
-                    return done('Access privileges for YouTube have been ' +
-                        'renewed.');
+                    return done(messages.status.YouTube.renewed);
                 });
             } else if (user.hasYouTube) {
                 // Defined Error: Connection already exists
-                return done(new Error('You\'re already connected with ' +
-                    'YouTube.'));
+                return done(new
+                    Error(messages.status.YouTube.already_connected));
             }
 
             // Save connection information (excluding other states) to account
@@ -56,7 +57,9 @@ module.exports = function(UserSchema) {
             user.youtube = connection;
             user.save(function(err) {
                 // Database Error
-                if (err) return done(err);
+                if (err) {
+                    return done(err);
+                }
 
                 // Success: Added YouTube connection
                 return done(null, user);
@@ -71,25 +74,28 @@ module.exports = function(UserSchema) {
     UserSchema.statics.removeYouTube = function(id, done) {
         mongoose.models.User.findById(id, function(err, user) {
             // Database Error
-            if (err) return done(err);
+            if (err) {
+                return done(err);
+            }
 
             // Unexpected Error: User not found
-            if (!user) return done(new Error('An error occurred. ' +
-                'Please try again in a few minutes.'));
+            if (!user) {
+                return done(new Error(messages.error.general));
+            }
 
             // Defined Error: Connection does not exist
-            if (!user.hasYouTube) return done(new Error('You\'re not ' +
-                'connected with YouTube.'));
+            if (!user.hasYouTube) {
+                return done(new Error(messages.status.YouTube.not_connected));
+            }
 
             var url = 'https://accounts.google.com/o/oauth2/revoke?token=' +
-                      user.youtube.accessToken;
+                user.youtube.accessToken;
 
-            request({
-                'url': url,
-                'json': true
-            }, function(err, res, body) {
+            request({ 'url': url, 'json': true }, function(err, res, body) {
                 // Request Error
-                if (err) return done(err);
+                if (err) {
+                    return done(err);
+                }
 
                 // Access Token Error
                 if (res.statusCode == 400 && body.error === 'invalid_token') {
@@ -102,7 +108,9 @@ module.exports = function(UserSchema) {
                     user.youtube = user.lastUpdateTime.youtube = undefined;
                     user.save(function(err) {
                         // Database Error
-                        if (err) return done(err);
+                        if (err) {
+                            return done(err);
+                        }
 
                         // Success: Removed YouTube connection
                         return done(null, user);
@@ -114,17 +122,17 @@ module.exports = function(UserSchema) {
 
     // Get YouTube subscriptions
     function getYouTubeContent(url, nextPageToken, content, done) {
-        request({
-            'url': url + nextPageToken,
-            'json': true
-        }, function(err, res, body) {
+        request({ 'url': url + nextPageToken, 'json': true },
+                function(err, res, body) {
             // Request Error
-            if (err) return done(err);
+            if (err) {
+                return done(err);
+            }
 
             // Access Token Error
             if (body.error && ((body.error.code == 401 &&
-                body.error.message === 'Invalid Credentials') ||
-                body.error.code == 403)) {
+                    body.error.message === 'Invalid Credentials') ||
+                    body.error.code === 403)) {
                 return done('400-YouTube');
             }
 
@@ -132,22 +140,20 @@ module.exports = function(UserSchema) {
                 body.items.forEach(function(element) {
                     content[element.snippet.title] = {
                         'id': element.snippet.resourceId.channelId,
-
                         'thumbnail': element.snippet.thumbnails.high.url ||
-                                     element.snippet.thumbnails.default.url,
-
+                            element.snippet.thumbnails.default.url,
                         'description': element.snippet.description ||
-                                       'No description provided.'
+                            'No description provided.'
                     };
                 });
             }
 
-            // Go to next page
+            // Go to next page if possible
             if (body.nextPageToken) {
                 getYouTubeContent(url, '&pageToken=' + body.nextPageToken,
                     content, done);
-            // Success: Retrieved all available content
             } else {
+                // Success: Retrieved all available content
                 return done(null, content);
             }
         });
@@ -159,34 +165,37 @@ module.exports = function(UserSchema) {
     UserSchema.statics.setUpYouTubeSubs = function(id, done) {
         mongoose.models.User.findById(id, function(err, user) {
             // Database Error
-            if (err) return done(err);
+            if (err) {
+                return done(err);
+            }
 
             // Unexpected Error: User not found
-            if (!user) return done(null, null, new Error('An error occurred. ' +
-                'Please try again in a few minutes.'));
+            if (!user) {
+                return done(null, null, new Error(messages.error.general));
+            }
 
             var url = 'https://www.googleapis.com/youtube/v3/subscriptions?' +
-                      'part=snippet&maxResults=50&mine=true&order=' +
-                      'alphabetical&access_token=' + user.youtube.accessToken;
+                'part=snippet&maxResults=50&mine=true&order=alphabetical&' +
+                'access_token=' + user.youtube.accessToken;
 
             getYouTubeContent(url, '', {}, function(err, content) {
                 // Error while retrieving content
-                if (err) {
-                    if (err === '400-YouTube') {
-                        refresh.requestNewAccessToken('youtube',
+                if (err && err === '400-YouTube') {
+                    refresh.requestNewAccessToken('youtube',
                             user.youtube.refreshToken,
                             function(err, accessToken, refreshToken) {
-                                user.youtube.accessToken = accessToken;
-                                user.save(function(err) {
-                                    // Database Error
-                                    if (err) return done(err);
+                        user.youtube.accessToken = accessToken;
+                        user.save(function(err) {
+                            // Database Error
+                            if (err) {
+                                return done(err);
+                            }
 
-                                    // Successfully refreshed access token
-                                    return done(new Error('Refreshed ' +
-                                        'Access Token'));
-                                });
+                            // Successfully refreshed access token
+                            return done(new
+                                Error(messages.status.YouTube.refreshed_token));
                         });
-                    }
+                    });
                 } else {
                     return done(null, content, user.youtube.subscriptions);
                 }
@@ -198,14 +207,16 @@ module.exports = function(UserSchema) {
     UserSchema.statics.saveYouTubeSubs = function(id, subscriptions, done) {
         mongoose.models.User.findById(id, function(err, user) {
             // Database Error
-            if (err) return done(err);
+            if (err) {
+                return done(err);
+            }
 
             // Unexpected Error: User not found
-            if (!user) return done(null, null, new Error('An error occurred. ' +
-                'Please try again in a few minutes.'));
+            if (!user) {
+                return done(null, null, new Error(messages.error.general));
+            }
 
             user.youtube.subscriptions = [];
-
             subscriptions.forEach(function(sub) {
                 var info = sub.split(';');
                 user.youtube.subscriptions.push({
@@ -214,10 +225,11 @@ module.exports = function(UserSchema) {
                     thumbnail: info[2]
                 });
             });
-
             user.save(function(err) {
                 // Database Error
-                if (err) return done(err);
+                if (err) {
+                    return done(err);
+                }
 
                 // Success: Saved selected YouTube subscriptions
                 return done(null, user);
@@ -236,8 +248,8 @@ module.exports = function(UserSchema) {
             if (err) return done(err);
 
             // Access Token Error
-            if (body.error && (body.error.code == 400 ||
-                body.error.code == 403)) {
+            if (body.error && (body.error.code === 400 ||
+                    body.error.code === 403)) {
                 return done('400-YouTube');
             }
 
@@ -276,7 +288,7 @@ module.exports = function(UserSchema) {
                         connection: 'youtube',
                         title: element.snippet.title,
                         actionDescription: element.snippet.channelTitle +
-                                           ' uploaded a new video!',
+                            ' uploaded a new video!',
                         content: videoDesc || '',
                         timestamp: element.snippet.publishedAt,
                         permalink: permalink,
@@ -287,11 +299,11 @@ module.exports = function(UserSchema) {
                 });
             }
 
-            // Go to next page
+            // Go to next page if possible
             if (body.nextPageToken) {
                 getYouTubeUploads(url, body.nextPageToken, content, name, done);
-            // Success: Retrieved all available posts meeting criteria
             } else {
+                // Success: Retrieved all available posts meeting criteria
                 return done(null, content);
             }
         });
@@ -317,25 +329,23 @@ module.exports = function(UserSchema) {
             if (user.youtube.subscriptions.length > 0) {
                 user.youtube.subscriptions.forEach(function(account) {
                     var feedUrl = 'https://www.googleapis.com/youtube/v3/' +
-                                  'activities?part=snippet%2CcontentDetails' +
-                                  '&channelId=' + account.subId +
-                                  '&maxResults=50&' + 'publishedAfter=' +
-                                  lastUpdateTime.toISOString() +
-                                  '&access_token=' + user.youtube.accessToken;
+                        'activities?part=snippet%2CcontentDetails&channelId=' +
+                        account.subId + '&maxResults=50&' + 'publishedAfter=' +
+                        lastUpdateTime.toISOString() + '&access_token=' +
+                        user.youtube.accessToken;
 
                     var content = getYouTubeUploads(feedUrl, null, [],
-                        account.name, function(err, content) {
-                            // An error occurred
-                            if (err) return callback(err);
+                            account.name, function(err, content) {
+                        // An error occurred
+                        if (err) return callback(err);
 
-                            // Retrieved posts successfully
-                            Array.prototype.push.apply(videoPosts, content);
-                            progress++;
-                            if (progress == user.youtube.subscriptions.length) {
-                                callback(null, videoPosts);
-                            }
+                        // Retrieved posts successfully
+                        Array.prototype.push.apply(videoPosts, content);
+                        progress++;
+                        if (progress == user.youtube.subscriptions.length) {
+                            callback(null, videoPosts);
                         }
-                    );
+                    });
                 });
             } else {
                 callback(null, []);
@@ -379,7 +389,9 @@ module.exports = function(UserSchema) {
                     user.batches.push(newUpdate);
                     user.save(function(err) {
                         // An error occurred
-                        if (err) return done(err);
+                        if (err) {
+                            return done(err);
+                        }
 
                         // Saved posts and update times; return new posts
                         return done(null, newPosts);
@@ -387,8 +399,13 @@ module.exports = function(UserSchema) {
                 // No new posts, set new update time
                 } else {
                     user.save(function(err) {
-                        if (err) return done(err);  // An error occurred
-                        return done(null, null);    // Saved update time
+                        // An error occurred
+                        if (err) {
+                            return done(err);
+                        }
+
+                        // Saved update time
+                        return done(null, null);
                     });
                 }
             });
@@ -398,22 +415,22 @@ module.exports = function(UserSchema) {
     // Enable or disable updates for YouTube
     UserSchema.methods.toggleYouTube = function(done) {
         mongoose.models.User.findById(this._id, function(err, user) {
-            var message = 'YouTube is not currently configured.';
+            var message = messages.status.YouTube.not_configured;
             if (user.hasYouTube) {
-                if (user.youtube.acceptUpdates) {
-                    user.youtube.acceptUpdates = false;
-                    message = 'YouTube updates have been disabled. ' +
-                              'Reloading...';
-                } else {
-                    user.youtube.acceptUpdates = true;
-                    message = 'YouTube updates have been enabled. ' +
-                              'Reloading...';
-                }
+                message = user.youtube.acceptUpdates ?
+                    messages.status.YouTube.updates_disabled :
+                    messages.status.YouTube.updates_enabled;
+                user.youtube.acceptUpdates = !user.youtube.acceptUpdates;
             }
 
             user.save(function(err) {
-                if (err) return done(err);  // An error occurred
-                return done(null, message); // Saved update preference
+                // An error occurred
+                if (err) {
+                    return done(err);
+                }
+
+                // Saved update preference
+                return done(null, message);
             });
         });
     };

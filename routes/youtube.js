@@ -4,7 +4,7 @@
 var User = require.main.require('./models/user');
 var validator = require('validator');
 require.main.require('./config/custom-validation.js')(validator);
-const error_messages = require.main.require('./config/error-messages.js');
+const messages = require.main.require('./config/messages.js');
 
 module.exports = function(app, passport, isLoggedIn) {
 
@@ -80,7 +80,7 @@ module.exports = function(app, passport, isLoggedIn) {
                 // No subscriptions found; return to connect page
                 } else {
                     req.flash('connectMessage',
-                        error_messages.YouTube.reauth.subscriptions);
+                        messages.error.YouTube.reauth.subscriptions);
                     res.redirect('/connect');
                 }
             }
@@ -109,7 +109,7 @@ module.exports = function(app, passport, isLoggedIn) {
             // Get new access token if current token was deemed invalid
             if (err) {
                 if (err.toString() === '400-YouTube') {
-                    req.flash('connectMessage', error_messages.YouTube.refresh);
+                    req.flash('connectMessage', messages.error.YouTube.refresh);
                 }
             } else {
                 req.flash('connectMessage',

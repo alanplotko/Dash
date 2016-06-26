@@ -1,5 +1,4 @@
 $(document).ready(function() {
-
     // Validation defaults
     $.validator.setDefaults({
         onkeyup: false,
