@@ -1,8 +1,8 @@
 $(document).ready(function() {
     var numItems = $('#setupForm .card').
-        find('.card-action :checkbox').size();
+        find('.card-action :checkbox').length;
     var numChecked = $('#setupForm .card').
-        find('.card-action :checkbox:checked').size();
+        find('.card-action :checkbox:checked').length;
     if (numChecked == numItems) {
         $('#selectAll').prop('checked', true);
     }

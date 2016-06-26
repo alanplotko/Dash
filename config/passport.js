@@ -143,7 +143,7 @@ module.exports = function(passport, nev) {
                             });
 
                             nev.createTempUser(newUser, function(err,
-                                newTempUser) {
+                                existingPersistentUser, newTempUser) {
                                 // An error occurred
                                 if (err) return done(null, false,
                                     req.flash('registerMessage',
@@ -154,8 +154,10 @@ module.exports = function(passport, nev) {
                                  * verification
                                  */
                                 if (newTempUser) {
-                                    nev.registerTempUser(newTempUser,
-                                        function(err) {
+                                    var URL = newTempUser[nev.options
+                                        .URLFieldName];
+                                    nev.sendVerificationEmail(email, URL,
+                                        function(err, info) {
                                         if (err) return done(null, false,
                                             req.flash('registerMessage',
                                             err.toString()));
@@ -170,10 +172,21 @@ module.exports = function(passport, nev) {
                                     });
 
                                 /**
+                                 * User already exists in the verified
+                                 * user collection
+                                 */
+                                } else if (existingPersistentUser) {
+                                    return done(null, false,
+                                        req.flash('registerMessage',
+                                            'Error: you already have an ' +
+                                            'account. <a href="/login' +
+                                            email + '">Proceed to login?</a>'));
+
+                                /**
                                  * User already exists in the unverified
                                  * user collection
                                  */
-                                } else {
+                                } else if (existingPersistentUser) {
                                     return done(null, false,
                                         req.flash('registerMessage',
                                             'Error: you already have an ' +

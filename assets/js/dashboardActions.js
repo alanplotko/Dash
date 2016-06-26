@@ -1,5 +1,11 @@
 function dismiss(batchId, postId, el) {
-    $.post('/dismiss/' + batchId + '/' + postId, function(data) {
+    var URL;
+    if (batchId === 'all' && postId === null) {
+        URL = '/dismiss/all';
+    } else {
+        URL = '/dismiss/' + batchId + '/' + postId;
+    }
+    $.post(URL, function(data) {
         var post = $(el).closest('div.row');
         $.when(post.fadeOut()).then(function() {
             post.remove().delay(1000);

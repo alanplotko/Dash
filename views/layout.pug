@@ -10,15 +10,15 @@ html.no-js
     <![endif]-->
 
     include ../includes/nav.pug
-    
+
     block content
 
     script(src='/jquery/jquery.js')
     script(src='/materialize/materialize.js')
     script.
       $(document).ready(function() {
-        $('.dropdown-button').dropdown({ 
-          belowOrigin: true 
+        $('.dropdown-button').dropdown({
+          belowOrigin: true
         });
       });
     block additionalScripts

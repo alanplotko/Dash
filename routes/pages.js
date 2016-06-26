@@ -25,28 +25,49 @@ module.exports = function(app, passport, isLoggedIn, nev) {
     });
 
     app.post('/reset/:service', isLoggedIn, function(req, res) {
-        var connectionName = req.params.service.toLowerCase();
-        var connectionUpdateTime = 'lastUpdateTime.' + connectionName;
+        var connectionName = req.params.service;
+        var connectionNameLower = connectionName.toLowerCase();
 
-        var unsetQuery = {};
-        unsetQuery[connectionUpdateTime] = 1;
-
-        User.findByIdAndUpdate(req.user._id, {
-            $unset: unsetQuery
-        }, function(err, user) {
+        User.findById(req.user._id, function(err, user) {
             if (err) {
                 return res.status(500).send({
                     message: 'Encountered an error. Please try again in a ' +
                              'few minutes.',
                     refresh: false
                 });
-            } else {
-                return res.status(200).send({
-                    message: 'Successfully reset ' + connectionName +
-                             ' connection. Reloading...',
-                    refresh: true
-                });
             }
+
+            // Clear update time
+            user.lastUpdateTime[connectionNameLower] = undefined;
+
+            // Clear service's posts
+            user.batches.forEach(function(batch) {
+                batch.posts.slice().reverse().forEach(function(post, idx, obj) {
+                    if (post.connection === connectionNameLower) {
+                        batch.posts.splice(obj.length - 1 - idx, 1);
+                    }
+                });
+                // Delete batch if it has no posts after cleanup
+                if (batch.posts.length === 0) {
+                    batch.remove();
+                }
+            });
+
+            user.save(function(err) {
+                if (err) {
+                    return res.status(500).send({
+                        message: 'Encountered an error. Please try again in ' +
+                        'a few minutes.',
+                        refresh: false
+                    });
+                } else {
+                    return res.status(200).send({
+                        message: 'Successfully reset ' + connectionName +
+                        ' connection. Reloading...',
+                        refresh: true
+                    });
+                }
+            });
         });
     });
 
@@ -332,13 +353,10 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
     app.post('/settings/account/email', isLoggedIn, function(req, res) {
         // Clean and verify form input
-        var email = validator.trim(req.body.email);
-        var settings = {};
+        var newEmail = validator.trim(req.body.email);
 
         // Validate changes
-        if (validator.isEmail(email) & email.length > 0) {
-            settings.email = email;
-        } else {
+        if (!validator.isEmail(newEmail) || newEmail.length === 0) {
             return res.status(200).send({
                 message: 'Email address invalid. Please enter a valid email ' +
                          'address.',
@@ -346,8 +364,78 @@ module.exports = function(app, passport, isLoggedIn, nev) {
             });
         }
 
+        User.findOne({
+            '_id': req.user._id
+        }, function(err, returnedUser) {
+            if (err) {
+                return res.status(500).send({
+                    message: 'An error occurred. Please try again in ' +
+                             'a few minutes.',
+                    refresh: false
+                });
+            }
+            returnedUser.email = newEmail;
+            nev.createTempUser(returnedUser, function(err,
+                existingPersistentUser, newTempUser) {
+                // An error occurred
+                if (err || existingPersistentUser) {
+                    return res.status(500).send({
+                        message: 'An error occurred. Please try ' +
+                                 'again in a few minutes.',
+                        refresh: false
+                    });
+                }
+
+                // New user creation successful; delete old one and verify email
+                if (newTempUser) {
+                    User.deleteUser(req.user._id, function(err,
+                        deleteSuccess) {
+                        // An error occurred
+                        if (err) {
+                            return res.status(500).send({
+                                message: 'An error occurred. ' +
+                                         'Please try again in a ' +
+                                         'few minutes.',
+                                refresh: false
+                            });
+                        } else if (deleteSuccess) {
+                            var URL = newTempUser[nev.options.URLFieldName];
+                            nev.sendVerificationEmail(newEmail, URL,
+                                function(err, info) {
+                                if (err) {
+                                    req.logout();
+                                    req.session.destroy(function(err) {
+                                        return res.status(500).send({
+                                            message: 'An error occurred. ' +
+                                                     'Please check your ' +
+                                                     'inbox a verification ' +
+                                                     'email and request a ' +
+                                                     'resend if necessary. ' +
+                                                     'Logging out...',
+                                            refresh: true
+                                        });
+                                    });
+                                } else {
+                                    req.logout();
+                                    req.session.destroy(function(err) {
+                                        return res.status(200).send({
+                                            message: 'Email address ' +
+                                                'updated. Remember to ' +
+                                                'verify your email ' +
+                                                'address! Logging out... ',
+                                            refresh: true
+                                        });
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
         // Update user settings
-        User.updateUser(req.user._id, settings, function(err, updateSuccess) {
+        /*User.updateUser(req.user._id, settings, function(err, updateSuccess) {
             if (err) {
                 return res.status(500).send({
                     message: 'Encountered an error. Please try again in a ' +
@@ -355,66 +443,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                     refresh: false
                 });
             } else if (updateSuccess) {
-                User.findOne({
-                    '_id': req.user._id
-                }, function(err, returnedUser) {
-                    if (err) {
-                        return res.status(500).send({
-                            message: 'An error occurred. Please try again in ' +
-                                     'a few minutes.',
-                            refresh: false
-                        });
-                    }
-                    nev.createTempUser(returnedUser, function(err,
-                        newTempUser) {
-                        // An error occurred
-                        if (err) {
-                            return res.status(500).send({
-                                message: 'An error occurred. Please try ' +
-                                         'again in a few minutes.',
-                                refresh: false
-                            });
-                        }
 
-                        // Update succeeded; next step is email verification
-                        if (newTempUser) {
-                            delete newTempUser.posts;
-                            nev.registerTempUser(newTempUser, function(err) {
-                                if (err) {
-                                    return res.status(500).send({
-                                        message: 'An error occurred. ' +
-                                                 'Please try again in a ' +
-                                                 'few minutes.',
-                                        refresh: false
-                                    });
-                                }
-                                User.deleteUser(req.user._id, function(err,
-                                    deleteSuccess) {
-                                    // An error occurred
-                                    if (err) {
-                                        return res.status(500).send({
-                                            message: 'An error occurred. ' +
-                                                     'Please try again in a ' +
-                                                     'few minutes.',
-                                            refresh: false
-                                        });
-                                    } else if (deleteSuccess) {
-                                        req.logout();
-                                        req.session.destroy(function(err) {
-                                            return res.status(200).send({
-                                                message: 'Email address ' +
-                                                    'updated. Remember to ' +
-                                                    'verify your email ' +
-                                                    'address! Logging out... ',
-                                                refresh: true
-                                            });
-                                        });
-                                    }
-                                });
-                            });
-                        }
-                    });
-                });
             } else {
                 return res.status(200).send({
                     message: 'Email address update failed. Please try again ' +
@@ -422,7 +451,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                     refresh: false
                 });
             }
-        });
+        });*/
     });
 
     app.post('/settings/account/password', isLoggedIn, function(req, res) {
@@ -599,17 +628,18 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
     // --------- Dash Email Verification ---------
     app.get('/verify/:token', function(req, res) {
-        nev.confirmTempUser(req.params.token, function(err, user) {
+        nev.confirmTempUser(req.params.token, function(err, newPersistentUser) {
             // An error occurred
             if (err) {
                 req.flash('registerMessage', err.toString());
                 return res.redirect('/register');
             }
             // Redirect to login
-            if (user) {
+            if (newPersistentUser) {
+                nev.sendConfirmationEmail(newPersistentUser.email);
                 req.flash('loginMessage', 'Email address verification ' +
-                    'complete! You may now login.');
-                return res.redirect('/login');
+                        'complete! You may now login.');
+                    return res.redirect('/login');
             } else {
                 // Redirect to register page
                 req.flash('registerMessage', 'Incorrect verification token. ' +
