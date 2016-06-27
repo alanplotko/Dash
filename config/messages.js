@@ -1,14 +1,16 @@
 // Define messages used across Dash
 var messages = {
   /**
-   * Define error messages
+   * Define error messages for mainly services and authentication
    */
     'error': {
       /**
-       * Define error messages for user credentials (e.g. login, register)
+       * Define general error message
        */
       'general': 'An error occurred. Please try again in a few minutes.',
-
+      /**
+       * Define error messages for user credentials (e.g. login, register)
+       */
       'credentials': {
 
         'missing':    'An error occurred. Please check if you\'ve typed in ' +
@@ -79,6 +81,17 @@ var messages = {
      */
     'status': {
       /**
+       * Define general status messages
+       */
+      'general': {
+
+        'new_posts':  'New posts! Reloading...',
+
+        'no_posts':   'No new posts.',
+
+        'reset_connection':   'Successfully reset connection. Reloading...'
+      },
+      /**
        * Define status messages for Facebook service
        */
       'Facebook': {
@@ -101,6 +114,9 @@ var messages = {
                                 'Reloading...',
 
         'updates_disabled':     'Facebook updates have been disabled. ' +
+                                'Reloading...',
+
+        'access_privileges':    'Facebook access privileges must be renewed. ' +
                                 'Reloading...'
       },
       /**
@@ -128,7 +144,106 @@ var messages = {
         'updates_disabled':     'YouTube updates have been disabled. ' +
                                 'Reloading...',
 
-        'refreshed_token':      'Refreshed Access Token'
+        'refreshed_token':      'Refreshed Access Token',
+
+        'access_privileges':    'YouTube access privileges must be renewed. ' +
+                                'Reloading...'
+      }
+    },
+    /**
+     * Define settings messages
+     */
+    'settings': {
+      /**
+       * Define settings messages for the user's display name
+       */
+      'display_name': {
+
+        'invalid':  'Please enter a valid display name.',
+
+        'change_succeeded': 'New display name set. Reloading...',
+
+        'change_failed':    'Display name update failed. Please try again ' +
+                            'in a few minutes.'
+      },
+      /**
+       * Define settings messages for the user's avatar
+       */
+      'avatar': {
+
+        'invalid':  'Avatar URL invalid. Please select a valid avatar URL.',
+
+        'change_succeeded': 'Avatar updated. Reloading...',
+
+        'change_failed':    'Avatar update failed. Please try again in a ' +
+                            'few minutes.',
+
+        'reset_succeeded':  'Your avatar has been reverted to using ' +
+                            'Gravatar. Reloading...',
+
+        'reset_failed':     'Avatar reset failed. Please try again in a ' +
+                            'few minutes.'
+      },
+      /**
+       * Define settings messages for the user's email address
+       */
+      'email': {
+
+        'invalid':    'Email address invalid. Please enter a valid email ' +
+                      'address.',
+
+        'incorrect':  'Incorrect email address. You need to create an ' +
+                      'account first, before you can proceed with the ' +
+                      'verification process.',
+
+        'verified':   'Email address verification complete! You may now login.',
+
+        'change_succeeded': 'Email address updated. Remember to verify your ' +
+                            'email address! Logging out...',
+
+        'change_failed':    'An error occurred. Please check your inbox a ' +
+                            'verification email and request a resend if ' +
+                            'necessary. Logging out...',
+
+        'verification_expired': 'Incorrect verification token. You need to ' +
+                                'create an account first, before you can ' +
+                                'proceed with the verification process.',
+
+        'verification_resent':  'Email address verification resent! Please ' +
+                                'wait a few minutes for the email to arrive.'
+      },
+      /**
+       * Define settings messages for the user's password
+       */
+      'password': {
+
+        'invalid':  'Please enter a valid password.',
+
+        'no_match': 'Please ensure the passwords match.',
+
+        'not_new':  'New password invalid. Your new password cannot be ' +
+                    'the same as your current password.',
+
+        'change_succeeded': 'Password updated. Reloading...',
+
+        'change_failed':    'Password update failed. Please try again in a ' +
+                            'few minutes.',
+
+        'unauthorized':     'Please enter your current password correctly ' +
+                            'to authorize the password change.'
+      },
+      /**
+       * Define settings messages for the user's account
+       */
+      'account': {
+
+        'delete_succeeded': 'Account deletion processed. Reloading...',
+
+        'delete_failed':    'Account deletion failed. Please try again in a ' +
+                            'few minutes.',
+
+        'connections_active':   'Account deletion failed. Please remove all ' +
+                                'connections beforehand.'
       }
     }
 };
