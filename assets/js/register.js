@@ -1,5 +1,4 @@
 $(document).ready(function() {
-
     // Validation defaults
     $.validator.setDefaults({
         onkeyup: false,
@@ -15,7 +14,6 @@ $(document).ready(function() {
         return regexpr.test(value);
     }, 'Must contain at least 1 uppercase letter, 1 lowercase letter, ' +
        'and 1 number.');
-
     $.validator.addMethod('displayNameRegex', function(value, element,
         regexpr) {
         return regexpr.test(value);

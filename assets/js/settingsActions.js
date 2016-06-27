@@ -19,21 +19,35 @@ function deleteAccount() {
     });
 }
 
+function resetAvatar() {
+    $.post('/settings/profile/avatar/reset', function(data) {
+        Materialize.toast(data.message, 4000, '', function() {
+            if (data.refresh) {
+                window.location.reload();
+            }
+        });
+    }).fail(function(data) {
+        Materialize.toast(data.responseJSON.message, 4000, '', function() {
+            if (data.responseJSON.refresh) {
+                window.location.reload();
+            }
+        });
+    });
+}
+
+// Handle submissions
 $('#displayNameForm').submit(function(e) {
     updateDisplayName();
     e.preventDefault();
 });
-
 $('#avatarForm').submit(function(e) {
     updateAvatar();
     e.preventDefault();
 });
-
 $('#emailForm').submit(function(e) {
     updateEmail();
     e.preventDefault();
 });
-
 $('#passwordForm').submit(function(e) {
     updatePassword();
     e.preventDefault();
@@ -59,22 +73,6 @@ function updateDisplayName() {
 function updateAvatar() {
     $.post('/settings/profile/avatar', $('#avatarForm').serialize(),
         function(data) {
-        Materialize.toast(data.message, 4000, '', function() {
-            if (data.refresh) {
-                window.location.reload();
-            }
-        });
-    }).fail(function(data) {
-        Materialize.toast(data.responseJSON.message, 4000, '', function() {
-            if (data.responseJSON.refresh) {
-                window.location.reload();
-            }
-        });
-    });
-}
-
-function resetAvatar() {
-    $.post('/settings/profile/avatar/reset', function(data) {
         Materialize.toast(data.message, 4000, '', function() {
             if (data.refresh) {
                 window.location.reload();

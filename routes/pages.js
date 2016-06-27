@@ -4,7 +4,7 @@
 var User = require.main.require('./models/user');
 var validator = require('validator');
 require.main.require('./config/custom-validation.js')(validator);
-const error_messages = require.main.require('./config/error-messages.js');
+const messages = require.main.require('./config/messages.js');
 const items_per_page = 10;
 
 module.exports = function(app, passport, isLoggedIn, nev) {
@@ -47,7 +47,9 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
     // --------- Front Page ---------
     app.get('/', function(req, res) {
-        if (req.isAuthenticated()) return res.redirect('/dashboard');
+        if (req.isAuthenticated()) {
+            return res.redirect('/dashboard');
+        }
         res.render('index');
     });
 
@@ -102,8 +104,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
         User.findById(req.user._id, function(err, user) {
             if (err) {
                 return res.status(500).send({
-                    message: 'Encountered an error. Please try again in a ' +
-                             'few minutes.',
+                    message: messages.error.general,
                     refresh: false
                 });
             }
@@ -127,14 +128,12 @@ module.exports = function(app, passport, isLoggedIn, nev) {
             user.save(function(err) {
                 if (err) {
                     return res.status(500).send({
-                        message: 'Encountered an error. Please try again in ' +
-                        'a few minutes.',
+                        message: messages.error.general,
                         refresh: false
                     });
                 } else {
                     return res.status(200).send({
-                        message: 'Successfully reset ' + connectionName +
-                        ' connection. Reloading...',
+                        message: messages.status.general.reset_connection,
                         refresh: true
                     });
                 }
@@ -148,27 +147,27 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                 if (err.toString().indexOf('400') !== -1) {
                     var service = err.toString().split('-')[1];
                     req.flash('connectMessage',
-                        error_messages[service].refresh);
+                        messages.error[service].refresh ||
+                        messages.error.general);
                     return res.status(500).send({
-                        message: service + ' access privileges must be ' +
-                                 'renewed. Reloading...',
+                        message: messages.status[service].access_privileges ||
+                            messages.error.general,
                         toConnect: true
                     });
                 } else {
                     return res.status(500).send({
-                        message: 'Encountered an error. Please try again ' +
-                        'in a few minutes.',
+                        message: messages.error.general,
                         refresh: false
                     });
                 }
             } else if (posts) {
                 return res.status(200).send({
-                    message: 'New posts! Reloading...',
+                    message: messages.status.general.new_posts,
                     refresh: true
                 });
             } else {
                 return res.status(200).send({
-                    message: 'No new posts.',
+                    message: messages.status.general.no_posts,
                     refresh: false
                 });
             }
@@ -182,27 +181,25 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                 if (err) {
                     if (err.toString() === '400-Facebook') {
                         req.flash('connectMessage',
-                            error_messages.Facebook.refresh);
+                            messages.error.Facebook.refresh);
                         return res.status(500).send({
-                            message: 'Facebook access privileges must be ' +
-                                     'renewed. Reloading...',
+                            message: messages.status.Facebook.access_privileges,
                             refresh: true
                         });
                     } else {
                         return res.status(500).send({
-                            message: 'Encountered an error. Please try again ' +
-                            'in a few minutes.',
+                            message: messages.error.general,
                             refresh: false
                         });
                     }
                 } else if (posts) {
                     return res.status(200).send({
-                        message: 'New posts! Reloading...',
+                        message: messages.status.general.new_posts,
                         refresh: true
                     });
                 } else {
                     return res.status(200).send({
-                        message: 'No new posts.',
+                        message: messages.status.general.no_posts,
                         refresh: false
                     });
                 }
@@ -212,27 +209,25 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                 if (err) {
                     if (err.toString() === '400-YouTube') {
                         req.flash('connectMessage',
-                            error_messages.YouTube.refresh);
+                            messages.error.YouTube.refresh);
                         return res.status(500).send({
-                            message: 'YouTube access privileges must be ' +
-                                     'renewed. Reloading...',
+                            message: messages.status.YouTube.access_privileges,
                             refresh: true
                         });
                     } else {
                         return res.status(500).send({
-                            message: 'Encountered an error. Please try again ' +
-                            'in a few minutes.',
+                            message: messages.error.general,
                             refresh: false
                         });
                     }
                 } else if (posts) {
                     return res.status(200).send({
-                        message: 'New posts! Reloading...',
+                        message: messages.status.general.new_posts,
                         refresh: true
                     });
                 } else {
                     return res.status(200).send({
-                        message: 'No new posts.',
+                        message: messages.status.general.no_posts,
                         refresh: false
                     });
                 }
@@ -246,8 +241,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
             req.user.toggleFacebook(function(err, result) {
                 if (err) {
                     return res.status(500).send({
-                        message: 'Encountered an error. Please try again in ' +
-                                 'a few minutes.',
+                        message: message.error.general,
                         refresh: false
                     });
                 } else if (result) {
@@ -266,8 +260,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
             req.user.toggleYouTube(function(err, result) {
                 if (err) {
                     return res.status(500).send({
-                        message: 'Encountered an error. Please try again in ' +
-                                 'a few minutes.',
+                        message: message.error.general,
                         refresh: false
                     });
                 } else if (result) {
@@ -291,7 +284,9 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                 'batches': []
             }
         }, function(err, user) {
-            if (err) return res.sendStatus(500);
+            if (err) {
+                return res.sendStatus(500);
+            }
             return res.sendStatus(200);
         });
     });
@@ -305,7 +300,9 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                     batch.remove();
                 }
                 user.save(function(err) {
-                    if (err) return res.sendStatus(500);
+                    if (err) {
+                        return res.sendStatus(500);
+                    }
                     return res.sendStatus(200);
                 });
             } else {
@@ -330,7 +327,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
             settings.displayName = displayName;
         } else {
             return res.status(200).send({
-                message: 'Please enter a valid display name.',
+                message: messages.settings.display_name.invalid,
                 refresh: false
             });
         }
@@ -339,19 +336,17 @@ module.exports = function(app, passport, isLoggedIn, nev) {
         User.updateUser(req.user._id, settings, function(err, updateSuccess) {
             if (err) {
                 return res.status(500).send({
-                    message: 'Encountered an error. Please try again in a ' +
-                             'few minutes.',
+                    message: messages.error.general,
                     refresh: false
                 });
             } else if (updateSuccess) {
                 return res.status(200).send({
-                    message: 'New display name set. Reloading...',
+                    message: messages.settings.display_name.change_succeeded,
                     refresh: true
                 });
             } else {
                 return res.status(200).send({
-                    message: 'Display name update failed. Please try again ' +
-                             'in a few minutes.',
+                    message: messages.settings.display_name.change_failed,
                     refresh: false
                 });
             }
@@ -367,8 +362,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
             settings.avatar = avatarUrl;
         } else {
             return res.status(200).send({
-                message: 'Avatar URL invalid. Please select a valid avatar ' +
-                         'URL.',
+                message: messages.settings.avatar.invalid,
                 refresh: false
             });
         }
@@ -377,19 +371,17 @@ module.exports = function(app, passport, isLoggedIn, nev) {
         User.updateUser(req.user._id, settings, function(err, updateSuccess) {
             if (err) {
                 return res.status(500).send({
-                    message: 'Encountered an error. Please try again in a ' +
-                             'few minutes.',
+                    message: messages.error.general,
                     refresh: false
                 });
             } else if (updateSuccess) {
                 return res.status(200).send({
-                    message: 'Avatar updated. Reloading...',
+                    message: messages.settings.avatar.change_succeeded,
                     refresh: true
                 });
             } else {
                 return res.status(200).send({
-                    message: 'Avatar update failed. Please try again in a ' +
-                             'few minutes.',
+                    message: messages.settings.avatar.change_failed,
                     refresh: false
                 });
             }
@@ -402,20 +394,17 @@ module.exports = function(app, passport, isLoggedIn, nev) {
             updateSuccess) {
             if (err) {
                 return res.status(500).send({
-                    message: 'Encountered an error. Please try again in a ' +
-                             'few minutes.',
+                    message: messages.error.general,
                     refresh: false
                 });
             } else if (updateSuccess) {
                 return res.status(200).send({
-                    message: 'Your avatar has been reverted to using ' +
-                             'Gravatar. Reloading...',
+                    message: messages.settings.avatar.reset_succeeded,
                     refresh: true
                 });
             } else {
                 return res.status(200).send({
-                    message: 'Avatar reset failed. Please try again in a ' +
-                             'few minutes.',
+                    message: messages.settings.avatar.reset_failed,
                     refresh: false
                 });
             }
@@ -429,8 +418,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
         // Validate changes
         if (!validator.isEmail(newEmail) || newEmail.length === 0) {
             return res.status(200).send({
-                message: 'Email address invalid. Please enter a valid email ' +
-                         'address.',
+                message: messages.settings.email.invalid,
                 refresh: false
             });
         }
@@ -440,33 +428,28 @@ module.exports = function(app, passport, isLoggedIn, nev) {
         }, function(err, returnedUser) {
             if (err) {
                 return res.status(500).send({
-                    message: 'An error occurred. Please try again in ' +
-                             'a few minutes.',
+                    message: messages.error.general,
                     refresh: false
                 });
             }
             returnedUser.email = newEmail;
             nev.createTempUser(returnedUser, function(err,
-                existingPersistentUser, newTempUser) {
+                    existingPersistentUser, newTempUser) {
                 // An error occurred
                 if (err || existingPersistentUser) {
                     return res.status(500).send({
-                        message: 'An error occurred. Please try ' +
-                                 'again in a few minutes.',
+                        message: messages.error.general,
                         refresh: false
                     });
                 }
 
                 // New user creation successful; delete old one and verify email
                 if (newTempUser) {
-                    User.deleteUser(req.user._id, function(err,
-                        deleteSuccess) {
+                    User.deleteUser(req.user._id, function(err, deleteSuccess) {
                         // An error occurred
                         if (err) {
                             return res.status(500).send({
-                                message: 'An error occurred. ' +
-                                         'Please try again in a ' +
-                                         'few minutes.',
+                                message: messages.error.general,
                                 refresh: false
                             });
                         } else if (deleteSuccess) {
@@ -477,12 +460,8 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                                     req.logout();
                                     req.session.destroy(function(err) {
                                         return res.status(500).send({
-                                            message: 'An error occurred. ' +
-                                                     'Please check your ' +
-                                                     'inbox a verification ' +
-                                                     'email and request a ' +
-                                                     'resend if necessary. ' +
-                                                     'Logging out...',
+                                            message: messages.settings.email
+                                                .change_failed,
                                             refresh: true
                                         });
                                     });
@@ -490,10 +469,8 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                                     req.logout();
                                     req.session.destroy(function(err) {
                                         return res.status(200).send({
-                                            message: 'Email address ' +
-                                                'updated. Remember to ' +
-                                                'verify your email ' +
-                                                'address! Logging out... ',
+                                            message: messages.settings.email
+                                                .change_succeeded,
                                             refresh: true
                                         });
                                     });
@@ -515,7 +492,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
         // Validate changes
         if (newPass !== newPassConfirm) {
             return res.status(200).send({
-                message: 'Please ensure the passwords match.',
+                message: messages.settings.password.no_match,
                 refresh: false
             });
         } else if (validator.isValidPassword(newPass)) {
@@ -524,8 +501,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                 user.comparePassword(currentPass, function(err, isMatch) {
                     if (err) {
                         return res.status(500).send({
-                            message: 'Encountered an error. Please try ' +
-                                     'again in a few minutes.',
+                            message: messages.error.general,
                             refresh: false
                         });
                     } else if (isMatch) {
@@ -533,17 +509,14 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                         User.findById(req.user._id, function(err, user) {
                             if (err) {
                                 return res.status(500).send({
-                                    message: 'Encountered an error. Please ' +
-                                    'try again in a few minutes.',
+                                    message: messages.error.general,
                                     refresh: false
                                 });
                             } else if (user) {
                                 if (currentPass === newPass) {
                                     return res.status(200).send({
-                                        message: 'New password invalid. ' +
-                                                 'Your new password cannot ' +
-                                                 'be the same as your ' +
-                                                 'current password.',
+                                        message: messages.settings.password
+                                            .not_new,
                                         refresh: false
                                     });
                                 }
@@ -552,33 +525,29 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                                     // An error occurred
                                     if (err) {
                                         return res.status(500).send({
-                                            message: 'Encountered an error. ' +
-                                                     'Please try again in a ' +
-                                                     'few minutes.',
+                                            message: messages.error.general,
                                             refresh: false
                                         });
                                     }
 
                                     // Successfully changed password
                                     return res.status(200).send({
-                                        message: 'Password updated. ' +
-                                                 'Reloading...',
+                                        message: messages.settings.password
+                                            .change_succeeded,
                                         refresh: true
                                     });
                                 });
                             } else {
                                 return res.status(200).send({
-                                    message: 'Password update failed. Please ' +
-                                             'try again in a few minutes.',
+                                    message: messages.settings.password
+                                            .change_failed,
                                     refresh: false
                                 });
                             }
                         });
                     } else {
                         return res.status(200).send({
-                            message: 'Please enter your current password ' +
-                                     'correctly to authorize the password ' +
-                                     'change.',
+                            message: messages.settings.password.unauthorized,
                             refresh: false
                         });
                     }
@@ -586,7 +555,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
             });
         } else {
             return res.status(200).send({
-                message: 'Please enter a valid password.',
+                message: messages.settings.password.invalid,
                 refresh: false
             });
         }
@@ -598,8 +567,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
         if (connected) {
             return res.status(200).send({
-                message: 'Account deletion failed. Please remove all ' +
-                         'connections beforehand.',
+                message: messages.settings.account.connections_active,
                 refresh: false
             });
         }
@@ -607,19 +575,17 @@ module.exports = function(app, passport, isLoggedIn, nev) {
         User.deleteUser(req.user._id, function(err, deleteSuccess) {
             if (err) {
                 return res.status(500).send({
-                    message: 'Encountered an error. Please try again in a ' +
-                             'few minutes.',
+                    message: messages.error.general,
                         refresh: false
                 });
             } else if (deleteSuccess) {
                 return res.status(200).send({
-                    message: 'Account deletion processed. Reloading...',
+                    message: messages.settings.account.delete_succeeded,
                     refresh: true
                 });
             } else {
                 return res.status(200).send({
-                    message: 'Account deletion failed. Please try again in a ' +
-                             'few minutes.',
+                    message: messages.settings.account.delete_failed,
                     refresh: false
                 });
             }
@@ -689,14 +655,12 @@ module.exports = function(app, passport, isLoggedIn, nev) {
             // Redirect to login
             if (newPersistentUser) {
                 nev.sendConfirmationEmail(newPersistentUser.email);
-                req.flash('loginMessage', 'Email address verification ' +
-                        'complete! You may now login.');
+                req.flash('loginMessage', messages.settings.email.verified);
                     return res.redirect('/login');
             } else {
                 // Redirect to register page
-                req.flash('registerMessage', 'Incorrect verification token. ' +
-                    'You need to create an account first, before you can ' +
-                    'proceed with the verification process.');
+                req.flash('registerMessage',
+                    messages.settings.email.verification_expired);
                 return res.redirect('/register');
             }
         });
@@ -706,9 +670,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
         // Clean and verify form input
         var email = validator.trim(req.params.email);
         if (!validator.isEmail(email) || email.length === 0) {
-            req.flash('registerMessage', 'Incorrect email address. ' +
-                'You need to create an account first, before you can ' +
-                'proceed with the verification process.');
+            req.flash('registerMessage', messages.settings.email.incorrect);
             return res.redirect('/register');
         }
 
@@ -718,17 +680,15 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                 req.flash('registerMessage', err.toString());
                 return res.redirect('/register');
             }
+
             // Redirect to login
             if (userFound) {
-                req.flash('loginMessage', 'Email address verification ' +
-                    'resent! Please wait a few minutes for the email to ' +
-                    'arrive.');
+                req.flash('loginMessage',
+                    messages.settings.email.verification_resent);
                 return res.redirect('/login');
             } else {
                 // Redirect to register page
-                req.flash('registerMessage', 'Incorrect email address. ' +
-                    'You need to create an account first, before you can ' +
-                    'proceed with the verification process.');
+                req.flash('registerMessage', messages.settings.email.incorrect);
                 return res.redirect('/register');
             }
         });

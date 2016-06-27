@@ -1,6 +1,9 @@
+/*jshint esversion: 6 */
+
 // --------- Environment Setup ---------
 var config = require.main.require('./config/settings')[process.env.NODE_ENV];
 config.connections = require.main.require('./config/settings').connections;
+const messages = require.main.require('./config/messages.js');
 
 // --------- Dependencies ---------
 var mongoose = require('mongoose');
@@ -169,27 +172,30 @@ UserSchema.pre('save', function(next) {
     var user = this;
 
     // Check if the provided email address already exists
-    mongoose.models.User.findOne({
-        email: user.email
-    }, function(err, user) {
+    mongoose.models.User.findOne({email: user.email}, function(err, user) {
         // An error occurred
-        if (err) return next(new Error('An error occurred. Please try ' +
-            'again in a few minutes.'));
+        if (err) {
+            return next(new Error(messages.error.general));
+        }
     });
 
     // Only hash password if it has been modified or is new
-    if (user.isNew || !user.isModified('password')) return next();
+    if (user.isNew || !user.isModified('password')) {
+        return next();
+    }
 
     // Generate salt
     bcrypt.genSalt(SALT_WORK_FACTOR, function(err, salt) {
         // An error occurred
-        if (err) return next(new Error('An error occurred. Please try again ' +
-            'in a few minutes.'));
+        if (err) {
+            return next(new Error(messages.error.general));
+        }
 
         // Hash password using new salt
         bcrypt.hash(user.password, salt, function(err, hash) {
-            if (err) return next(new Error('An error occurred. Please try ' +
-                'again in a few minutes.'));
+            if (err) {
+                return next(new Error(messages.error.general));
+            }
 
             // Set hashed password back on document
             user.password = hash;
@@ -201,7 +207,9 @@ UserSchema.pre('save', function(next) {
 // Validate password for user
 UserSchema.methods.comparePassword = function(candidatePassword, done) {
     bcrypt.compare(candidatePassword, this.password, function(err, isMatch) {
-        if (err) return done(err);
+        if (err) {
+            return done(err);
+        }
         done(null, isMatch);
     });
 };
@@ -252,32 +260,35 @@ UserSchema.statics.authSerializer = function(user, done) {
 // Deserialize function for use with passport
 UserSchema.statics.authDeserializer = function(id, done) {
     mongoose.models.User.findById(id,
-        'email displayName avatar batches facebook.profileId ' +
-        'facebook.acceptUpdates youtube.profileId youtube.acceptUpdates',
-        function(err, user) {
-            done(err, user);
-        }
-    );
+            'email displayName avatar batches facebook.profileId ' +
+            'facebook.acceptUpdates youtube.profileId youtube.acceptUpdates',
+            function(err, user) {
+        done(err, user);
+    });
 };
 
 // Authenticate the provided credentials
 UserSchema.statics.authenticateUser = function(email, password, done) {
     // Search for email address
-    this.findOne({
-        email: email
-    }, function(err, user) {
+    this.findOne({email: email}, function(err, user) {
         // An error occurred
-        if (err) return done(err);
+        if (err) {
+            return done(err);
+        }
 
         // Check if user exists
-        if (!user) return done(null, null, reasons.NOT_FOUND);
+        if (!user) {
+            return done(null, null, reasons.NOT_FOUND);
+        }
 
         // Check if account is currently locked
         if (user.isLocked) {
             // Increment login attempts if account is already locked
             return user.incLoginAttempts(function(err) {
                 // An error occurred
-                if (err) return done(err);
+                if (err) {
+                    return done(err);
+                }
                 return done(null, null, reasons.MAX_ATTEMPTS);
             });
         }
@@ -285,7 +296,9 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
         // Test provided credentials for matching password
         user.comparePassword(password, function(err, isMatch) {
             // An error occurred
-            if (err) return done(err);
+            if (err) {
+                return done(err);
+            }
 
             // Check if password matched
             if (isMatch) {
@@ -306,7 +319,9 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
 
                 return user.update(updates, function(err) {
                     // An error occurred
-                    if (err) return done(err);
+                    if (err) {
+                        return done(err);
+                    }
                     return done(null, user);
                 });
             }
@@ -314,7 +329,9 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
             // Password incorrect, so increment login attempts before responding
             user.incLoginAttempts(function(err) {
                 // An error occurred
-                if (err) return done(err);
+                if (err) {
+                    return done(err);
+                }
                 return done(null, null, reasons.PASSWORD_INCORRECT);
             });
         });
@@ -323,11 +340,15 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
 
 // Update user settings
 UserSchema.statics.updateUser = function(id, settings, done) {
-    mongoose.models.User.update({
-        _id: id
-    }, settings, function(err, numAffected) {
-        if (err) return done(err);  // An error occurred
-        return done(null, true);    // Update succeeded
+    mongoose.models.User.update({_id: id}, settings,
+            function(err, numAffected) {
+        // An error occurred
+        if (err) {
+            return done(err);
+        }
+
+        // Update succeeded
+        return done(null, true);
     });
 };
 
@@ -338,19 +359,28 @@ UserSchema.statics.resetAvatar = function(id, email, done) {
     var avatarUrl = 'https://gravatar.com/avatar/' + gravatar;
     settings.avatar = avatarUrl;
 
-    mongoose.models.User.update({
-        _id: id
-    }, settings, function(err, numAffected) {
-        if (err) return done(err);  // An error occurred
-        return done(null, true);    // Update succeeded
+    mongoose.models.User.update({_id: id}, settings,
+            function(err, numAffected) {
+        // An error occurred
+        if (err) {
+            return done(err);
+        }
+
+        // Update succeeded
+        return done(null, true);
     });
 };
 
 // Remove user account
 UserSchema.statics.deleteUser = function(id, done) {
     mongoose.models.User.findByIdAndRemove(id, function(err) {
-        if (err) return done(err);  // An error occurred
-        return done(null, true);    // Deletion succeeded
+        // An error occurred
+        if (err) {
+            return done(err);
+        }
+
+        // Deletion succeeded
+        return done(null, true);
     });
 };
 
@@ -375,7 +405,10 @@ UserSchema.methods.updateContent = function(done) {
         }
 
         async.parallel(calls, function(err, results) {
-            if (err) return done(err);
+            // An error occurred
+            if (err) {
+                return done(err);
+            }
 
             var newUpdate = {
                 posts: [],
@@ -409,7 +442,9 @@ UserSchema.methods.updateContent = function(done) {
                 user.batches.push(newUpdate);
                 user.save(function(err) {
                     // An error occurred
-                    if (err) return done(err);
+                    if (err) {
+                        return done(err);
+                    }
 
                     // Saved posts and update times; return new update
                     return done(null, newUpdate);
@@ -417,7 +452,12 @@ UserSchema.methods.updateContent = function(done) {
             // No new posts, set new update time
             } else {
                 user.save(function(err) {
-                    if (err) return done(err);
+                    // An error occurred
+                    if (err) {
+                        return done(err);
+                    }
+
+                    // Saved new update time
                     return done(null, null);
                 });
             }

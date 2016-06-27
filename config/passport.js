@@ -1,6 +1,9 @@
+/*jshint esversion: 6 */
+
 // --------- Environment Setup ---------
 var config = require.main.require('./config/settings')[process.env.NODE_ENV];
 config.connections = require.main.require('./config/settings').connections;
+const messages = require.main.require('./config/messages.js');
 
 // --------- Dependencies ---------
 var LocalStrategy = require('passport-local').Strategy;
@@ -32,25 +35,27 @@ module.exports = function(passport, nev) {
         passwordField: 'password',
         passReqToCallback: true
     }, function(req, emailAddress, password, done) {
-
         // Clean and verify form input
         var email = validator.trim(emailAddress);
 
         if (!validator.isEmail(email) || email.length === 0 ||
             password.length === 0) {
             return done(null, false, req.flash('loginMessage',
-                'An error occurred. Please check if you\'ve ' +
-                'typed in your credentials.'));
+                messages.error.credentials.missing));
         }
 
         // Authenticate the provided credentials
         User.authenticateUser(email, password, function(err, user, reason) {
             // An error occurred
-            if (err) return done(null, false, req.flash('loginMessage',
-                err.toString()));
+            if (err) {
+                return done(null, false, req.flash('loginMessage',
+                    err.toString()));
+            }
 
             // Login succeeded
-            if (user) return done(null, user, req.flash('loginMessage', ''));
+            if (user) {
+                return done(null, user, req.flash('loginMessage', ''));
+            }
 
             // Login failed
             if (reason !== null) {
@@ -60,18 +65,17 @@ module.exports = function(passport, nev) {
                     case reasons.NOT_FOUND:
                     case reasons.PASSWORD_INCORRECT:
                         return done(null, false, req.flash('loginMessage',
-                            'Error: The email address or password is ' +
-                            'incorrect.'));
+                            messages.error.credentials.incorrect));
                     case reasons.MAX_ATTEMPTS:
                         // To Do: Send email about account being locked
                         return done(null, false, req.flash('loginMessage',
-                            'Error: The account is temporarily locked.'));
+                            messages.error.credentials.locked));
                 }
             }
 
             // An unexpected error occurred
             return done(null, false, req.flash('loginMessage',
-                'An error occurred. Please try again in a few minutes.'));
+                messages.error.general));
         });
     }));
 
@@ -80,12 +84,13 @@ module.exports = function(passport, nev) {
         usernameField: 'email',
         passwordField: 'password',
         passReqToCallback: true
-    },
-    function(req, emailAddress, password, done) {
+    }, function(req, emailAddress, password, done) {
         // Clean and verify form input
         var email = validator.trim(emailAddress);
         var display = validator.trim(req.body.display_name);
-        if (display.length === 0) display = email.split('@')[0];
+        if (display.length === 0) {
+            display = email.split('@')[0];
+        }
         var gravatar = crypto.createHash('md5').update(email).digest('hex');
 
         if (!validator.isValidDisplayName(display)) {
@@ -93,30 +98,21 @@ module.exports = function(passport, nev) {
         }
 
         if (!validator.isEmail(email) || email.length === 0 ||
-            password.length === 0) {
+                password.length === 0 || !validator.isValidPassword(password)) {
             return done(null, false, req.flash('registerMessage',
-                'An error occurred. Please check if you\'ve typed in ' +
-                'your credentials.'));
-        }
-
-        if (!validator.isEmail(email) || !validator.isValidPassword(password)) {
-            return done(null, false, req.flash('registerMessage',
-                'Error: Email address or password did not meet criteria. ' +
-                'Please try again.'));
+                messages.error.credentials.missing));
         }
 
         if (password !== req.body.passwordVerify) {
             return done(null, false, req.flash('registerMessage',
-                'Error: Password confirmation failed. Please check ' +
-                'if you\'ve typed in your password correctly.'));
+                messages.error.credentials.password));
         }
 
-        User.findOne({
-            'email': email
-        }, function(err, returnedUser) {
+        User.findOne({'email': email}, function(err, returnedUser) {
             // An error occurred
-            if (err) return done(new Error('An error occurred. Please ' +
-                'try again in a few minutes.'));
+            if (err) {
+                return done(new Error(messages.error.general));
+            }
 
             if (!returnedUser) {
                 // If validation passes, proceed to register user
@@ -124,14 +120,15 @@ module.exports = function(passport, nev) {
                     // Generate salt
                     bcrypt.genSalt(SALT_WORK_FACTOR, function(err, salt) {
                         // An error occurred
-                        if (err) return done(new Error('An error occurred. ' +
-                            'Please try again in a few minutes.'));
+                        if (err) {
+                            return done(new Error(messages.error.general));
+                        }
 
                         // Hash password using new salt
                         bcrypt.hash(password, salt, function(err, hash) {
-                            if (err) return done(new Error('An error ' +
-                                'occurred. Please try again in a few ' +
-                                'minutes.'));
+                            if (err) {
+                                return done(new Error(messages.error.general));
+                            }
 
                             // Set hashed password back on document
                             var newUser = new User({
@@ -143,31 +140,32 @@ module.exports = function(passport, nev) {
                             });
 
                             nev.createTempUser(newUser, function(err,
-                                existingPersistentUser, newTempUser) {
+                                    existingPersistentUser, newTempUser) {
                                 // An error occurred
-                                if (err) return done(null, false,
-                                    req.flash('registerMessage',
-                                    err.toString()));
+                                if (err) {
+                                    return done(null, false,
+                                        req.flash('registerMessage',
+                                        err.toString()));
+                                }
 
                                 /**
                                  * Registration succeeded; next step is email
                                  * verification
                                  */
                                 if (newTempUser) {
-                                    var URL = newTempUser[nev.options
-                                        .URLFieldName];
+                                    var URL = newTempUser[
+                                        nev.options.URLFieldName
+                                    ];
                                     nev.sendVerificationEmail(email, URL,
-                                        function(err, info) {
-                                        if (err) return done(null, false,
-                                            req.flash('registerMessage',
-                                            err.toString()));
+                                            function(err, info) {
+                                        if (err) {
+                                            return done(null, false,
+                                                req.flash('registerMessage',
+                                                err.toString()));
+                                        }
                                         req.flash('loginMessage',
-                                            'You have successfully ' +
-                                            'registered! You should receive ' +
-                                            'an email momentarily for ' +
-                                            'verifying your email address. ' +
-                                            'Click on the link in that email ' +
-                                            'to proceed.');
+                                            messages.error.credentials
+                                            .register_success);
                                         return done(null, newTempUser);
                                     });
 
@@ -178,20 +176,10 @@ module.exports = function(passport, nev) {
                                 } else if (existingPersistentUser) {
                                     return done(null, false,
                                         req.flash('registerMessage',
-                                            'Error: you already have an ' +
-                                            'account. <a href="/login' +
-                                            email + '">Proceed to login?</a>'));
-
-                                /**
-                                 * User already exists in the unverified
-                                 * user collection
-                                 */
-                                } else if (existingPersistentUser) {
-                                    return done(null, false,
-                                        req.flash('registerMessage',
-                                            'Error: you already have an ' +
-                                            'account. <a href="/resend/' +
-                                            email + '"> Resend verification ' +
+                                            messages.error.credentials
+                                            .account_exists + 'Perhaps ' +
+                                            '<a href="/resend/' + email +
+                                            '"> resend a verification ' +
                                             'email?</a>'));
                                 }
                             });
@@ -199,9 +187,8 @@ module.exports = function(passport, nev) {
                     });
                 });
             } else {
-                return done(null, false,
-                    req.flash('registerMessage', 'Error: you already have an ' +
-                        'account. <a href="/login">Proceed to login?</a>'));
+                return done(null, false, req.flash('registerMessage',
+                    messages.error.credentials.account_exists));
             }
         });
     }));
@@ -213,8 +200,7 @@ module.exports = function(passport, nev) {
         callbackURL: config.url + '/connect/auth/facebook/callback',
         enableProof: true,
         passReqToCallback: true
-    },
-    function(req, accessToken, refreshToken, profile, done) {
+    }, function(req, accessToken, refreshToken, profile, done) {
         // Set up connection
         connection = {
             profileId: profile.id,
@@ -227,14 +213,16 @@ module.exports = function(passport, nev) {
         process.nextTick(function() {
             User.addFacebook(req.user.id, connection, function(err, user) {
                 // An error occurred
-                if (err) return done(null, false, req.flash('connectMessage',
-                    err.toString()));
+                if (err) {
+                    return done(null, false, req.flash('connectMessage',
+                        err.toString()));
+                }
 
                 // Connection added successfully
-                if (connection) return done(null, user,
-                    req.flash('connectMessage',
-                        'You are now connected with Facebook. Facebook ' +
-                        'settings are now available for configuration.'));
+                if (connection) {
+                    return done(null, user, req.flash('connectMessage',
+                        messages.status.Facebook.connected));
+                }
             });
             delete req.session.reauth;
             delete req.session.refreshAccessToken;
@@ -249,8 +237,7 @@ module.exports = function(passport, nev) {
         clientSecret: config.connections.youtube.clientSecret,
         callbackURL: config.url + '/connect/auth/youtube/callback',
         passReqToCallback: true
-    },
-    function(req, accessToken, refreshToken, profile, done) {
+    }, function(req, accessToken, refreshToken, profile, done) {
         // Set up connection
         connection = {
             profileId: profile.id,
@@ -263,14 +250,16 @@ module.exports = function(passport, nev) {
         process.nextTick(function() {
             User.addYouTube(req.user.id, connection, function(err, user) {
                 // An error occurred
-                if (err) return done(null, false, req.flash('connectMessage',
-                    err.toString()));
+                if (err) {
+                    return done(null, false, req.flash('connectMessage',
+                        err.toString()));
+                }
 
                 // Connection added successfully
-                if (connection) return done(null, user,
-                    req.flash('connectMessage',
-                        'You are now connected with YouTube. YouTube ' +
-                        'settings are now available for configuration.'));
+                if (connection) {
+                    return done(null, user, req.flash('connectMessage',
+                        messages.status.YouTube.connected));
+                }
             });
             delete req.session.reauth;
             delete req.session.refreshAccessToken;
