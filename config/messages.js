@@ -9,6 +9,24 @@ var messages = {
        */
       'general': 'An error occurred. Please try again in a few minutes.',
       /**
+       * Define error messages for the error page in various environments
+       */
+      'error_page': {
+
+        'internal_server_error':
+          'An error occurred! Click the button below ' +
+          'to return to the front page.<br /><br />If you were in the ' +
+          'middle of trying to do something, then try again after ' +
+          'a few minutes.<br /><br />If you\'re still experiencing ' +
+          'problems, then let the team know!',
+
+        'page_not_found':
+          'That\'s strange... we couldn\'t find what you were ' +
+          'looking for.<br /><br />If you\'re sure that you\'re in the right ' +
+          'place, let the team know.<br /><br />Otherwise, if you\'re lost, ' +
+          'you can find your way back to the front page using the button below.'
+      },
+      /**
        * Define error messages for user credentials (e.g. login, register)
        */
       'credentials': {

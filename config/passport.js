@@ -1,3 +1,5 @@
+/*jshint esversion: 6 */
+
 // --------- Environment Setup ---------
 var config = require.main.require('./config/settings')[process.env.NODE_ENV];
 config.connections = require.main.require('./config/settings').connections;
@@ -96,13 +98,7 @@ module.exports = function(passport, nev) {
         }
 
         if (!validator.isEmail(email) || email.length === 0 ||
-                password.length === 0) {
-            return done(null, false, req.flash('registerMessage',
-                'An error occurred. Please check if you\'ve typed in ' +
-                'your credentials.'));
-        }
-
-        if (!validator.isEmail(email) || !validator.isValidPassword(password)) {
+                password.length === 0 || !validator.isValidPassword(password)) {
             return done(null, false, req.flash('registerMessage',
                 messages.error.credentials.missing));
         }
@@ -112,7 +108,7 @@ module.exports = function(passport, nev) {
                 messages.error.credentials.password));
         }
 
-        User.findOne({ 'email': email }, function(err, returnedUser) {
+        User.findOne({'email': email}, function(err, returnedUser) {
             // An error occurred
             if (err) {
                 return done(new Error(messages.error.general));
@@ -181,18 +177,9 @@ module.exports = function(passport, nev) {
                                     return done(null, false,
                                         req.flash('registerMessage',
                                             messages.error.credentials
-                                            .account_exists));
-
-                                /**
-                                 * User already exists in the unverified
-                                 * user collection
-                                 */
-                                } else if (existingPersistentUser) {
-                                    return done(null, false,
-                                        req.flash('registerMessage',
-                                            'Error: you already have an ' +
-                                            'account. <a href="/resend/' +
-                                            email + '"> Resend verification ' +
+                                            .account_exists + 'Perhaps ' +
+                                            '<a href="/resend/' + email +
+                                            '"> resend a verification ' +
                                             'email?</a>'));
                                 }
                             });
@@ -263,13 +250,16 @@ module.exports = function(passport, nev) {
         process.nextTick(function() {
             User.addYouTube(req.user.id, connection, function(err, user) {
                 // An error occurred
-                if (err) return done(null, false, req.flash('connectMessage',
-                    err.toString()));
+                if (err) {
+                    return done(null, false, req.flash('connectMessage',
+                        err.toString()));
+                }
 
                 // Connection added successfully
-                if (connection) return done(null, user,
-                    req.flash('connectMessage',
-                    messages.status.YouTube.connected));
+                if (connection) {
+                    return done(null, user, req.flash('connectMessage',
+                        messages.status.YouTube.connected));
+                }
             });
             delete req.session.reauth;
             delete req.session.refreshAccessToken;

@@ -6,6 +6,7 @@ process.env.NODE_ENV = (process.argv[2] == 'dev' ||
 var debug = (process.env.NODE_ENV == 'dev');
 var config = require('./config/settings')[process.env.NODE_ENV];
 config.connections = require('./config/settings').connections;
+const messages = require.main.require('./config/messages.js');
 
 // --------- Dependencies ---------
 var express = require('express');
@@ -46,28 +47,38 @@ nev.configure({
 
     // Log errors on console
     verifySendMailCallback: function(err, info) {
-        if (err) console.error(err);
+        if (err) {
+            console.error(err);
+        }
     },
     confirmSendMailCallback: function(err, info) {
-        if (err) console.error(err);
+        if (err) {
+            console.error(err);
+        }
     }
 }, function(err, options) {
-    if (err) console.error(err);
+    if (err) {
+        console.error(err);
+    }
 });
 nev.generateTempUserModel(User, function(err, info) {
-    if (err) console.error(err);
+    if (err) {
+        console.error(err);
+    }
 });
 
 // --------- Support bodies ---------
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({
-    extended: true
-}));
+app.use(bodyParser.urlencoded({extended: true}));
 
 // --------- MongoDB & Mongoose Setup ---------
 mongoose.connect(config.MONGO_URI, function(err) {
-    if (err) throw err;
-    if (debug) console.log('Successfully connected to MongoDB');
+    if (err) {
+        throw err;
+    }
+    if (debug) {
+        console.log('Successfully connected to MongoDB');
+    }
 });
 
 // --------- Authentication Setup ---------
@@ -75,9 +86,7 @@ require('./config/passport')(passport, nev);
 app.use(cookieParser());
 app.use(session({
     secret: '#ofi!af8_1b_edlif6h=o8b)f&)hc!8kx=w*$f2pi%hm)(@yx8',
-    store: new MongoStore({
-        mongooseConnection: mongoose.connection
-    }),
+    store: new MongoStore({mongooseConnection: mongoose.connection}),
     resave: true,
     saveUninitialized: true
 }));
@@ -137,7 +146,9 @@ app.use(function(req, res, next) {
 // Route middleware to ensure user is logged in
 function isLoggedIn(req, res, next) {
     // Proceed if user is authenticated
-    if (req.isAuthenticated()) return next();
+    if (req.isAuthenticated()) {
+        return next();
+    }
 
     // Otherwise, redirect to front page
     res.redirect('/');
@@ -154,20 +165,19 @@ require('./routes/youtube')(app, passport, isLoggedIn);
  *  that other routes are not overridden!
 ==================================================================*/
 app.all('*', function(req, res, next) {
-    var err = new Error();
-    err.status = 404;
-    err.message = 'Page Not Found';
-    err.description = 'That\'s strange... we couldn\'t find what you were ' +
-    'looking for.<br /><br />If you\'re sure that you\'re in the right ' +
-    'place, let the team know.<br /><br />Otherwise, if you\'re lost, you ' +
-    'can find your way back to the front page using the button below.';
-    next(err);
+    next(new Error({
+        status: 404,
+        message: 'Page Not Found',
+        description: messages.error.error_page.page_not_found
+    }));
 });
 
 // --------- Error handling ---------
 app.use(function(err, req, res, next) {
     // If no status is predefined, then label as internal server error
-    if (!err.status) err.status = 500;
+    if (!err.status) {
+        err.status = 500;
+    }
 
     // If in dev env, pass all information on error
     if (debug) {
@@ -183,11 +193,8 @@ app.use(function(err, req, res, next) {
         res.render('error', {
             title: 'Error ' + err.status,
             message: err.message,
-            description: err.description || 'An error occurred! Click the ' +
-            'button below to return to the front page.<br /><br />If you ' +
-            'were in the middle of trying to do something, then try again ' +
-            'after a few minutes.<br /><br />If you\'re still experiencing ' +
-            'problems, then let the team know!'
+            description: err.description ||
+                messages.error.error_page.internal_server_error
         });
     }
 });
@@ -195,7 +202,7 @@ app.use(function(err, req, res, next) {
 // Run App
 var server = app.listen(3000, function() {
     if (debug) {
-        var host = (server.address().address == '::') ? 'localhost' :
+        var host = (server.address().address === '::') ? 'localhost' :
             server.address().address;
         var port = server.address().port;
         console.log('Listening on %s:%s', host, port);

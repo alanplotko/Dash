@@ -47,7 +47,9 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
     // --------- Front Page ---------
     app.get('/', function(req, res) {
-        if (req.isAuthenticated()) return res.redirect('/dashboard');
+        if (req.isAuthenticated()) {
+            return res.redirect('/dashboard');
+        }
         res.render('index');
     });
 
@@ -298,7 +300,9 @@ module.exports = function(app, passport, isLoggedIn, nev) {
                     batch.remove();
                 }
                 user.save(function(err) {
-                    if (err) return res.sendStatus(500);
+                    if (err) {
+                        return res.sendStatus(500);
+                    }
                     return res.sendStatus(200);
                 });
             } else {

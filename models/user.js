@@ -1,3 +1,5 @@
+/*jshint esversion: 6 */
+
 // --------- Environment Setup ---------
 var config = require.main.require('./config/settings')[process.env.NODE_ENV];
 config.connections = require.main.require('./config/settings').connections;
@@ -170,7 +172,7 @@ UserSchema.pre('save', function(next) {
     var user = this;
 
     // Check if the provided email address already exists
-    mongoose.models.User.findOne({ email: user.email }, function(err, user) {
+    mongoose.models.User.findOne({email: user.email}, function(err, user) {
         // An error occurred
         if (err) {
             return next(new Error(messages.error.general));
@@ -268,7 +270,7 @@ UserSchema.statics.authDeserializer = function(id, done) {
 // Authenticate the provided credentials
 UserSchema.statics.authenticateUser = function(email, password, done) {
     // Search for email address
-    this.findOne({ email: email }, function(err, user) {
+    this.findOne({email: email}, function(err, user) {
         // An error occurred
         if (err) {
             return done(err);
@@ -338,7 +340,7 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
 
 // Update user settings
 UserSchema.statics.updateUser = function(id, settings, done) {
-    mongoose.models.User.update({ _id: id }, settings,
+    mongoose.models.User.update({_id: id}, settings,
             function(err, numAffected) {
         // An error occurred
         if (err) {
@@ -357,7 +359,7 @@ UserSchema.statics.resetAvatar = function(id, email, done) {
     var avatarUrl = 'https://gravatar.com/avatar/' + gravatar;
     settings.avatar = avatarUrl;
 
-    mongoose.models.User.update({ _id: id }, settings,
+    mongoose.models.User.update({_id: id}, settings,
             function(err, numAffected) {
         // An error occurred
         if (err) {

@@ -1,3 +1,5 @@
+/*jshint esversion: 6 */
+
 // --------- Environment Setup ---------
 var config = require.main.require('./config/settings')[process.env.NODE_ENV];
 config.connections = require.main.require('./config/settings').connections;
@@ -25,11 +27,14 @@ module.exports = function(UserSchema) {
     UserSchema.statics.addYouTube = function(id, connection, done) {
         mongoose.models.User.findById(id, function(err, user) {
             // Database Error
-            if (err) return done(err);
+            if (err) {
+                return done(err);
+            }
 
             // Unexpected Error: User not found
-            if (!user) return done(null, null,
-                new Error(messages.error.general));
+            if (!user) {
+                return done(null, null, new Error(messages.error.general));
+            }
 
             if (connection.reauth) {
                 return done(messages.status.YouTube.missing_permissions);
@@ -91,7 +96,7 @@ module.exports = function(UserSchema) {
             var url = 'https://accounts.google.com/o/oauth2/revoke?token=' +
                 user.youtube.accessToken;
 
-            request({ 'url': url, 'json': true }, function(err, res, body) {
+            request({'url': url, 'json': true}, function(err, res, body) {
                 // Request Error
                 if (err) {
                     return done(err);
@@ -122,7 +127,7 @@ module.exports = function(UserSchema) {
 
     // Get YouTube subscriptions
     function getYouTubeContent(url, nextPageToken, content, done) {
-        request({ 'url': url + nextPageToken, 'json': true },
+        request({'url': url + nextPageToken, 'json': true},
                 function(err, res, body) {
             // Request Error
             if (err) {
@@ -245,7 +250,9 @@ module.exports = function(UserSchema) {
             'json': true
         }, function(err, res, body) {
             // Request Error
-            if (err) return done(err);
+            if (err) {
+                return done(err);
+            }
 
             // Access Token Error
             if (body.error && (body.error.code === 400 ||
@@ -337,7 +344,9 @@ module.exports = function(UserSchema) {
                     var content = getYouTubeUploads(feedUrl, null, [],
                             account.name, function(err, content) {
                         // An error occurred
-                        if (err) return callback(err);
+                        if (err) {
+                            return callback(err);
+                        }
 
                         // Retrieved posts successfully
                         Array.prototype.push.apply(videoPosts, content);
@@ -365,7 +374,9 @@ module.exports = function(UserSchema) {
             }
 
             async.parallel(calls, function(err, results) {
-                if (err) return done(err);
+                if (err) {
+                    return done(err);
+                }
 
                 var newPosts = [];
 

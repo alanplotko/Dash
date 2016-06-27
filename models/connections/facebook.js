@@ -1,3 +1,5 @@
+/*jshint esversion: 6 */
+
 // --------- Environment Setup ---------
 var config = require.main.require('./config/settings')[process.env.NODE_ENV];
 config.connections = require.main.require('./config/settings').connections;
@@ -100,7 +102,7 @@ module.exports = function(UserSchema) {
                 user.facebook.profileId + '/permissions?access_token=' +
                 user.facebook.accessToken + appSecretProof;
 
-            request.del({ 'url': url, 'json': true }, function(err, res, body) {
+            request.del({'url': url, 'json': true}, function(err, res, body) {
                 // Request Error
                 if (err) {
                     return done(err);
@@ -131,7 +133,7 @@ module.exports = function(UserSchema) {
 
     // Retrieve Facebook content for user to select from
     function getFacebookContent(url, content, appSecretProof, done) {
-        request({ 'url': url + appSecretProof, 'json': true },
+        request({'url': url + appSecretProof, 'json': true},
                 function(err, res, body) {
             // Request Error
             if (err) {
@@ -183,10 +185,12 @@ module.exports = function(UserSchema) {
 
     // Retrieve Facebook posts for selected pages
     function getFacebookPosts(url, content, name, type, appSecretProof, done) {
-        request({ 'url': url + appSecretProof, 'json': true },
+        request({'url': url + appSecretProof, 'json': true},
                 function(err, res, body) {
             // Request Error
-            if (err) return done(err);
+            if (err) {
+                return done(err);
+            }
 
             // Access Token Error
             if (body.error && body.error.code == 190) {
@@ -280,7 +284,9 @@ module.exports = function(UserSchema) {
     UserSchema.statics.saveFacebookGroups = function(id, groups, done) {
         mongoose.models.User.findById(id, function(err, user) {
             // Database Error
-            if (err) return done(err);
+            if (err) {
+                return done(err);
+            }
 
             // Unexpected Error: User not found
             if (!user) {
@@ -412,7 +418,9 @@ module.exports = function(UserSchema) {
                     var content = getFacebookPosts(feedUrl, [], page.name,
                             'page', appSecretProof, function(err, content) {
                         // An error occurred
-                        if (err) return callback(err);
+                        if (err) {
+                            return callback(err);
+                        }
 
                         // Retrieved posts successfully
                         Array.prototype.push.apply(pagePosts, content);
@@ -441,7 +449,9 @@ module.exports = function(UserSchema) {
                     var content = getFacebookPosts(feedUrl, [], group.name,
                             'group', appSecretProof, function(err, content) {
                         // An error occurred
-                        if (err) return callback(err);
+                        if (err) {
+                            return callback(err);
+                        }
 
                         // Retrieved posts successfully
                         Array.prototype.push.apply(groupPosts, content);
