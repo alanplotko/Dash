@@ -219,8 +219,8 @@ var messages = {
         'change_succeeded': 'Email address updated. Remember to verify your ' +
                             'email address! Logging out...',
 
-        'change_failed':    'An error occurred. Please check your inbox a ' +
-                            'verification email and request a resend if ' +
+        'change_failed':    'An error occurred. Please check your inbox for ' +
+                            'a verification email and request a resend if ' +
                             'necessary. Logging out...',
 
         'verification_expired': 'Incorrect verification token. You need to ' +
@@ -228,7 +228,11 @@ var messages = {
                                 'proceed with the verification process.',
 
         'verification_resent':  'Email address verification resent! Please ' +
-                                'wait a few minutes for the email to arrive.'
+                                'wait a few minutes for the email to arrive.',
+
+        'confirmation_email_failed':
+          'A confirmation email failed to send. However, your account has ' +
+          'been verified.'
       },
       /**
        * Define settings messages for the user's password

@@ -654,9 +654,8 @@ module.exports = function(app, passport, isLoggedIn, nev) {
             }
             // Redirect to login
             if (newPersistentUser) {
-                nev.sendConfirmationEmail(newPersistentUser.email);
                 req.flash('loginMessage', messages.settings.email.verified);
-                    return res.redirect('/login');
+                return res.redirect('/login');
             } else {
                 // Redirect to register page
                 req.flash('registerMessage',

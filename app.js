@@ -43,7 +43,6 @@ nev.configure({
     transportOptions: smtpTransport(config.email_settings),
     verifyMailOptions: config.verify_email_format,
     confirmMailOptions: config.confirm_email_format,
-    shouldSendConfirmation: false,
 
     // Log errors on console
     verifySendMailCallback: function(err, info) {

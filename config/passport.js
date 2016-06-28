@@ -177,7 +177,7 @@ module.exports = function(passport, nev) {
                                     return done(null, false,
                                         req.flash('registerMessage',
                                             messages.error.credentials
-                                            .account_exists + 'Perhaps ' +
+                                            .account_exists + ' Perhaps ' +
                                             '<a href="/resend/' + email +
                                             '"> resend a verification ' +
                                             'email?</a>'));
