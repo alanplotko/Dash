@@ -1,6 +1,7 @@
 var chai = require('chai');
 var should = chai.should();
 var config;
+var mongoose;
 var envs = {development: 'DEV', production: 'PROD'};
 var envProps = [
   'MONGO_URI',
@@ -13,7 +14,7 @@ var connectionProps = ['CLIENT_ID', 'CLIENT_SECRET'];
 var emailProps = ['HOST', 'PORT', 'AUTH', 'SECURE'];
 var formatProps = ['FROM', 'SUBJECT', 'HTML', 'TEXT'];
 
-describe('Dash Settings', function() {
+describe('Dash settings', function() {
   it('should exist', function(done) {
     should.exist(require('../config/settings'));
     config = require('../config/settings');
@@ -74,6 +75,40 @@ describe('Dash Settings', function() {
           );
 
           done();
+        });
+        /* eslint-enable no-loop-func */
+      }
+    }
+  });
+});
+
+describe('Dash database', function() {
+  describe('should have a valid URL', function() {
+    for (var envName in envs) {
+      if (envs.hasOwnProperty(envName)) {
+        /* eslint-disable no-loop-func */
+        it('for ' + envName, function(done) {
+          should.exist(config[envs[envName]].MONGO_URI);
+          config[envs[envName]].MONGO_URI.should.match(/^(mongodb:(?:\/{2})?)((\S+?):(\S+?)@|:?@?)(\S+?):(\d+)\/(\w+?)$/);
+          done();
+        });
+        /* eslint-enable no-loop-func */
+      }
+    }
+  });
+  describe('should connect successfully', function() {
+    before(function() {
+      mongoose = require('mongoose');
+      mongoose.Promise = require('bluebird');
+    });
+    for (var envName in envs) {
+      if (envs.hasOwnProperty(envName)) {
+        /* eslint-disable no-loop-func */
+        it('for ' + envName, function(done) {
+          mongoose.connect(config[envs[envName]].MONGO_URI, function(err) {
+            should.not.exist(err);
+            mongoose.connection.close(done);
+          });
         });
         /* eslint-enable no-loop-func */
       }
