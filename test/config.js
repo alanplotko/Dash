@@ -106,6 +106,9 @@ describe('Dash database', function() {
     for (var envName in envs) {
       if (envs.hasOwnProperty(envName)) {
         /* eslint-disable no-loop-func */
+        if (process.env.TRAVIS && envName === 'development') {
+          continue;
+        }
         it('for ' + envName, function(done) {
           mongoose.connect(config[envs[envName]].MONGO_URI, function(err) {
             should.not.exist(err);
