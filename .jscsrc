@@ -1,6 +1,0 @@
-{
-	"preset": "google",
-	"maxErrors": 5,
-	"validateIndentation": null,
-	"requireCamelCaseOrUpperCaseIdentifiers": null
-}

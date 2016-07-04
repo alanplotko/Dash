@@ -27,7 +27,7 @@ block content
               a(href=val.link, target='_blank')
                 div.card-image
                   img(src=val.cover)
-                  if val.is_verified
+                  if val.isVerified
                     div.card-title.fadeTitle.valign-wrapper
                       i.fa.fa-check-circle.left.valign.tooltipped(data-position='top', data-tooltip='Facebook Verified Page')
                       span= index
