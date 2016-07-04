@@ -86,6 +86,9 @@ describe('Dash database', function() {
   describe('should have a valid URL', function() {
     for (var envName in envs) {
       if (envs.hasOwnProperty(envName)) {
+        if (process.env.TRAVIS && envName === 'development') {
+          continue;
+        }
         /* eslint-disable no-loop-func */
         it('for ' + envName, function(done) {
           should.exist(config[envs[envName]].MONGO_URI);
