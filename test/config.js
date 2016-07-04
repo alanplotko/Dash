@@ -88,6 +88,10 @@ describe('Dash database', function() {
       if (envs.hasOwnProperty(envName)) {
         /* eslint-disable no-loop-func */
         it('for ' + envName, function(done) {
+          if (envName === 'development') {
+            console.log(config[envs[envName]]);
+            console.log(config[envs[envName]].MONGO_URI);
+          }
           should.exist(config[envs[envName]].MONGO_URI);
           config[envs[envName]].MONGO_URI.should.match(/^(mongodb:(?:\/{2})?)((\S+?):(\S+?)@|:?@?)(\S+?):(\d+)\/(\w+?)$/);
           done();
@@ -97,10 +101,12 @@ describe('Dash database', function() {
     }
   });
   describe('should connect successfully', function() {
-    before(function() {
+    before(function(done) {
       mongoose = require('mongoose');
       mongoose.Promise = require('bluebird');
+      done();
     });
+
     for (var envName in envs) {
       if (envs.hasOwnProperty(envName)) {
         /* eslint-disable no-loop-func */
