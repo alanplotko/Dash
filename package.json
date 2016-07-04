@@ -4,10 +4,7 @@
   "description": "Dash is a central dashboard for keeping you updated with the information you care about.",
   "main": "app.js",
   "scripts": {
-    "test": "mocha test",
-    "test-jshint": "jshint assets/js config/ models/ routes/ app.js",
-    "test-jscs": "jscs assets/js config/ models/ routes/ app.js",
-    "test-csslint": "csslint assets/css/"
+    "test": "mocha test --recursive"
   },
   "repository": {
     "type": "git",
@@ -56,7 +53,6 @@
     "eslint-config-google": "^0.6.0",
     "mocha": "^2.5.3",
     "mocha-csslint": "^1.0.0",
-    "mocha-eslint": "^2.1.1",
-    "mocha-jshint": "^2.3.1"
+    "mocha-eslint": "^2.1.1"
   }
 }
