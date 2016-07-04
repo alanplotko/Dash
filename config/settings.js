@@ -1,5 +1,3 @@
-/* eslint-disable no-undef */
-
 // Define variables for development and production environments
 var settings = {
   CONNECTIONS: {
@@ -56,7 +54,8 @@ var settings = {
     }
   },
   PROD: {
-    MONGO_URI: process.env.DASH_MONGODB_URL || TRAVIS_DASH_MONGODB_URL,
+    MONGO_URI: process.env.DASH_MONGODB_URL ||
+      process.env.TRAVIS_DASH_MONGODB_URL,
     URL: 'http://localhost:3000', // Default to localhost for now
     EMAIL_SETTINGS: {
       HOST: process.env.DASH_EMAIL_HOST,
