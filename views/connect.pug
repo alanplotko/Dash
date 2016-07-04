@@ -23,7 +23,7 @@ block content
           i.material-icons.left settings
         li: a(href='/setup/facebook/pages') Pages
           i.material-icons.left settings
-        if facebook_on
+        if facebookOn
           li: a.modal-trigger(href='#', onclick='updateModal("Facebook"); return false;') Update
             i.material-icons.left update
           li: a.modal-trigger(href='#', onclick='resetModal("Facebook"); return false;') Reset
@@ -40,7 +40,7 @@ block content
       ul#youtube.dropdown-content
         li: a(href='/setup/youtube/subscriptions') Subscriptions
           i.material-icons.left settings
-        if youtube_on
+        if youtubeOn
           li: a.modal-trigger(href='#', onclick='updateModal("YouTube"); return false;') Update
             i.material-icons.left update
           li: a.modal-trigger(href='#', onclick='resetModal("YouTube"); return false;') Reset

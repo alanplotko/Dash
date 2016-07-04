@@ -1,0 +1,9 @@
+{
+    "rules": {
+        // Disable rules for assets
+        "require-jsdoc": 0,
+        "valid-jsdoc": 0,
+        "no-unused-vars": 0,
+        "no-undef": 0
+    }
+}

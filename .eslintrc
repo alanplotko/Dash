@@ -1,0 +1,18 @@
+{
+    "extends": "google",
+    "rules": {
+        // Ignore regular expressions
+        "max-len": [1, 80, 2, {
+            ignoreComments: true,
+            ignoreUrls: true,
+            ignorePattern: "\\/\\^.*?(\\{(\\d+)?,?\\s*(\\d+)?\\})?\\$\\/"
+        }]
+    },
+    "env": {
+      "browser": true,
+      "jquery": true,
+      "mocha": true,
+      "mongo": true,
+      "node": true
+    }
+}
