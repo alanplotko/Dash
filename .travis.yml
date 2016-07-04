@@ -1,13 +1,17 @@
 language: node_js
 node_js:
-    - "5"
+- '5'
 env:
+  matrix:
   - CXX=g++-4.8
+  global:
+    secure: DWlfQIbFAvX1o7FMZWgaClCo+JbdwkwO3GBqrVGDEM1iwbLeOHy9Z9LtxjFLtBxOfgIinfgXmXO+4pbV9uFNkH3B/kJPVxvu9cxw2imulhTWDGPDfg/nb/ER9/3MgcoUqm/KH2kMpndC8O+f1IM31JcQWfetZn0iYbYa5v3O9Our/m/vv24FFkKXc6zQYlJQOiyFrfHtv+/Tft+AGFQNN4db7ispoOTj0vGs743KErQvJ4CQZ1tPh+4JTHB93NAv4tc4/WIT5nVyWl0bKbDUqBImo38+r+XTtGC+n93VcScz9O2N1hMwbNNDlkVSwwheMK7S7hsv3keJHdbbYlN0j8k+mSifxcVR94I3H7IJUgytjBZLt8zaFNB2Pom9PFXFcOTO1SkegBlQ5xqARHpQwyDyeUl3DbDuQpAtVFnGXZNsrKLo3xdocHKg5O8Cj9iU+IuixEzpg5F9skkA6/wBoVB3qeXWCHlPDWQhtlMrPjZxjtkNpc5pl7M4NZQqj81q9Hiskq1FmBtedWglgKrFitWn6OfnuzCTLFnGNFigW/oHcX5YS0qC53vwKzkqeNQ0JGpQkP+Ud00QY8Y6VkOlFUUwMnfbUQDzLdpPWKNQVc5cdJpZ1UJyM2FN6E2LDQ7J3HfTj62hluXXIdX0EoN5MPoYoYwmSmLk/vocMPuOHCg=
 addons:
   apt:
     sources:
-      - ubuntu-toolchain-r-test
+    - ubuntu-toolchain-r-test
     packages:
-      - g++-4.8
+    - g++-4.8
 before_install:
-    - npm config set python python2.7
+- npm config set python python2.7
+
