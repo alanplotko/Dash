@@ -55,6 +55,7 @@ var settings = {
   },
   PROD: {
     MONGO_URI: process.env.DASH_MONGODB_URL,
+    URL: 'http://localhost:3000', // Default to localhost for now
     EMAIL_SETTINGS: {
       HOST: process.env.DASH_EMAIL_HOST,
       PORT: process.env.DASH_EMAIL_PORT,
