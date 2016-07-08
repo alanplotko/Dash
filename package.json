@@ -1,6 +1,6 @@
 {
   "name": "dash-project",
-  "version": "1.0.0-alpha",
+  "version": "0.1.0-alpha",
   "description": "Dash is a central dashboard for keeping you updated with the information you care about.",
   "main": "app.js",
   "scripts": {
