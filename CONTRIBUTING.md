@@ -108,6 +108,7 @@ For instance, if you'd like to contribute to these contributor guidelines (feel 
 | `security` | Related to security. |
 | `testing` | Related to unit testing. |
 | `ui` | Related to frontend or user interfaces. |
+| `ux` | Related to user experience in using Dash. |
 
 ####Issue State (used by myself to provide closure to specific issues)
 | Label Name | Description |
