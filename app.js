@@ -4,7 +4,7 @@ process.env.NODE_ENV = (process.argv[2].toUpperCase() === 'DEV' ||
 var debug = (process.env.NODE_ENV.toUpperCase() === 'DEV');
 var config = require('./config/settings')[process.env.NODE_ENV];
 config.CONNECTIONS = require('./config/settings').CONNECTIONS;
-var messages = require.main.require('./config/messages.js');
+var messages = require('./config/messages');
 
 // --------- Dependencies ---------
 var express = require('express');
@@ -175,7 +175,6 @@ app.all('*', function(req, res, next) {
 
 // --------- Error handling ---------
 app.use(function(err, req, res, next) {
-  console.log(err);
   // If no status is predefined, then label as internal server error
   if (!err.status) {
     err.status = 500;

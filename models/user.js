@@ -1,7 +1,7 @@
 // --------- Environment Setup ---------
 var config = require.main.require('./config/settings')[process.env.NODE_ENV];
 config.CONNECTIONS = require.main.require('./config/settings').CONNECTIONS;
-var messages = require.main.require('./config/messages.js');
+var messages = require.main.require('./config/messages');
 
 // --------- Dependencies ---------
 var mongoose = require('mongoose');
