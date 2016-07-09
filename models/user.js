@@ -1,17 +1,16 @@
-// --------- Environment Setup ---------
-var config = require.main.require('./config/settings')[process.env.NODE_ENV];
-config.CONNECTIONS = require.main.require('./config/settings').CONNECTIONS;
-var messages = require.main.require('./config/messages');
-
 // --------- Dependencies ---------
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var async = require('async');
+require('./post');
+require('./post_collection');
 var PostCollection = mongoose.model('PostCollection');
 var PostCollectionSchema = PostCollection.schema;
 var passportLocalMongoose = require('passport-local-mongoose');
 var bcrypt = require('bcrypt');
 var crypto = require('crypto');
+var config = require('../config/settings');
+var messages = require('../config/messages');
 
 // --------- Account Constants ---------
 var SALT_WORK_FACTOR = 10;
@@ -429,8 +428,8 @@ UserSchema.statics.deleteUser = function(id, done) {
 /**
  * Set Up Connections
  */
-require('./connections/facebook')(UserSchema);
-require('./connections/youtube')(UserSchema);
+require('./connections/facebook')(UserSchema, messages, config);
+require('./connections/youtube')(UserSchema, messages);
 
 /**
  * Update all of the user's connections.

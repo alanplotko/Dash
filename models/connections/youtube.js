@@ -1,6 +1,3 @@
-// --------- Environment Setup ---------
-var messages = require.main.require('./config/messages');
-
 // --------- Dependencies ---------
 var mongoose = require('mongoose');
 var moment = require('moment');
@@ -8,7 +5,7 @@ var request = require('request');
 var refresh = require('passport-oauth2-refresh');
 var async = require('async');
 
-module.exports = function(UserSchema) {
+module.exports = function(UserSchema, messages) {
   /**
    * Check if the user has an existing YouTube connection.
    * @return {Boolean} A status of whether the user has added this connection

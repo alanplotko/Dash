@@ -23,8 +23,6 @@ var smtpTransport = require('nodemailer-smtp-transport');
 require('express-mongoose');
 
 // Require models
-require('./models/post');
-require('./models/post_collection');
 var User = require('./models/user');
 
 // Configure email verification options

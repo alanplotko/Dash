@@ -2,7 +2,7 @@
 var User = require.main.require('./models/user');
 var validator = require('validator');
 require.main.require('./config/custom-validation')(validator);
-var messages = require.main.require('./config/messages.');
+var messages = require.main.require('./config/messages');
 
 module.exports = function(app, passport, isLoggedIn) {
   app.get('/connect/auth/facebook', isLoggedIn, function(req, res, next) {
