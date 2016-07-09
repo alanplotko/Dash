@@ -2,7 +2,11 @@ var chai = require('chai');
 var should = chai.should();
 var config;
 var mongoose;
+
+// Define existing environments Dash can run in
 var envs = {development: 'DEV', production: 'PROD'};
+
+// Define required properties for each environment property
 var envProps = [
   'MONGO_URI',
   'URL',
@@ -10,10 +14,15 @@ var envProps = [
   'VERIFY_EMAIL_FORMAT',
   'CONFIRM_EMAIL_FORMAT'
 ];
-var connectionProps = ['CLIENT_ID', 'CLIENT_SECRET'];
-var emailProps = ['HOST', 'PORT', 'AUTH', 'SECURE'];
-var formatProps = ['FROM', 'SUBJECT', 'HTML', 'TEXT'];
 
+// Define required properties for other properties
+var connectionProps = ['CLIENT_ID', 'CLIENT_SECRET'];   // Connections
+var emailProps = ['HOST', 'PORT', 'AUTH', 'SECURE'];    // Email Setup
+var formatProps = ['FROM', 'SUBJECT', 'HTML', 'TEXT'];  // Email Formatting
+
+/**
+ * Test for whether required settings are defined
+ */
 describe('Dash settings', function() {
   it('should exist', function(done) {
     should.exist(require('../config/settings'));
@@ -82,6 +91,9 @@ describe('Dash settings', function() {
   });
 });
 
+/**
+ * Test for valid database configuration and connection.
+ */
 describe('Dash database', function() {
   describe('should have a valid URL', function() {
     for (var envName in envs) {
@@ -99,6 +111,7 @@ describe('Dash database', function() {
       }
     }
   });
+
   describe('should connect successfully', function() {
     before(function(done) {
       mongoose = require('mongoose');
@@ -109,6 +122,7 @@ describe('Dash database', function() {
     for (var envName in envs) {
       if (envs.hasOwnProperty(envName)) {
         /* eslint-disable no-loop-func */
+        // Disable dev environment tests in TRAVIS
         if (process.env.TRAVIS && envName === 'development') {
           continue;
         }
