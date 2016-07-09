@@ -8,7 +8,7 @@ block content
     div.col.s12
       h1.error-heading.center.thin #{title}: #{message}
     if (message && message.length > 0)
-      if (process.env.NODE_ENV == 'dev')
+      if (process.env.NODE_ENV.toUpperCase() === 'DEV')
         div.row
           div#errorBox.col.s12
             div#errorMessage.center

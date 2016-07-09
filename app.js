@@ -166,15 +166,16 @@ require('./routes/youtube')(app, passport, isLoggedIn);
  * routes are not overridden!
  */
 app.all('*', function(req, res, next) {
-  next(new Error({
+  next({
     status: 404,
     message: 'Page Not Found',
     description: messages.ERROR.ERROR_PAGE.PAGE_NOT_FOUND
-  }));
+  });
 });
 
 // --------- Error handling ---------
 app.use(function(err, req, res, next) {
+  console.log(err);
   // If no status is predefined, then label as internal server error
   if (!err.status) {
     err.status = 500;
@@ -186,7 +187,7 @@ app.use(function(err, req, res, next) {
       title: 'Error ' + err.status,
       message: err.message,
       fullError: JSON.stringify(err, null, '<br />').replace('}', '<br />}'),
-      stack: err.stack
+      stack: err.stack || 'No stack to display'
     });
   } else {
     // If in prod env, pass a user-friendly message
@@ -194,7 +195,7 @@ app.use(function(err, req, res, next) {
       title: 'Error ' + err.status,
       message: err.message,
       description: err.description ||
-      messages.ERROR.ERROR_PAGE.INTERNAL_SERVER_ERROR
+        messages.ERROR.ERROR_PAGE.INTERNAL_SERVER_ERROR
     });
   }
 });
