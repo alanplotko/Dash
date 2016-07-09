@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-- '5'
+- '6'
 env:
   matrix:
   - CXX=g++-4.8
@@ -12,6 +12,8 @@ addons:
     - ubuntu-toolchain-r-test
     packages:
     - g++-4.8
+  code_climate:
+    repo_token: 9bdb3725e114168adb4377551910c6c01e8e77d04b63c8b1fa5d2f75e1f461e1
 before_install:
 - npm config set python python2.7
 notifications:

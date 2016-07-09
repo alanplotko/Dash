@@ -1,8 +1,3 @@
-// --------- Environment Setup ---------
-var config = require.main.require('./config/settings')[process.env.NODE_ENV];
-config.CONNECTIONS = require.main.require('./config/settings').CONNECTIONS;
-var messages = require.main.require('./config/messages.js');
-
 // --------- Dependencies ---------
 var mongoose = require('mongoose');
 var moment = require('moment');
@@ -10,7 +5,10 @@ var crypto = require('crypto');
 var request = require('request');
 var async = require('async');
 
-module.exports = function(UserSchema) {
+module.exports = function(UserSchema, messages, configuration) {
+  var config = configuration[process.env.NODE_ENV];
+  config.CONNECTIONS = configuration.CONNECTIONS;
+
   /**
    * Check if the user has an existing Facebook connection.
    * @return {Boolean} A status of whether the user has added this connection

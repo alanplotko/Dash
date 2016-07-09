@@ -1,3 +1,6 @@
+/**
+ * JS Linting
+ */
 require('mocha-eslint')([
   'assets/js',
   'config',

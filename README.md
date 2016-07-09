@@ -14,11 +14,11 @@ Dash highlights the information and news you care about. Rather than opening up 
 
 3) Now you can cd into the directory that Dash is located in and run `npm install` to set up dependencies.
 
-4) Run the app with `node app.js dev`. Passing in 'dev' will use the defined database in config.js for the development environment. You will need to set up MongoDB on your computer, create a database, and overwrite the database URI.
+4) Run the app with `node app.js dev`. Passing in 'dev' will use the defined database in config.js for the development environment. You will need to set up MongoDB on your computer, create a database, and overwrite the database URI in `/config/settings.js`.
 
 Optional: If you plan on making changes to the files, consider using nodemon. Nodemon restarts your app whenever it detects changes. To use nodemon, run the app with `nodemon app.js dev` instead.
 
-Note: There are environment variables in the settings.js file. You will need to create your own test apps to fill in the missing information for connections. You will also need to create your own MongoDB database and update the MongoDB details accordingly. If you'd like to add a new connection, take a look at the existing connections as an example. You'll need to add the associated tokens and secrets in the settings.js file.
+Note: There are environment variables in `/config/settings.js`. You will need to create your own test apps to fill in the missing information for connections. You will also need to create your own MongoDB database and update the MongoDB details accordingly. If you'd like to add a new connection, take a look at the existing connections as an example. You'll need to add the associated tokens and secrets.
 
 # Contributing
 

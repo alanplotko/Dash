@@ -1,8 +1,8 @@
 // --------- Dependencies ---------
 var User = require.main.require('./models/user');
 var validator = require('validator');
-require.main.require('./config/custom-validation.js')(validator);
-var messages = require.main.require('./config/messages.js');
+require.main.require('./config/custom-validation')(validator);
+var messages = require.main.require('./config/messages');
 
 module.exports = function(app, passport, isLoggedIn) {
   app.get('/connect/auth/youtube', isLoggedIn,

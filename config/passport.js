@@ -1,7 +1,7 @@
 // --------- Environment Setup ---------
 var config = require.main.require('./config/settings')[process.env.NODE_ENV];
 config.CONNECTIONS = require.main.require('./config/settings').CONNECTIONS;
-var messages = require.main.require('./config/messages.js');
+var messages = require.main.require('./config/messages');
 
 // --------- Dependencies ---------
 var LocalStrategy = require('passport-local').Strategy;
@@ -10,7 +10,7 @@ var YoutubeV3Strategy = require('passport-youtube-v3').Strategy;
 var refresh = require('passport-oauth2-refresh');
 var User = require.main.require('./models/user');
 var validator = require('validator');
-require.main.require('./config/custom-validation.js')(validator);
+require.main.require('./config/custom-validation')(validator);
 var crypto = require('crypto');
 var bcrypt = require('bcrypt');
 

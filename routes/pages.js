@@ -1,8 +1,8 @@
 // --------- Dependencies ---------
 var User = require.main.require('./models/user');
 var validator = require('validator');
-require.main.require('./config/custom-validation.js')(validator);
-var messages = require.main.require('./config/messages.js');
+require.main.require('./config/custom-validation')(validator);
+var messages = require.main.require('./config/messages');
 var ITEMS_PER_PAGE = 10; // Number of post items per page
 var NUM_PAGES_SHOWN = 5; // Number of pages shown in the pagination
 var PAGE_CENTER = 2; // Number of pages shown in pagination before current page
@@ -155,7 +155,8 @@ module.exports = function(app, passport, isLoggedIn, nev) {
       });
 
       // Ensure start page is positive
-      results.startPage = results.currentPage - PAGE_CENTER > 0 ?
+      results.startPage = results.currentPage - PAGE_CENTER > 0 &&
+        results.numPages > NUM_PAGES_SHOWN ?
         results.currentPage - PAGE_CENTER : 1;
 
       // Ensure there is no overflow past the total number of pages
@@ -165,8 +166,8 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
       // Ensure start page is NUM_PAGES_SHOWN - 1 away from the end page
       results.startPage = results.endPage - (NUM_PAGES_SHOWN - 1) <
-        results.startPage ? results.endPage - (NUM_PAGES_SHOWN - 1) :
-        results.startPage;
+        results.startPage && results.endPage - (NUM_PAGES_SHOWN - 1) !== 0 ?
+        results.endPage - (NUM_PAGES_SHOWN - 1) : results.startPage;
     }
 
     return results;
@@ -427,9 +428,9 @@ module.exports = function(app, passport, isLoggedIn, nev) {
           }
           return res.sendStatus(200);
         });
+      } else {
+        return res.sendStatus(500);
       }
-
-      return res.sendStatus(500);
     });
   });
 
