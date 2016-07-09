@@ -121,7 +121,7 @@ block content
     div.modal-content
       h4 WARNING: Account Deletion
         p By proceeding with the account deletion, all preferences and data will be lost. You will be required to start from scratch with a new account if you change your mind after deletion. There is no restoration process - once deleted, your account is gone forever.
-        p NOTE: If your goal is to reset your connection-specific preferences, a reset option exists on the connections page. You may reset the connection or remove the connection from the connections page. There is no need to delete your account unless you no longer want one.
+        p NOTE: If your goal is to reset your service-specific preferences, a reset option exists on the services page. You may reset the service or remove the service from the services page. There is no need to delete your account unless you no longer want one.
     div.modal-footer
       a.modal-action.modal-close.waves-effect.waves-blue.btn-flat Cancel
       a#deleteConfirm.modal-action.modal-close.waves-effect.waves-blue.btn-flat Delete Account
@@ -129,5 +129,6 @@ block content
 block additionalScripts
   script(src='/jquery/jquery.validate.js')
   script(src='/jquery/additional-methods.js')
+  script(src='/static/js/validator.js')
   script(src='/static/js/settings.js')
   script(src='/static/js/settingsActions.js')

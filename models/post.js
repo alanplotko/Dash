@@ -5,8 +5,8 @@ var Schema = mongoose.Schema;
 // Define post fields
 var PostSchema = new Schema({
 
-  // Connection Name
-  connection: {
+  // Service Name
+  service: {
     type: String
   },
 

@@ -1,6 +1,6 @@
 // Define variables for development and production environments
 var settings = {
-  CONNECTIONS: {
+  SERVICES: {
     FACEBOOK: {
       CLIENT_ID: process.env.DASH_FACEBOOK_APP_ID,
       CLIENT_SECRET: process.env.DASH_FACEBOOK_APP_SECRET

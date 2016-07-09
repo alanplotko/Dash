@@ -1,20 +1,4 @@
 $(document).ready(function() {
-  // Validation defaults
-  $.validator.setDefaults({
-    onkeyup: false,
-    errorClass: 'invalid',
-    validClass: 'valid',
-    errorPlacement: function(error, element) {
-      error.insertAfter($(element).siblings('label'));
-    }
-  });
-
-  // Regex validations
-  $.validator.addMethod('passwordRegex', function(value, element, regexpr) {
-    return regexpr.test(value);
-  }, 'Must contain at least 1 uppercase letter, 1 lowercase letter, and 1 ' +
-    'number');
-
   // Form validation setup
   $('#loginForm').validate({
     rules: {
@@ -26,7 +10,13 @@ $(document).ready(function() {
         required: true,
         minlength: 8,
         maxlength: 128,
-        passwordRegex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%^&*}{><~`:;?|,.\]\[\)(+=._-]{8,128}$/
+        regex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%^&*}{><~`:;?|,.\]\[\)(+=._-]{8,128}$/
+      }
+    },
+    messages: {
+      password: {
+        regex: 'Must contain at least 1 uppercase letter, 1 lowercase ' +
+          'letter, and 1 number.'
       }
     }
   });

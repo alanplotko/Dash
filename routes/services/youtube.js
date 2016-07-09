@@ -5,7 +5,7 @@ require.main.require('./config/custom-validation')(validator);
 var messages = require.main.require('./config/messages');
 
 module.exports = function(app, passport, isLoggedIn) {
-  app.get('/connect/auth/youtube', isLoggedIn,
+  app.get('/services/auth/youtube', isLoggedIn,
     passport.authenticate('youtube', {
       scope: [
         'https://www.googleapis.com/auth/youtube.force-ssl',
@@ -13,13 +13,13 @@ module.exports = function(app, passport, isLoggedIn) {
       ]
     }));
 
-  app.get('/connect/auth/youtube/callback', isLoggedIn,
+  app.get('/services/auth/youtube/callback', isLoggedIn,
     passport.authenticate('youtube', {
-      failureRedirect: '/connect',
-      successRedirect: '/connect'
+      failureRedirect: '/services',
+      successRedirect: '/services'
     }));
 
-  app.get('/connect/reauth/youtube', isLoggedIn, function(req, res, next) {
+  app.get('/services/reauth/youtube', isLoggedIn, function(req, res, next) {
     req.session.reauth = true;
     next();
   }, passport.authenticate('youtube', {
@@ -29,7 +29,7 @@ module.exports = function(app, passport, isLoggedIn) {
     ]
   }));
 
-  app.get('/connect/refresh_token/youtube', isLoggedIn, function(req, res,
+  app.get('/services/refresh_token/youtube', isLoggedIn, function(req, res,
       next) {
     req.session.refreshAccessToken = true;
     next();
@@ -44,8 +44,8 @@ module.exports = function(app, passport, isLoggedIn) {
         if (err.toString() === 'Error: Refreshed Access Token') {
           res.redirect('/setup/youtube/subscriptions');
         } else {
-          req.flash('connectMessage', err.toString());
-          res.redirect('/connect');
+          req.flash('serviceMessage', err.toString());
+          res.redirect('/services');
         }
       } else if (allSubscriptions && Object.keys(allSubscriptions).length > 0) {
         // Fill in checkboxes for existing subscriptions
@@ -71,10 +71,10 @@ module.exports = function(app, passport, isLoggedIn) {
           contentName: 'subscriptions'
         });
       } else {
-        // No subscriptions found; return to connect page
-        req.flash('connectMessage',
+        // No subscriptions found; return to services page
+        req.flash('serviceMessage',
           messages.ERROR.YOUTUBE.REAUTH.SUBSCRIPTIONS);
-        res.redirect('/connect');
+        res.redirect('/services');
       }
     });
   });
@@ -87,23 +87,23 @@ module.exports = function(app, passport, isLoggedIn) {
         req.flash('setupMessage', err.toString());
         res.redirect('/setup/youtube/subscriptions');
       } else {
-        // Saved subscriptions; return to connect page
-        req.flash('connectMessage',
+        // Saved subscriptions; return to services page
+        req.flash('serviceMessage',
           messages.STATUS.YOUTUBE.SUBSCRIPTIONS_UPDATED);
-        res.redirect('/connect');
+        res.redirect('/services');
       }
     });
   });
 
-  app.get('/connect/remove/youtube', isLoggedIn, function(req, res) {
+  app.get('/services/remove/youtube', isLoggedIn, function(req, res) {
     User.removeYouTube(req.user.id, function(err) {
       // Get new access token if current token was deemed invalid
       if (err && err.toString() === '400-YouTube') {
-        req.flash('connectMessage', messages.ERROR.YOUTUBE.REFRESH);
+        req.flash('serviceMessage', messages.ERROR.YOUTUBE.REFRESH);
       } else {
-        req.flash('connectMessage', messages.STATUS.YOUTUBE.REMOVED);
+        req.flash('serviceMessage', messages.STATUS.YOUTUBE.REMOVED);
       }
-      res.redirect('/connect');
+      res.redirect('/services');
     });
   });
 };

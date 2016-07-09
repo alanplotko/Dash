@@ -3,176 +3,9 @@ var User = require.main.require('./models/user');
 var validator = require('validator');
 require.main.require('./config/custom-validation')(validator);
 var messages = require.main.require('./config/messages');
-var ITEMS_PER_PAGE = 10; // Number of post items per page
-var NUM_PAGES_SHOWN = 5; // Number of pages shown in the pagination
-var PAGE_CENTER = 2; // Number of pages shown in pagination before current page
-
-/**
- * Modifies the user's email address by moving the user back into
- * the unverified users' MongoDB collection.
- * @param  {Object}   nev           The email-verification module imported from
- *                                  app.js
- * @param  {Object}   returnedUser  The returned User object containing user
- *                                  details
- * @param  {string}   newEmail      The user's new email address
- * @param  {Object}   req           The current request
- * @param  {Object}   res           The response
- * @return {res}                    Send a message back to the user regarding
- *                                  the status of updating the email address
- */
-function changeUserEmail(nev, returnedUser, newEmail, req, res) {
-  return nev.createTempUser(returnedUser, function(err, existingPersistentUser,
-      newTempUser) {
-    // An error occurred
-    if (err || existingPersistentUser) {
-      return res.status(500).send({
-        message: messages.ERROR.GENERAL,
-        refresh: false
-      });
-    }
-
-    // New user creation successful; delete old one and verify email
-    if (newTempUser) {
-      User.deleteUser(req.user._id, function(err, deleteSuccess) {
-        // An error occurred
-        if (err) {
-          return res.status(500).send({
-            message: messages.ERROR.GENERAL,
-            refresh: false
-          });
-        } else if (deleteSuccess) {
-          var URL = newTempUser[nev.options.URLFieldName];
-          nev.sendVerificationEmail(newEmail, URL, function(err, info) {
-            if (err) {
-              req.logout();
-              req.session.destroy(function(err) {
-                if (err) {
-                  return res.status(500).send({
-                    message: messages.ERROR.GENERAL,
-                    refresh: true
-                  });
-                }
-                return res.status(500).send({
-                  message: messages.SETTINGS.EMAIL.CHANGE_FAILED,
-                  refresh: true
-                });
-              });
-            } else {
-              req.logout();
-              req.session.destroy(function(err) {
-                if (err) {
-                  return res.status(500).send({
-                    message: messages.ERROR.GENERAL,
-                    refresh: true
-                  });
-                }
-                return res.status(200).send({
-                  message: messages.SETTINGS.EMAIL.CHANGE_SUCCEEDED,
-                  refresh: true
-                });
-              });
-            }
-          });
-        }
-      });
-    }
-  });
-}
-
-/**
- * Modifies the user's password after verifying it is different from
- * the current password.
- * @param  {string}   currentPass The current password
- * @param  {string}   newPass     The new password
- * @param  {Object}   req         The current request
- * @param  {Object}   res         The response
- * @return {res}                  Send a message back to the user regarding
- *                                the status of updating the password
- */
-function updateUserPassword(currentPass, newPass, req, res) {
-  return User.findById(req.user._id, function(err, user) {
-    if (err) {
-      return res.status(500).send({
-        message: messages.ERROR.GENERAL,
-        refresh: false
-      });
-    } else if (user) {
-      if (currentPass === newPass) {
-        return res.status(200).send({
-          message: messages.SETTINGS.PASSWORD.NOT_NEW,
-          refresh: false
-        });
-      }
-      user.password = newPass;
-      user.save(function(err) {
-        // An error occurred
-        if (err) {
-          return res.status(500).send({
-            message: messages.ERROR.GENERAL,
-            refresh: false
-          });
-        }
-
-        // Successfully changed password
-        return res.status(200).send({
-          message: messages.SETTINGS.PASSWORD.CHANGE_SUCCEEDED,
-          refresh: true
-        });
-      });
-    } else {
-      return res.status(200).send({
-        message: messages.SETTINGS.PASSWORD.CHANGE_FAILED,
-        refresh: false
-      });
-    }
-  });
-}
+var handlers = require.main.require('./routes/handlers');
 
 module.exports = function(app, passport, isLoggedIn, nev) {
-  // --------- Return <= 10 posts for pagination ---------
-  var slicePosts = function(batches, currentPage, totalPosts, numPages) {
-    var results = {
-      batches: batches,
-      currentPage: currentPage,
-      numPages: numPages,
-      startPage: null,
-      endPage: null
-    };
-    if (totalPosts > 0) {
-      var postCount = ITEMS_PER_PAGE;
-      var skipCount = ITEMS_PER_PAGE * (results.currentPage - 1);
-      batches.reverse().forEach(function(batch) {
-        batch.posts.slice().forEach(function(post, idx, obj) {
-          if (skipCount > 0) {
-            skipCount--;
-            batch.posts.splice(obj.length - 1 - idx, 1);
-          } else if (postCount > 0) {
-            postCount--;
-          } else if (postCount === 0) {
-            batch.posts.splice(obj.length - 1 - idx, 1);
-          }
-        });
-      });
-
-      // Ensure start page is positive
-      results.startPage = results.currentPage - PAGE_CENTER > 0 &&
-        results.numPages > NUM_PAGES_SHOWN ?
-        results.currentPage - PAGE_CENTER : 1;
-
-      // Ensure there is no overflow past the total number of pages
-      results.endPage = results.startPage + (NUM_PAGES_SHOWN - 1) <=
-        results.numPages ? results.startPage + (NUM_PAGES_SHOWN - 1) :
-        results.numPages;
-
-      // Ensure start page is NUM_PAGES_SHOWN - 1 away from the end page
-      results.startPage = results.endPage - (NUM_PAGES_SHOWN - 1) <
-        results.startPage && results.endPage - (NUM_PAGES_SHOWN - 1) !== 0 ?
-        results.endPage - (NUM_PAGES_SHOWN - 1) : results.startPage;
-    }
-
-    return results;
-  };
-
   // --------- Front Page ---------
   app.get('/', function(req, res) {
     if (req.isAuthenticated()) {
@@ -187,9 +20,11 @@ module.exports = function(app, passport, isLoggedIn, nev) {
     req.user.batches.forEach(function(batch) {
       totalPosts += batch.posts.length;
     });
-    var numPages = Math.ceil(totalPosts / ITEMS_PER_PAGE);
+    var numPages = Math.ceil(totalPosts / handlers.ITEMS_PER_PAGE);
 
-    var results = slicePosts(req.user.batches, 1, totalPosts, numPages);
+    var results = handlers.handlePagination(req.user.batches, 1, totalPosts,
+      numPages);
+
     res.render('dashboard', {
       connected: req.user.facebook.profileId !== undefined ||
         req.user.youtube.profileId !== undefined,
@@ -207,13 +42,14 @@ module.exports = function(app, passport, isLoggedIn, nev) {
     req.user.batches.forEach(function(batch) {
       totalPosts += batch.posts.length;
     });
-    var numPages = Math.ceil(totalPosts / ITEMS_PER_PAGE);
+    var numPages = Math.ceil(totalPosts / handlers.ITEMS_PER_PAGE);
     if (currentPage === 1 || currentPage <= 0 || currentPage > numPages) {
       return res.redirect('/dashboard');
     }
 
-    var results = slicePosts(req.user.batches, currentPage, totalPosts,
-      numPages);
+    var results = handlers.handlePagination(req.user.batches, currentPage,
+      totalPosts, numPages);
+
     res.render('dashboard', {
       connected: req.user.facebook.profileId !== undefined ||
         req.user.youtube.profileId !== undefined,
@@ -226,8 +62,8 @@ module.exports = function(app, passport, isLoggedIn, nev) {
   });
 
   app.post('/reset/:service', isLoggedIn, function(req, res) {
-    var connectionName = req.params.service;
-    var connectionNameLower = connectionName.toLowerCase();
+    var serviceName = req.params.service;
+    var serviceNameLower = serviceName.toLowerCase();
 
     User.findById(req.user._id, function(err, user) {
       if (err) {
@@ -238,12 +74,12 @@ module.exports = function(app, passport, isLoggedIn, nev) {
       }
 
       // Clear update time
-      user.lastUpdateTime[connectionNameLower] = undefined;
+      user.lastUpdateTime[serviceNameLower] = undefined;
 
       // Clear service's posts
       user.batches.forEach(function(batch) {
         batch.posts.slice().reverse().forEach(function(post, idx, obj) {
-          if (post.connection === connectionNameLower) {
+          if (post.service === serviceNameLower) {
             batch.posts.splice(obj.length - 1 - idx, 1);
           }
         });
@@ -261,7 +97,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
           });
         }
         return res.status(200).send({
-          message: messages.STATUS.GENERAL.RESET_CONNECTION,
+          message: messages.STATUS.GENERAL.RESET_SERVICE,
           refresh: true
         });
       });
@@ -272,12 +108,12 @@ module.exports = function(app, passport, isLoggedIn, nev) {
     req.user.updateContent(function(err, posts) {
       if (err && err.toString().indexOf('400') !== -1) {
         var SERVICE = err.toString().split('-')[1];
-        req.flash('connectMessage', messages.ERROR[SERVICE].REFRESH ||
+        req.flash('serviceMessage', messages.ERROR[SERVICE].REFRESH ||
           messages.ERROR.GENERAL);
         return res.status(500).send({
           message: messages.STATUS[SERVICE].ACCESS_PRIVILEGES ||
-          messages.ERROR.GENERAL,
-          toConnect: true
+            messages.ERROR.GENERAL,
+          redirectToServices: true
         });
       } else if (err) {
         return res.status(500).send({
@@ -299,99 +135,29 @@ module.exports = function(app, passport, isLoggedIn, nev) {
   });
 
   app.post('/refresh/:service', isLoggedIn, function(req, res) {
-    var connectionName = req.params.service;
-    if (connectionName === 'facebook') {
+    var serviceName = req.params.service;
+    if (serviceName === 'facebook') {
       req.user.refreshFacebook(function(err, posts) {
-        if (err && err.toString() === '400-Facebook') {
-          req.flash('connectMessage', messages.ERROR.FACEBOOK.REFRESH);
-          return res.status(500).send({
-            message: messages.STATUS.FACEBOOK.ACCESS_PRIVILEGES,
-            refresh: true
-          });
-        } else if (err) {
-          return res.status(500).send({
-            message: messages.ERROR.GENERAL,
-            refresh: false
-          });
-        } else if (posts) {
-          return res.status(200).send({
-            message: messages.STATUS.GENERAL.NEW_POSTS,
-            refresh: true
-          });
-        }
-
-        return res.status(200).send({
-          message: messages.STATUS.GENERAL.NO_POSTS,
-          refresh: false
-        });
+        return handlers.handlePostRefresh(serviceName.toUpperCase(), err,
+          '400-Facebook', posts, req, res);
       });
-    } else if (connectionName === 'youtube') {
+    } else if (serviceName === 'youtube') {
       req.user.refreshYouTube(function(err, posts) {
-        if (err && err.toString() === '400-YouTube') {
-          req.flash('connectMessage', messages.ERROR.YOUTUBE.REFRESH);
-          return res.status(500).send({
-            message: messages.STATUS.YOUTUBE.ACCESS_PRIVILEGES,
-            refresh: true
-          });
-        } else if (err) {
-          return res.status(500).send({
-            message: messages.ERROR.GENERAL,
-            refresh: false
-          });
-        } else if (posts) {
-          return res.status(200).send({
-            message: messages.STATUS.GENERAL.NEW_POSTS,
-            refresh: true
-          });
-        }
-
-        return res.status(200).send({
-          message: messages.STATUS.GENERAL.NO_POSTS,
-          refresh: false
-        });
+        return handlers.handlePostRefresh(serviceName.toUpperCase(), err,
+          '400-YouTube', posts, req, res);
       });
     }
   });
 
   app.post('/toggleUpdates/:service', isLoggedIn, function(req, res) {
-    var connectionName = req.params.service;
-    if (connectionName === 'facebook') {
+    var serviceName = req.params.service;
+    if (serviceName === 'facebook') {
       req.user.toggleFacebook(function(err, result) {
-        if (err) {
-          return res.status(500).send({
-            message: messages.ERROR.GENERAL,
-            refresh: false
-          });
-        } else if (result) {
-          return res.status(200).send({
-            message: result,
-            refresh: true
-          });
-        }
-
-        return res.status(200).send({
-          message: result,
-          refresh: false
-        });
+        return handlers.handlePostUpdate(result, result, err, result, req, res);
       });
-    } else if (connectionName === 'youtube') {
+    } else if (serviceName === 'youtube') {
       req.user.toggleYouTube(function(err, result) {
-        if (err) {
-          return res.status(500).send({
-            message: messages.ERROR.GENERAL,
-            refresh: false
-          });
-        } else if (result) {
-          return res.status(200).send({
-            message: result,
-            refresh: true
-          });
-        }
-
-        return res.status(200).send({
-          message: result,
-          refresh: false
-        });
+        return handlers.handlePostUpdate(result, result, err, result, req, res);
       });
     }
   });
@@ -457,22 +223,10 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
     // Update user settings
     User.updateUser(req.user._id, settings, function(err, updateSuccess) {
-      if (err) {
-        return res.status(500).send({
-          message: messages.ERROR.GENERAL,
-          refresh: false
-        });
-      } else if (updateSuccess) {
-        return res.status(200).send({
-          message: messages.SETTINGS.DISPLAY_NAME.CHANGE_SUCCEEDED,
-          refresh: true
-        });
-      }
-
-      return res.status(200).send({
-        message: messages.SETTINGS.DISPLAY_NAME.CHANGE_FAILED,
-        refresh: false
-      });
+      var success = messages.SETTINGS.DISPLAY_NAME.CHANGE_SUCCEEDED;
+      var failure = messages.SETTINGS.DISPLAY_NAME.CHANGE_FAILED;
+      return handlers.handlePostUpdate(success, failure, err, updateSuccess,
+        req, res);
     });
   });
 
@@ -492,22 +246,10 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
     // Update user settings
     User.updateUser(req.user._id, settings, function(err, updateSuccess) {
-      if (err) {
-        return res.status(500).send({
-          message: messages.ERROR.GENERAL,
-          refresh: false
-        });
-      } else if (updateSuccess) {
-        return res.status(200).send({
-          message: messages.SETTINGS.AVATAR.CHANGE_SUCCEEDED,
-          refresh: true
-        });
-      }
-
-      return res.status(200).send({
-        message: messages.SETTINGS.AVATAR.CHANGE_FAILED,
-        refresh: false
-      });
+      var success = messages.SETTINGS.AVATAR.CHANGE_SUCCEEDED;
+      var failure = messages.SETTINGS.AVATAR.CHANGE_FAILED;
+      return handlers.handlePostUpdate(success, failure, err, updateSuccess,
+        req, res);
     });
   });
 
@@ -515,22 +257,10 @@ module.exports = function(app, passport, isLoggedIn, nev) {
     // Reset user's avatar to use Gravatar
     User.resetAvatar(req.user._id, req.user.email, function(err,
         updateSuccess) {
-      if (err) {
-        return res.status(500).send({
-          message: messages.ERROR.GENERAL,
-          refresh: false
-        });
-      } else if (updateSuccess) {
-        return res.status(200).send({
-          message: messages.SETTINGS.AVATAR.RESET_SUCCEEDED,
-          refresh: true
-        });
-      }
-
-      return res.status(200).send({
-        message: messages.SETTINGS.AVATAR.RESET_FAILED,
-        refresh: false
-      });
+      var success = messages.SETTINGS.AVATAR.RESET_SUCCEEDED;
+      var failure = messages.SETTINGS.AVATAR.RESET_FAILED;
+      return handlers.handlePostUpdate(success, failure, err, updateSuccess,
+        req, res);
     });
   });
 
@@ -554,7 +284,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
         });
       }
       returnedUser.email = newEmail;
-      return changeUserEmail(nev, returnedUser, newEmail, req, res);
+      return handlers.handleEmailChange(nev, returnedUser, newEmail, req, res);
     });
   });
 
@@ -587,7 +317,8 @@ module.exports = function(app, passport, isLoggedIn, nev) {
             });
           } else if (isMatch) {
             // Update user settings
-            return updateUserPassword(currentPass, newPass, req, res);
+            return handlers.handlePasswordChange(currentPass, newPass, req,
+              res);
           }
 
           return res.status(200).send({
@@ -610,35 +341,23 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
     if (connected) {
       return res.status(200).send({
-        message: messages.SETTINGS.ACCOUNT.CONNECTIONS_ACTIVE,
+        message: messages.SETTINGS.ACCOUNT.SERVICES_ACTIVE,
         refresh: false
       });
     }
 
     User.deleteUser(req.user._id, function(err, deleteSuccess) {
-      if (err) {
-        return res.status(500).send({
-          message: messages.ERROR.GENERAL,
-          refresh: false
-        });
-      } else if (deleteSuccess) {
-        return res.status(200).send({
-          message: messages.SETTINGS.ACCOUNT.DELETE_SUCCEEDED,
-          refresh: true
-        });
-      }
-
-      return res.status(200).send({
-        message: messages.SETTINGS.ACCOUNT.DELETE_FAILED,
-        refresh: false
-      });
+      var success = messages.SETTINGS.ACCOUNT.DELETE_SUCCEEDED;
+      var failure = messages.SETTINGS.ACCOUNT.DELETE_FAILED;
+      return handlers.handlePostUpdate(success, failure, err, deleteSuccess,
+        req, res);
     });
   });
 
-  // --------- User's Connected Sites ---------
-  app.get('/connect', isLoggedIn, function(req, res) {
-    res.render('connect', {
-      message: req.flash('connectMessage'),
+  // --------- User's Connected Services ---------
+  app.get('/services', isLoggedIn, function(req, res) {
+    res.render('services', {
+      message: req.flash('serviceMessage'),
       facebook: req.user.facebook.profileId,
       facebookOn: req.user.facebook.acceptUpdates,
       youtube: req.user.youtube.profileId,
@@ -693,21 +412,10 @@ module.exports = function(app, passport, isLoggedIn, nev) {
   // --------- Dash Email Verification ---------
   app.get('/verify/:token', function(req, res) {
     nev.confirmTempUser(req.params.token, function(err, newPersistentUser) {
-      // An error occurred
-      if (err) {
-        req.flash('registerMessage', err.toString());
-        return res.redirect('/register');
-      }
-      // Redirect to login
-      if (newPersistentUser) {
-        req.flash('loginMessage', messages.SETTINGS.EMAIL.VERIFIED);
-        return res.redirect('/login');
-      }
-
-      // Redirect to register page
-      req.flash('registerMessage',
-        messages.SETTINGS.EMAIL.VERIFICATION_EXPIRED);
-      return res.redirect('/register');
+      var success = messages.SETTINGS.EMAIL.VERIFIED;
+      var failure = messages.SETTINGS.EMAIL.VERIFICATION_EXPIRED;
+      return handlers.handlePostRegistrationEmail(success, failure, err,
+        userFound, req, res);
     });
   });
 
@@ -720,21 +428,10 @@ module.exports = function(app, passport, isLoggedIn, nev) {
     }
 
     nev.resendVerificationEmail(email, function(err, userFound) {
-      // An error occurred
-      if (err) {
-        req.flash('registerMessage', err.toString());
-        return res.redirect('/register');
-      }
-
-      // Redirect to login
-      if (userFound) {
-        req.flash('loginMessage', messages.SETTINGS.EMAIL.VERIFICATION_RESENT);
-        return res.redirect('/login');
-      }
-
-      // Redirect to register page
-      req.flash('registerMessage', messages.SETTINGS.EMAIL.INCORRECT);
-      return res.redirect('/register');
+      var success = messages.SETTINGS.EMAIL.VERIFICATION_RESENT;
+      var failure = messages.SETTINGS.EMAIL.INCORRECT;
+      return handlers.handlePostRegistrationEmail(success, failure, err,
+        userFound, req, res);
     });
   });
 };

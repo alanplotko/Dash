@@ -41,8 +41,8 @@ function refresh() {
   }).fail(function(data) {
     $('.refresh-bar').fadeOut();
     Materialize.toast(data.responseJSON.message, 4000, '', function() {
-      if (data.responseJSON.toConnect) {
-        window.location.href = '/connect';
+      if (data.responseJSON.redirectToServices) {
+        window.location.href = '/services';
       } else if (data.responseJSON.refresh) {
         window.location.reload();
       }

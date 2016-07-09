@@ -7,8 +7,8 @@ var async = require('async');
 
 module.exports = function(UserSchema, messages) {
   /**
-   * Check if the user has an existing YouTube connection.
-   * @return {Boolean} A status of whether the user has added this connection
+   * Check if the user is connected to YouTube.
+   * @return {Boolean} A status of whether the user has added this service
    */
   UserSchema.virtual('hasYouTube').get(function() {
     return Boolean(this.youtube.profileId);
@@ -17,11 +17,11 @@ module.exports = function(UserSchema, messages) {
   /**
    * Populate the user's YouTube identifiers and tokens.
    * @param  {ObjectId} id          The current user's id in MongoDB
-   * @param  {Object}   connection  User-specific details for the connection
+   * @param  {Object}   service     User-specific details for the service
    * @param  {Function} done        The callback function to execute upon
    *                                completion
    */
-  UserSchema.statics.addYouTube = function(id, connection, done) {
+  UserSchema.statics.addYouTube = function(id, service, done) {
     mongoose.models.User.findById(id, function(err, user) {
       // Database Error
       if (err) {
@@ -33,36 +33,36 @@ module.exports = function(UserSchema, messages) {
         return done(null, null, new Error(messages.ERROR.GENERAL));
       }
 
-      if (connection.reauth) {
+      if (service.reauth) {
         return done(messages.STATUS.YOUTUBE.MISSING_PERMISSIONS);
-      } else if (connection.refreshAccessToken) {
-        delete connection.refreshAccessToken;
-        user.youtube = connection;
+      } else if (service.refreshAccessToken) {
+        delete service.refreshAccessToken;
+        user.youtube = service;
         user.save(function(err) {
           // Database Error
           if (err) {
             return done(err);
           }
 
-          // Success: Refreshed access token for YouTube connection
+          // Success: Refreshed access token for YouTube service
           return done(messages.STATUS.YOUTUBE.RENEWED);
         });
       } else if (user.hasYouTube) {
-        // Defined Error: Connection already exists
+        // Defined Error: Service already exists
         return done(new Error(messages.STATUS.YOUTUBE.ALREADY_CONNECTED));
       }
 
-      // Save connection information (excluding other states) to account
-      delete connection.reauth;
-      delete connection.refreshAccessToken;
-      user.youtube = connection;
+      // Save service information (excluding other states) to account
+      delete service.reauth;
+      delete service.refreshAccessToken;
+      user.youtube = service;
       user.save(function(err) {
         // Database Error
         if (err) {
           return done(err);
         }
 
-        // Success: Added YouTube connection
+        // Success: Added YouTube service
         return done(null, user);
       });
     });
@@ -87,7 +87,7 @@ module.exports = function(UserSchema, messages) {
         return done(new Error(messages.ERROR.GENERAL));
       }
 
-      // Defined Error: Connection does not exist
+      // Defined Error: Service does not exist
       if (!user.hasYouTube) {
         return done(new Error(messages.STATUS.YOUTUBE.NOT_CONNECTED));
       }
@@ -116,7 +116,7 @@ module.exports = function(UserSchema, messages) {
               return done(err);
             }
 
-            // Success: Removed YouTube connection
+            // Success: Removed YouTube service
             return done(null, user);
           });
         }
@@ -323,7 +323,7 @@ module.exports = function(UserSchema, messages) {
           }
 
           content.push({
-            connection: 'youtube',
+            service: 'youtube',
             title: element.snippet.title,
             actionDescription: element.snippet.channelTitle +
               ' uploaded a new video!',
@@ -402,7 +402,7 @@ module.exports = function(UserSchema, messages) {
   };
 
   /**
-   * Retrieve only new content from YouTube on the connections page.
+   * Retrieve only new content from YouTube on the services page.
    * @param {Function} done The callback function to execute upon completion
    */
   UserSchema.methods.refreshYouTube = function(done) {
