@@ -3,7 +3,9 @@ var User = require.main.require('./models/user');
 var validator = require('validator');
 require.main.require('./config/custom-validation.js')(validator);
 var messages = require.main.require('./config/messages.js');
-var ITEMS_PER_PAGE = 10;
+var ITEMS_PER_PAGE = 10; // Number of post items per page
+var NUM_PAGES_SHOWN = 5; // Number of pages shown in the pagination
+var PAGE_CENTER = 2; // Number of pages shown in pagination before current page
 
 /**
  * Modifies the user's email address by moving the user back into
@@ -136,7 +138,6 @@ module.exports = function(app, passport, isLoggedIn, nev) {
       startPage: null,
       endPage: null
     };
-
     if (totalPosts > 0) {
       var postCount = ITEMS_PER_PAGE;
       var skipCount = ITEMS_PER_PAGE * (results.currentPage - 1);
@@ -152,14 +153,20 @@ module.exports = function(app, passport, isLoggedIn, nev) {
           }
         });
       });
-      results.startPage = results.currentPage - 2 > 0 ?
-      results.currentPage - 2 : 1;
-      results.endPage = results.startPage + (ITEMS_PER_PAGE - 1) >
-      results.numPages ? results.numPages : results.startPage +
-      (ITEMS_PER_PAGE - 1);
-      if (results.endPage - results.numPages < results.startPage - 1) {
-        results.startPage = results.endPage - results.numPages + 1;
-      }
+
+      // Ensure start page is positive
+      results.startPage = results.currentPage - PAGE_CENTER > 0 ?
+        results.currentPage - PAGE_CENTER : 1;
+
+      // Ensure there is no overflow past the total number of pages
+      results.endPage = results.startPage + (NUM_PAGES_SHOWN - 1) <=
+        results.numPages ? results.startPage + (NUM_PAGES_SHOWN - 1) :
+        results.numPages;
+
+      // Ensure start page is NUM_PAGES_SHOWN - 1 away from the end page
+      results.startPage = results.endPage - (NUM_PAGES_SHOWN - 1) <
+        results.startPage ? results.endPage - (NUM_PAGES_SHOWN - 1) :
+        results.startPage;
     }
 
     return results;
