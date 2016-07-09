@@ -10,7 +10,7 @@ Dash highlights the information and news you care about. Rather than opening up 
 
 1) Download the latest development version of [Dash](https://github.com/alanplotko/Dash/archive/develop.zip) and extract it to a directory of your choosing. Alternatively, feel free to fork the repo and create a local clone.
 
-2) Install the latest version of [Node.js](https://nodejs.org/en/).
+2) Install the latest version of [Node.js](https://nodejs.org/en/). Dash currently uses Node.js v6.3.0.
 
 3) Now you can cd into the directory that Dash is located in and run `npm install` to set up dependencies.
 
