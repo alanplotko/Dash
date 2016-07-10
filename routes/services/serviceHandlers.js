@@ -67,11 +67,27 @@ var handlePostSetupError = module.exports.handlePostSetupError =
     res.redirect('/services');
   };
 
-module.exports.retrieveActivity = function(err, settings, allContent,
-    existingContent, type, req, res) {
+/**
+ * [retrieveActivity description]
+ * @param  {Object}   settings        An object containing the service name and
+ *                                    a singular term describing the content
+ * @param  {Object}   err             An error, if one has occurred
+ * @param  {Object[]} allContent      A list of items representing all available
+ *                                    content including those that the user
+ *                                    has selected
+ * @param  {Object[]} existingContent A list of items representing only content
+ *                                    that the user has selected
+ * @param  {Object}   req             The current request
+ * @param  {Object}   res             The response
+ */
+module.exports.retrieveActivity = function(settings, err, allContent,
+    existingContent, req, res) {
+  settings.plural = settings.singular + 's';  // Set up the plural term
+  settings.id = settings.singular + 'Id';     // Set up the id name
   // An error occurred
   if (err) {
-    handlePostSetupError(settings.name, err, settings.error, req, res);
+    handlePostSetupError(settings.name, err, settings.error ||
+      '400-' + settings.name, req, res);
   // Found content
   } else if (Object.keys(allContent).length > 0) {
     // Fill in checkboxes for existing content
@@ -79,7 +95,7 @@ module.exports.retrieveActivity = function(err, settings, allContent,
       var ids = [];
 
       existingContent.forEach(function(item) {
-        ids.push(item[type.id]);
+        ids.push(item[settings.id]);
       });
 
       for (var key in allContent) {
@@ -94,12 +110,12 @@ module.exports.retrieveActivity = function(err, settings, allContent,
     res.render(settings.name.toLowerCase() + '-setup', {
       message: req.flash('setupMessage'),
       content: allContent,
-      contentName: type.name
+      contentName: settings.plural
     });
   // No content found; return to services page
   } else {
     req.flash('serviceMessage', messages.ERROR[settings.name.toUpperCase()]
-      .REAUTH[type.name.toUpperCase()]);
+      .REAUTH[settings.plural.toUpperCase()]);
     res.redirect('/services');
   }
 };

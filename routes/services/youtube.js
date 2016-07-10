@@ -39,10 +39,13 @@ module.exports = function(app, passport, isLoggedIn) {
   app.get('/setup/youtube/subscriptions', isLoggedIn, function(req, res) {
     User.setUpYouTubeSubs(req.user._id, function(err, allContent,
         existingContent) {
-      var settings = {name: 'YouTube', error: 'Error: Refreshed Access Token'};
-      var type = {id: 'subId', name: 'subscriptions'};
-      handlers.retrieveActivity(err, settings, allContent, existingContent,
-        type, req, res);
+      var settings = {
+        name: 'YouTube',
+        error: 'Error: Refreshed Access Token',
+        singular: 'subscription'
+      };
+      handlers.retrieveActivity(settings, err, allContent, existingContent, req,
+        res);
     });
   });
 

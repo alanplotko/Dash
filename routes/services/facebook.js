@@ -36,10 +36,9 @@ module.exports = function(app, passport, isLoggedIn) {
   app.get('/setup/facebook/groups', isLoggedIn, function(req, res) {
     User.setUpFacebookGroups(req.user._id, function(err, allContent,
         existingContent) {
-      var settings = {name: 'Facebook', error: '400-Facebook'};
-      var type = {id: 'groupId', name: 'groups'};
-      handlers.retrieveActivity(err, settings, allContent, existingContent,
-        type, req, res);
+      var settings = {name: 'Facebook', singular: 'group'};
+      handlers.retrieveActivity(settings, err, allContent, existingContent, req,
+        res);
     });
   });
 
@@ -54,10 +53,9 @@ module.exports = function(app, passport, isLoggedIn) {
   app.get('/setup/facebook/pages', isLoggedIn, function(req, res) {
     User.setUpFacebookPages(req.user._id, function(err, allContent,
         existingContent) {
-      var settings = {name: 'Facebook', error: '400-Facebook'};
-      var type = {id: 'pageId', name: 'pages'};
-      handlers.retrieveActivity(err, settings, allContent, existingContent,
-        type, req, res);
+      var settings = {name: 'Facebook', singular: 'page'};
+      handlers.retrieveActivity(settings, err, allContent, existingContent, req,
+        res);
     });
   });
 
