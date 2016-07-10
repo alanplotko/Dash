@@ -1,34 +1,24 @@
+function notify(data) {
+  Materialize.toast(data.message, 4000, '', function() {
+    if (data.refresh) {
+      window.location.reload();
+    }
+  });
+}
+
 function createRequest(route) {
   $.post(route, function(data) {
-    Materialize.toast(data.message, 4000, '', function() {
-      if (data.refresh) {
-        window.location.reload();
-      }
-    });
+    notify(data);
   }).fail(function(data) {
-    Materialize.toast(data.responseJSON.message, 4000, '', function() {
-      if (data.responseJSON.refresh) {
-        window.location.reload();
-      }
-    });
+    notify(data.responseJSON);
   });
 }
 
 function createRequestFromForm(route, formSelector) {
-  $.post(route, $(formSelector).serialize(),
-    function(data) {
-      Materialize.toast(data.message, 4000, '', function() {
-        if (data.refresh) {
-          window.location.reload();
-        }
-      });
-    })
-  .fail(function(data) {
-    Materialize.toast(data.responseJSON.message, 4000, '', function() {
-      if (data.responseJSON.refresh) {
-        window.location.reload();
-      }
-    });
+  $.post(route, $(formSelector).serialize(), function(data) {
+    notify(data);
+  }).fail(function(data) {
+    notify(data.responseJSON);
   });
 }
 
