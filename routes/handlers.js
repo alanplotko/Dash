@@ -14,16 +14,19 @@ var PAGE_CENTER = module.exports.PAGE_CENTER = 2;
 /**
  * Send a general error back to the user.
  * @param  {Object}   res         The response
- * @param  {boolean}  doRefresh   Whether to refresh the page after sending the
- *                                response
- * @return {res}                  Send a message back to the user that a general
- *                                error has occurred
+ * @param  {number}   code        The status code
+ * @param  {?string}   message    A custom message to send to the user or the
+ *                                general error message if null
+ * @param  {boolean}  refresh     Whether to refresh the page after sending
+ *                                the response
+ * @return {res}                  Send a message back to the user that indicates
+ *                                the status of the completed process
  */
-var errorHandler = module.exports.handleGeneralError = function(res,
-    doRefresh) {
-  return res.status(500).send({
-    message: messages.ERROR.GENERAL,
-    refresh: doRefresh
+var responseHandler = module.exports.handleResponse = function(res, code,
+    message, refresh) {
+  return res.status(code).send({
+    message: message || messages.ERROR.GENERAL,
+    refresh: refresh
   });
 };
 
@@ -99,22 +102,14 @@ module.exports.handlePostRefresh = function(serviceName, err, errorMessage,
     posts, req, res) {
   if (err && err.toString() === errorMessage) {
     req.flash('serviceMessage', messages.ERROR[serviceName].REFRESH);
-    return res.status(500).send({
-      message: messages.STATUS[serviceName].ACCESS_PRIVILEGES,
-      refresh: true
-    });
+    return responseHandler(res, 500,
+      messages.STATUS[serviceName].ACCESS_PRIVILEGES, true);
   } else if (err) {
-    return errorHandler.handleGeneralError(res, false);
+    return responseHandler(res, 500, null, true);
   } else if (posts) {
-    return res.status(200).send({
-      message: messages.STATUS.GENERAL.NEW_POSTS,
-      refresh: true
-    });
+    return responseHandler(res, 200, messages.STATUS.GENERAL.NEW_POSTS, true);
   }
-  return res.status(200).send({
-    message: messages.STATUS.GENERAL.NO_POSTS,
-    refresh: false
-  });
+  return responseHandler(res, 200, messages.STATUS.GENERAL.NO_POSTS, false);
 };
 
 /**
@@ -132,18 +127,11 @@ module.exports.handlePostRefresh = function(serviceName, err, errorMessage,
 module.exports.handlePostUpdate = function(successMessage, failureMessage, err,
     updateSuccess, req, res) {
   if (err) {
-    return errorHandler.handleGeneralError(res, false);
+    return responseHandler(res, 500, null, false);
   } else if (updateSuccess) {
-    return res.status(200).send({
-      message: successMessage,
-      refresh: true
-    });
+    return responseHandler(res, 200, successMessage, true);
   }
-
-  return res.status(200).send({
-    message: failureMessage,
-    refresh: false
-  });
+  return responseHandler(res, 200, failureMessage, false);
 };
 
 /**
@@ -191,12 +179,9 @@ var logoutHandler = module.exports.handleLogout = function(statusMessage,
   req.logout();
   req.session.destroy(function(err) {
     if (err) {
-      return errorHandler.handleGeneralError(res, true);
+      return responseHandler(res, 500, null, true);
     }
-    return res.status(statusCode).send({
-      message: statusMessage,
-      refresh: true
-    });
+    return responseHandler(res, statusCode, statusMessage, true);
   });
 };
 
@@ -219,7 +204,7 @@ module.exports.handleEmailChange = function(nev, returnedUser, newEmail, req,
       newTempUser) {
     // An error occurred
     if (err || existingPersistentUser) {
-      return errorHandler.handleGeneralError(res, false);
+      return responseHandler(res, 200, messages.SETTINGS.EMAIL.EXISTS, false);
     }
 
     // New user creation successful; delete old one and verify email
@@ -227,7 +212,7 @@ module.exports.handleEmailChange = function(nev, returnedUser, newEmail, req,
       User.deleteUser(req.user._id, function(err, deleteSuccess) {
         // An error occurred
         if (err) {
-          return errorHandler.handleGeneralError(res, false);
+          return responseHandler(res, 500, null, false);
         } else if (deleteSuccess) {
           var URL = newTempUser[nev.options.URLFieldName];
           nev.sendVerificationEmail(newEmail, URL, function(err, info) {
@@ -261,14 +246,11 @@ var saveHandler = module.exports.handlePostSave = function(successMessage, err,
     req, res) {
   // An error occurred
   if (err) {
-    return errorHandler.handleGeneralError(res, false);
+    return responseHandler(res, 500, null, false);
   }
 
   // Successfully changed password
-  return res.status(200).send({
-    message: successMessage,
-    refresh: true
-  });
+  return responseHandler(res, 200, successMessage, true);
 };
 
 /**
@@ -284,24 +266,20 @@ var saveHandler = module.exports.handlePostSave = function(successMessage, err,
 module.exports.handlePasswordChange = function(currentPass, newPass, req, res) {
   return User.findById(req.user._id, function(err, user) {
     if (err) {
-      return errorHandler.handleGeneralError(res, false);
+      return responseHandler(res, 500, null, false);
     } else if (user) {
       if (currentPass === newPass) {
-        return res.status(200).send({
-          message: messages.SETTINGS.PASSWORD.NOT_NEW,
-          refresh: false
-        });
+        return responseHandler(res, 200, messages.SETTINGS.PASSWORD.NOT_NEW,
+          false);
       }
       user.password = newPass;
       user.save(function(err) {
         var success = messages.SETTINGS.PASSWORD.CHANGE_SUCCEEDED;
-        return saveHandler.handlePostSave(success, err, req, res);
+        return saveHandler(success, err, req, res);
       });
     } else {
-      return res.status(200).send({
-        message: messages.SETTINGS.PASSWORD.CHANGE_FAILED,
-        refresh: false
-      });
+      return responseHandler(res, 200, messages.SETTINGS.PASSWORD.CHANGE_FAILED,
+        false);
     }
   });
 };
