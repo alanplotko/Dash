@@ -12,6 +12,22 @@ var NUM_PAGES_SHOWN = module.exports.NUM_PAGES_SHOWN = 5;
 var PAGE_CENTER = module.exports.PAGE_CENTER = 2;
 
 /**
+ * Send a general error back to the user.
+ * @param  {Object}   res         The response
+ * @param  {boolean}  doRefresh   Whether to refresh the page after sending the
+ *                                response
+ * @return {res}                  Send a message back to the user that a general
+ *                                error has occurred
+ */
+var errorHandler = module.exports.handleGeneralError = function(res,
+    doRefresh) {
+  return res.status(500).send({
+    message: messages.ERROR.GENERAL,
+    refresh: doRefresh
+  });
+};
+
+/**
  * Handles pagination for the dashboard.
  * @param  {Object} batches     The post collections
  * @param  {number} currentPage The current page that the user is on
@@ -66,10 +82,13 @@ module.exports.handlePagination = function(batches, currentPage, totalPosts) {
  * Completes the remaining steps after a refresh to generate a status message
  * for the user.
  * @param  {string} serviceName    The name of the service from which to
- *                                 retrieve messages
+ *                                 retrieve messages or an empty string if
+ *                                 running a refresh across all services
  * @param  {Object} err            An error, if one has occurred
  * @param  {string} errorMessage   Message to look out for in determining
- *                                 whether an access issue occurred
+ *                                 whether an access issue occurred or an empty
+ *                                 string if running a refresh across all
+ *                                 services
  * @param  {Object} posts          An object returned upon successfully finding
  *                                 new posts across services
  * @param  {Object} req            The current request
@@ -85,10 +104,7 @@ module.exports.handlePostRefresh = function(serviceName, err, errorMessage,
       refresh: true
     });
   } else if (err) {
-    return res.status(500).send({
-      message: messages.ERROR.GENERAL,
-      refresh: false
-    });
+    return errorHandler.handleGeneralError(res, false);
   } else if (posts) {
     return res.status(200).send({
       message: messages.STATUS.GENERAL.NEW_POSTS,
@@ -116,10 +132,7 @@ module.exports.handlePostRefresh = function(serviceName, err, errorMessage,
 module.exports.handlePostUpdate = function(successMessage, failureMessage, err,
     updateSuccess, req, res) {
   if (err) {
-    return res.status(500).send({
-      message: messages.ERROR.GENERAL,
-      refresh: false
-    });
+    return errorHandler.handleGeneralError(res, false);
   } else if (updateSuccess) {
     return res.status(200).send({
       message: successMessage,
@@ -173,15 +186,12 @@ module.exports.handlePostRegistrationEmail = function(successMessage,
  * @param  {Object} req           The current request
  * @param  {Object} res           The response
  */
-var handler = module.exports.handleLogout = function(statusMessage,
+var logoutHandler = module.exports.handleLogout = function(statusMessage,
     statusCode, req, res) {
   req.logout();
   req.session.destroy(function(err) {
     if (err) {
-      return res.status(500).send({
-        message: messages.ERROR.GENERAL,
-        refresh: true
-      });
+      return errorHandler.handleGeneralError(res, true);
     }
     return res.status(statusCode).send({
       message: statusMessage,
@@ -209,10 +219,7 @@ module.exports.handleEmailChange = function(nev, returnedUser, newEmail, req,
       newTempUser) {
     // An error occurred
     if (err || existingPersistentUser) {
-      return res.status(500).send({
-        message: messages.ERROR.GENERAL,
-        refresh: false
-      });
+      return errorHandler.handleGeneralError(res, false);
     }
 
     // New user creation successful; delete old one and verify email
@@ -220,20 +227,17 @@ module.exports.handleEmailChange = function(nev, returnedUser, newEmail, req,
       User.deleteUser(req.user._id, function(err, deleteSuccess) {
         // An error occurred
         if (err) {
-          return res.status(500).send({
-            message: messages.ERROR.GENERAL,
-            refresh: false
-          });
+          return errorHandler.handleGeneralError(res, false);
         } else if (deleteSuccess) {
           var URL = newTempUser[nev.options.URLFieldName];
           nev.sendVerificationEmail(newEmail, URL, function(err, info) {
             if (err) {
-              return handler.handleLogout(
+              return logoutHandler.handleLogout(
                 messages.SETTINGS.EMAIL.CHANGE_FAILED,
                 500
               );
             }
-            return handler.handleLogout(
+            return logoutHandler.handleLogout(
               messages.SETTINGS.EMAIL.CHANGE_SUCCEEDED,
               200
             );
@@ -241,6 +245,29 @@ module.exports.handleEmailChange = function(nev, returnedUser, newEmail, req,
         }
       });
     }
+  });
+};
+
+/**
+ * Handles the remaining step of a process by notifying the user of whether the
+ * save was successful.
+ * @param  {string} successMessage The message to send on success
+ * @param  {Object} err            An error, if one has occurred
+ * @param  {Object} req            The current request
+ * @param  {Object} res            The response
+ * @return {res}                   Send the user back a status message
+ */
+var saveHandler = module.exports.handlePostSave = function(successMessage, err,
+    req, res) {
+  // An error occurred
+  if (err) {
+    return errorHandler.handleGeneralError(res, false);
+  }
+
+  // Successfully changed password
+  return res.status(200).send({
+    message: successMessage,
+    refresh: true
   });
 };
 
@@ -257,10 +284,7 @@ module.exports.handleEmailChange = function(nev, returnedUser, newEmail, req,
 module.exports.handlePasswordChange = function(currentPass, newPass, req, res) {
   return User.findById(req.user._id, function(err, user) {
     if (err) {
-      return res.status(500).send({
-        message: messages.ERROR.GENERAL,
-        refresh: false
-      });
+      return errorHandler.handleGeneralError(res, false);
     } else if (user) {
       if (currentPass === newPass) {
         return res.status(200).send({
@@ -270,19 +294,8 @@ module.exports.handlePasswordChange = function(currentPass, newPass, req, res) {
       }
       user.password = newPass;
       user.save(function(err) {
-        // An error occurred
-        if (err) {
-          return res.status(500).send({
-            message: messages.ERROR.GENERAL,
-            refresh: false
-          });
-        }
-
-        // Successfully changed password
-        return res.status(200).send({
-          message: messages.SETTINGS.PASSWORD.CHANGE_SUCCEEDED,
-          refresh: true
-        });
+        var success = messages.SETTINGS.PASSWORD.CHANGE_SUCCEEDED;
+        return saveHandler.handlePostSave(success, err, req, res);
       });
     } else {
       return res.status(200).send({

@@ -67,10 +67,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
     User.findById(req.user._id, function(err, user) {
       if (err) {
-        return res.status(500).send({
-          message: messages.ERROR.GENERAL,
-          refresh: false
-        });
+        return handlers.handleGeneralError(res, false);
       }
 
       // Clear update time
@@ -90,47 +87,15 @@ module.exports = function(app, passport, isLoggedIn, nev) {
       });
 
       user.save(function(err) {
-        if (err) {
-          return res.status(500).send({
-            message: messages.ERROR.GENERAL,
-            refresh: false
-          });
-        }
-        return res.status(200).send({
-          message: messages.STATUS.GENERAL.RESET_SERVICE,
-          refresh: true
-        });
+        return handlers.handlePostSave(messages.STATUS.GENERAL.RESET_SERVICE,
+          err, req, res);
       });
     });
   });
 
   app.post('/refresh', isLoggedIn, function(req, res) {
     req.user.updateContent(function(err, posts) {
-      if (err && err.toString().indexOf('400') !== -1) {
-        var SERVICE = err.toString().split('-')[1];
-        req.flash('serviceMessage', messages.ERROR[SERVICE].REFRESH ||
-          messages.ERROR.GENERAL);
-        return res.status(500).send({
-          message: messages.STATUS[SERVICE].ACCESS_PRIVILEGES ||
-            messages.ERROR.GENERAL,
-          redirectToServices: true
-        });
-      } else if (err) {
-        return res.status(500).send({
-          message: messages.ERROR.GENERAL,
-          refresh: false
-        });
-      } else if (posts) {
-        return res.status(200).send({
-          message: messages.STATUS.GENERAL.NEW_POSTS,
-          refresh: true
-        });
-      }
-
-      return res.status(200).send({
-        message: messages.STATUS.GENERAL.NO_POSTS,
-        refresh: false
-      });
+      return handlers.handlePostRefresh('', err, '', posts, req, res);
     });
   });
 
@@ -278,10 +243,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
     User.findOne({_id: req.user._id}, function(err, returnedUser) {
       if (err) {
-        return res.status(500).send({
-          message: messages.ERROR.GENERAL,
-          refresh: false
-        });
+        return handlers.handleGeneralError(res, false);
       }
       returnedUser.email = newEmail;
       return handlers.handleEmailChange(nev, returnedUser, newEmail, req, res);
@@ -304,17 +266,11 @@ module.exports = function(app, passport, isLoggedIn, nev) {
       settings.password = newPass;
       User.findById(req.user._id, function(err, user) {
         if (err) {
-          return res.status(500).send({
-            message: messages.ERROR.GENERAL,
-            refresh: false
-          });
+          return handlers.handleGeneralError(res, false);
         }
         user.comparePassword(currentPass, function(err, isMatch) {
           if (err) {
-            return res.status(500).send({
-              message: messages.ERROR.GENERAL,
-              refresh: false
-            });
+            return handlers.handleGeneralError(res, false);
           } else if (isMatch) {
             // Update user settings
             return handlers.handlePasswordChange(currentPass, newPass, req,

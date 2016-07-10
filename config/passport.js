@@ -235,7 +235,7 @@ module.exports = function(passport, nev) {
   var ytStrategy = new YoutubeV3Strategy({
     clientID: config.SERVICES.YOUTUBE.CLIENT_ID,
     clientSecret: config.SERVICES.YOUTUBE.CLIENT_SECRET,
-    callbackURL: config.url + '/services/auth/youtube/callback',
+    callbackURL: config.URL + '/services/auth/youtube/callback',
     passReqToCallback: true
   }, function(req, accessToken, refreshToken, profile, done) {
     // Set up service
