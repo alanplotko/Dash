@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/alanplotko/Dash.svg?branch=master)](https://travis-ci.org/alanplotko/Dash)
 [![Code Climate](https://codeclimate.com/github/alanplotko/Dash/badges/gpa.svg)](https://codeclimate.com/github/alanplotko/Dash)
+[![Test Coverage](https://codeclimate.com/github/alanplotko/Dash/badges/coverage.svg)](https://codeclimate.com/github/alanplotko/Dash/coverage)
 [![Dependency Status](https://img.shields.io/david/alanplotko/Dash.svg?style=flat)](https://david-dm.org/alanplotko/Dash)
 [![devDependencies Status](https://img.shields.io/david/dev/alanplotko/Dash.svg?style=flat)](https://david-dm.org/alanplotko/Dash#info=devDependencies)
 
