@@ -4,18 +4,10 @@ function createRequest(route) {
     '</div>').insertAfter('nav');
   $.post(route, function(data) {
     $('.refresh-bar').fadeOut();
-    Materialize.toast(data.message, 4000, '', function() {
-      if (data.refresh) {
-        window.location.reload();
-      }
-    });
+    notify(data);
   }).fail(function(data) {
     $('.refresh-bar').fadeOut();
-    Materialize.toast(data.responseJSON.message, 4000, '', function() {
-      if (data.responseJSON.refresh) {
-        window.location.reload();
-      }
-    });
+    notify(data.responseJSON);
   });
 }
 

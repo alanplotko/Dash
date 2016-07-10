@@ -1,11 +1,3 @@
-function notify(data) {
-  Materialize.toast(data.message, 4000, '', function() {
-    if (data.refresh) {
-      window.location.reload();
-    }
-  });
-}
-
 function createRequest(route) {
   $.post(route, function(data) {
     notify(data);
