@@ -3,7 +3,7 @@ var User = require.main.require('./models/user');
 var validator = require('validator');
 require.main.require('./config/custom-validation')(validator);
 var messages = require.main.require('./config/messages');
-var handlers = require.main.require('./routes/handlers');
+var handlers = require.main.require('./routes/routeHandlers');
 
 module.exports = function(app, passport, isLoggedIn, nev) {
   // --------- Front Page ---------
