@@ -1,5 +1,7 @@
 sudo: false
 language: node_js
+notifications:
+  email: false
 node_js:
 - '6'
 env:
@@ -7,6 +9,10 @@ env:
   - CXX=g++-4.8
   global:
     secure: kD25UgKJkALoqJczAmiKMn0X7CU3WoZxPUTQoF2mBNuLJHPzgdZrw9FUPODr3r5qr0FPtGXHMQfxsPvNWXM2POadXGJJAgXDAoO8pPfW2oL3EN1i/rFulRVy+mrDbupNIru8EOu3CYyot8920W+lRC72BqhXMmMTGSd6jKyaq3D5LAniZ2TZMkT960ImUd2YfBsHR55cuAAYTvHuMijs+opWDIhB5yXUciAuaIv6hewcvQz94ULLbj+/edcXDkhCPCYruec2I9w/lHAc2t6hmf5Z1E8Wgb36ppGKWG5fLuKkVwSkDyG4L5u6CCxYujE4yeVJYCX6b+bkcMFkbrD6x3wmH/lbdb9aei+TcQqqbB1y2AE5Tob9VXRfPE0ADI32uKyBhYpFdC8FXGuqZBv7mB9cdgbFCdjNQEc9iShhgaONQzGc+FxI1/jE8RutXxbFS2smy/gyakihtQnFquQPGRWmmW7tbo9q7OjpzKKB8vFsJJ6XtUO7u+XInX0ja+X+cTL3akZqLHqFyLKle3O7jylvppdGMgH/GSljKBvweNReEcoGdWGpWLzO3Kfk0kupLIe4YRtuiDIXIBm55uPTwFqquz18ofJzEjbHjgN6rtBStYRTfnjBMhjTr3cEBr1iM4GL3va2W786P+PvNNdGTdhM0r9dLuI5kbVc9nvK6v4=
+before_install:
+- npm config set python python2.7
+after_success:
+- codeclimate-test-reporter < coverage/lcov.info
 addons:
   apt:
     sources:
@@ -15,10 +21,3 @@ addons:
     - g++-4.8
   code_climate:
     repo_token: 9bdb3725e114168adb4377551910c6c01e8e77d04b63c8b1fa5d2f75e1f461e1
-before_install:
-- npm config set python python2.7
-notifications:
-  email: false
-after_success:
-- npm install -g codeclimate-test-reporter
-- codeclimate-test-reporter < lcov.info

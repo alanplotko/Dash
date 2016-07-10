@@ -4,7 +4,7 @@
   "description": "Dash is a central dashboard for keeping you updated with the information you care about.",
   "main": "app.js",
   "scripts": {
-    "test": "mocha test --recursive"
+    "test": "istanbul cover _mocha -- -R spec --recursive"
   },
   "repository": {
     "type": "git",
@@ -50,7 +50,9 @@
   },
   "devDependencies": {
     "chai": "^3.5.0",
+    "codeclimate-test-reporter": "^0.3.3",
     "eslint-config-google": "^0.6.0",
+    "istanbul": "^0.4.4",
     "mocha": "^2.5.3",
     "mocha-csslint": "^1.0.0",
     "mocha-eslint": "^2.1.1"
