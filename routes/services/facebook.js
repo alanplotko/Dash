@@ -5,20 +5,20 @@ require.main.require('./config/custom-validation')(validator);
 var messages = require.main.require('./config/messages');
 
 module.exports = function(app, passport, isLoggedIn) {
-  app.get('/connect/auth/facebook', isLoggedIn, function(req, res, next) {
+  app.get('/services/auth/facebook', isLoggedIn, function(req, res, next) {
     req.session.reauth = false;
     next();
   }, passport.authenticate('facebook', {
     scope: ['user_managed_groups', 'user_likes']
   }));
 
-  app.get('/connect/auth/facebook/callback', isLoggedIn,
+  app.get('/services/auth/facebook/callback', isLoggedIn,
     passport.authenticate('facebook', {
-      failureRedirect: '/connect',
-      successRedirect: '/connect'
+      failureRedirect: '/services',
+      successRedirect: '/services'
     }));
 
-  app.get('/connect/reauth/facebook/', isLoggedIn, function(req, res, next) {
+  app.get('/services/reauth/facebook/', isLoggedIn, function(req, res, next) {
     req.session.reauth = true;
     next();
   }, passport.authenticate('facebook', {
@@ -26,7 +26,7 @@ module.exports = function(app, passport, isLoggedIn) {
     scope: ['user_managed_groups', 'user_likes']
   }));
 
-  app.get('/connect/refresh_token/facebook', isLoggedIn, function(req, res,
+  app.get('/services/refresh_token/facebook', isLoggedIn, function(req, res,
       next) {
     req.session.refreshAccessToken = true;
     next();
@@ -39,11 +39,11 @@ module.exports = function(app, passport, isLoggedIn) {
       if (err) {
         // Get new access token if current token was deemed invalid
         if (err.toString() === '400-Facebook') {
-          req.flash('connectMessage', messages.ERROR.FACEBOOK.REFRESH);
+          req.flash('serviceMessage', messages.ERROR.FACEBOOK.REFRESH);
         } else {
-          req.flash('connectMessage', err.toString());
+          req.flash('serviceMessage', err.toString());
         }
-        res.redirect('/connect');
+        res.redirect('/services');
       // Found groups
       } else if (Object.keys(allGroups).length > 0) {
         // Fill in checkboxes for existing groups
@@ -68,10 +68,10 @@ module.exports = function(app, passport, isLoggedIn) {
           content: allGroups,
           contentName: 'groups'
         });
-      // No groups found; return to connect page
+      // No groups found; return to services page
       } else {
-        req.flash('connectMessage', messages.ERROR.FACEBOOK.REAUTH.GROUPS);
-        res.redirect('/connect');
+        req.flash('serviceMessage', messages.ERROR.FACEBOOK.REAUTH.GROUPS);
+        res.redirect('/services');
       }
     });
   });
@@ -84,9 +84,9 @@ module.exports = function(app, passport, isLoggedIn) {
           req.flash('setupMessage', err.toString());
           res.redirect('/setup/facebook/groups');
         } else {
-          // Saved groups; return to connect page
-          req.flash('connectMessage', messages.STATUS.FACEBOOK.GROUPS_UPDATED);
-          res.redirect('/connect');
+          // Saved groups; return to services page
+          req.flash('serviceMessage', messages.STATUS.FACEBOOK.GROUPS_UPDATED);
+          res.redirect('/services');
         }
       });
   });
@@ -98,11 +98,11 @@ module.exports = function(app, passport, isLoggedIn) {
       if (err) {
         // Get new access token if current token was deemed invalid
         if (err.toString() === '400-Facebook') {
-          req.flash('connectMessage', messages.ERROR.FACEBOOK.REFRESH);
+          req.flash('serviceMessage', messages.ERROR.FACEBOOK.REFRESH);
         } else {
-          req.flash('connectMessage', err.toString());
+          req.flash('serviceMessage', err.toString());
         }
-        res.redirect('/connect');
+        res.redirect('/services');
       } else if (Object.keys(allPages).length > 0) {
         // Fill in checkboxes for existing pages
         if (existingPages.length > 0) {
@@ -127,9 +127,9 @@ module.exports = function(app, passport, isLoggedIn) {
           contentName: 'pages'
         });
       } else {
-        // No pages found; return to connect page
-        req.flash('connectMessage', messages.ERROR.FACEBOOK.REAUTH.PAGES);
-        res.redirect('/connect');
+        // No pages found; return to services page
+        req.flash('serviceMessage', messages.ERROR.FACEBOOK.REAUTH.PAGES);
+        res.redirect('/services');
       }
     });
   });
@@ -142,22 +142,22 @@ module.exports = function(app, passport, isLoggedIn) {
         req.flash('setupMessage', err.toString());
         res.redirect('/setup/facebook/pages');
       } else {
-        // Saved pages; return to connect page
-        req.flash('connectMessage', messages.STATUS.FACEBOOK.PAGES_UPDATED);
-        res.redirect('/connect');
+        // Saved pages; return to services page
+        req.flash('serviceMessage', messages.STATUS.FACEBOOK.PAGES_UPDATED);
+        res.redirect('/services');
       }
     });
   });
 
-  app.get('/connect/remove/facebook', isLoggedIn, function(req, res) {
+  app.get('/services/remove/facebook', isLoggedIn, function(req, res) {
     User.removeFacebook(req.user.id, function(err) {
       // Get new access token if current token was deemed invalid
       if (err && err.toString() === '400-Facebook') {
-        req.flash('connectMessage', messages.ERROR.FACEBOOK.REFRESH);
+        req.flash('serviceMessage', messages.ERROR.FACEBOOK.REFRESH);
       } else {
-        req.flash('connectMessage', messages.STATUS.FACEBOOK.REMOVED);
+        req.flash('serviceMessage', messages.STATUS.FACEBOOK.REMOVED);
       }
-      res.redirect('/connect');
+      res.redirect('/services');
     });
   });
 };

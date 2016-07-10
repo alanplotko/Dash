@@ -7,11 +7,11 @@ var async = require('async');
 
 module.exports = function(UserSchema, messages, configuration) {
   var config = configuration[process.env.NODE_ENV];
-  config.CONNECTIONS = configuration.CONNECTIONS;
+  config.SERVICES = configuration.SERVICES;
 
   /**
-   * Check if the user has an existing Facebook connection.
-   * @return {Boolean} A status of whether the user has added this connection
+   * Check if the user is connected to Facebook.
+   * @return {Boolean} A status of whether the user has added this service
    */
   UserSchema.virtual('hasFacebook').get(function() {
     return Boolean(this.facebook.profileId);
@@ -20,11 +20,11 @@ module.exports = function(UserSchema, messages, configuration) {
   /**
    * Populate the user's Facebook identifiers and tokens.
    * @param  {ObjectId} id          The current user's id in MongoDB
-   * @param  {Object}   connection  User-specific details for the connection
+   * @param  {Object}   service     User-specific details for the service
    * @param  {Function} done        The callback function to execute upon
    *                                completion
    */
-  UserSchema.statics.addFacebook = function(id, connection, done) {
+  UserSchema.statics.addFacebook = function(id, service, done) {
     mongoose.models.User.findById(id, function(err, user) {
       // Database Error
       if (err) {
@@ -36,36 +36,36 @@ module.exports = function(UserSchema, messages, configuration) {
         return done(null, null, new Error(messages.ERROR.GENERAL));
       }
 
-      if (connection.reauth) {
+      if (service.reauth) {
         return done(messages.STATUS.FACEBOOK.MISSING_PERMISSIONS);
-      } else if (connection.refreshAccessToken) {
-        delete connection.refreshAccessToken;
-        user.facebook = connection;
+      } else if (service.refreshAccessToken) {
+        delete service.refreshAccessToken;
+        user.facebook = service;
         user.save(function(err) {
           // Database Error
           if (err) {
             return done(err);
           }
 
-          // Success: Refreshed access token for Facebook connection
+          // Success: Refreshed access token for Facebook service
           return done(messages.STATUS.FACEBOOK.RENEWED);
         });
       } else if (user.hasFacebook) {
-        // Defined Error: Connection already exists
+        // Defined Error: Service already exists
         return done(new Error(messages.STATUS.FACEBOOK.ALREADY_CONNECTED));
       }
 
-      // Save connection information (excluding other states) to account
-      delete connection.reauth;
-      delete connection.refreshAccessToken;
-      user.facebook = connection;
+      // Save service information (excluding other states) to account
+      delete service.reauth;
+      delete service.refreshAccessToken;
+      user.facebook = service;
       user.save(function(err) {
         // Database Error
         if (err) {
           return done(err);
         }
 
-        // Success: Added Facebook connection
+        // Success: Added Facebook service
         return done(null, user);
       });
     });
@@ -90,13 +90,13 @@ module.exports = function(UserSchema, messages, configuration) {
         return done(new Error(messages.ERROR.GENERAL));
       }
 
-      // Defined Error: Connection does not exist
+      // Defined Error: Service does not exist
       if (!user.hasFacebook) {
         return done(new Error(messages.STATUS.FACEBOOK.NOT_CONNECTED));
       }
 
       var appSecretProof = '&appsecret_proof=' + crypto
-        .createHmac('sha256', config.CONNECTIONS.FACEBOOK.CLIENT_SECRET)
+        .createHmac('sha256', config.SERVICES.FACEBOOK.CLIENT_SECRET)
         .update(user.facebook.accessToken)
         .digest('hex');
 
@@ -125,7 +125,7 @@ module.exports = function(UserSchema, messages, configuration) {
               return done(err);
             }
 
-            // Success: Removed Facebook connection
+            // Success: Removed Facebook service
             return done(null, user);
           });
         }
@@ -235,7 +235,7 @@ module.exports = function(UserSchema, messages, configuration) {
             }
 
             content.push({
-              connection: 'facebook',
+              service: 'facebook',
               title: name,
               actionDescription: element.story || '',
               content: element.message,
@@ -281,7 +281,7 @@ module.exports = function(UserSchema, messages, configuration) {
       }
 
       var appSecretProof = '&appsecret_proof=' + crypto
-        .createHmac('sha256', config.CONNECTIONS.FACEBOOK.CLIENT_SECRET)
+        .createHmac('sha256', config.SERVICES.FACEBOOK.CLIENT_SECRET)
         .update(user.facebook.accessToken)
         .digest('hex');
 
@@ -362,7 +362,7 @@ module.exports = function(UserSchema, messages, configuration) {
       }
 
       var appSecretProof = '&appsecret_proof=' + crypto
-        .createHmac('sha256', config.CONNECTIONS.FACEBOOK.CLIENT_SECRET)
+        .createHmac('sha256', config.SERVICES.FACEBOOK.CLIENT_SECRET)
         .update(user.facebook.accessToken)
         .digest('hex');
 
@@ -439,7 +439,7 @@ module.exports = function(UserSchema, messages, configuration) {
     };
 
     var appSecretProof = '&appsecret_proof=' + crypto
-      .createHmac('sha256', config.CONNECTIONS.FACEBOOK.CLIENT_SECRET)
+      .createHmac('sha256', config.SERVICES.FACEBOOK.CLIENT_SECRET)
       .update(user.facebook.accessToken)
       .digest('hex');
 
@@ -512,7 +512,7 @@ module.exports = function(UserSchema, messages, configuration) {
   };
 
   /**
-   * Retrieve only new content from Facebook on the connections page.
+   * Retrieve only new content from Facebook on the services page.
    * @param {Function} done The callback function to execute upon completion
    */
   UserSchema.methods.refreshFacebook = function(done) {

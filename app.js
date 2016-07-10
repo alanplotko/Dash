@@ -3,7 +3,7 @@ process.env.NODE_ENV = (process.argv[2].toUpperCase() === 'DEV' ||
   process.argv[2].toUpperCase() === 'DEVELOPMENT') ? 'DEV' : 'PROD';
 var debug = (process.env.NODE_ENV.toUpperCase() === 'DEV');
 var config = require('./config/settings')[process.env.NODE_ENV];
-config.CONNECTIONS = require('./config/settings').CONNECTIONS;
+config.SERVICES = require('./config/settings').SERVICES;
 var messages = require('./config/messages');
 
 // --------- Dependencies ---------
@@ -155,8 +155,8 @@ function isLoggedIn(req, res, next) {
 
 // Set up app routes
 require('./routes/pages')(app, passport, isLoggedIn, nev);
-require('./routes/facebook')(app, passport, isLoggedIn);
-require('./routes/youtube')(app, passport, isLoggedIn);
+require('./routes/services/facebook')(app, passport, isLoggedIn);
+require('./routes/services/youtube')(app, passport, isLoggedIn);
 
 /**
  * If the route does not exist (error 404), go to the error page.

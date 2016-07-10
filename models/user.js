@@ -59,16 +59,16 @@ var UserSchema = new Schema({
   // Batches of post updates
   batches: [PostCollectionSchema],
 
-  // Last time data pulled from connections
+  // Last time data pulled from services
   lastUpdateTime: {
     facebook: Date,
     youtube: Date
   },
 
-  // Connections
+  // Services
   facebook: {
 
-    // Connection status
+    // Service status
     acceptUpdates: {
       type: Boolean,
       default: true
@@ -115,7 +115,7 @@ var UserSchema = new Schema({
 
   youtube: {
 
-    // Connection status
+    // Service status
     acceptUpdates: {
       type: Boolean,
       default: true
@@ -160,7 +160,7 @@ var UserSchema = new Schema({
  */
 
 /**
- * Check if user has existing Facebook connection
+ * Check if user has existing account lock
  * @return {Boolean} A status of whether the user's account is locked
  */
 UserSchema.virtual('isLocked').get(function() {
@@ -426,13 +426,13 @@ UserSchema.statics.deleteUser = function(id, done) {
 };
 
 /**
- * Set Up Connections
+ * Set Up Services
  */
-require('./connections/facebook')(UserSchema, messages, config);
-require('./connections/youtube')(UserSchema, messages);
+require('./services/facebook')(UserSchema, messages, config);
+require('./services/youtube')(UserSchema, messages);
 
 /**
- * Update all of the user's connections.
+ * Update all of the user's services.
  * @param  {Function} done  The callback function to execute upon completion
  */
 UserSchema.methods.updateContent = function(done) {

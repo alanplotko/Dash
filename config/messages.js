@@ -68,21 +68,21 @@ var messages = {
       REFRESH:
         'Could not connect to Facebook service. ' +
         'Access privileges may have expired. ' +
-        '<a href="/connect/refresh_token/' +
+        '<a href="/services/refresh_token/' +
         'facebook">Renew access privileges?</a>',
 
       REAUTH: {
         GROUPS: 'You do not have any configurable Facebook ' +
         'groups at this time. It is possible you ' +
         'may be missing required permissions. ' +
-        '<a href="/connect/reauth/youtube">Reauthenticate ' +
+        '<a href="/services/reauth/youtube">Reauthenticate ' +
         'just in case?</a>',
 
         PAGES:
           'You do not have any configurable Facebook ' +
           'pages at this time. It is possible you ' +
           'may be missing required permissions. ' +
-          '<a href="/connect/reauth/youtube">Reauthenticate ' +
+          '<a href="/services/reauth/youtube">Reauthenticate ' +
           'just in case?</a>'
       }
     },
@@ -95,7 +95,7 @@ var messages = {
       REFRESH:
         'Could not connect to YouTube service. ' +
         'Access privileges may have expired. ' +
-        '<a href="/connect/refresh_token/' +
+        '<a href="/services/refresh_token/' +
         'youtube">Renew access privileges?</a>',
 
       REAUTH: {
@@ -103,7 +103,7 @@ var messages = {
           'You do not have any configurable YouTube ' +
           'subscriptions at this time. It is possible ' +
           'you may be missing required permissions. ' +
-          '<a href="/connect/reauth/youtube">' +
+          '<a href="/services/reauth/youtube">' +
           'Reauthenticate just in case?</a>'
       }
     }
@@ -125,8 +125,8 @@ var messages = {
       NO_POSTS:
         'No new posts.',
 
-      RESET_CONNECTION:
-        'Successfully reset connection. Reloading...'
+      RESET_SERVICE:
+        'Successfully reset service. Reloading...'
     },
 
     /**
@@ -135,7 +135,7 @@ var messages = {
     FACEBOOK: {
 
       REMOVED:
-        'Your Facebook connection has been removed.',
+        'Your Facebook service has been removed.',
 
       RENEWED:
         'Access privileges for Facebook have been renewed.',
@@ -182,7 +182,7 @@ var messages = {
     YOUTUBE: {
 
       REMOVED:
-        'Your YouTube connection has been removed.',
+        'Your YouTube service has been removed.',
 
       RENEWED:
         'Access privileges for YouTube have been renewed.',
@@ -342,9 +342,9 @@ var messages = {
         'Account deletion failed. Please try again in a ' +
         'few minutes.',
 
-      CONNECTIONS_ACTIVE:
+      SERVICES_ACTIVE:
         'Account deletion failed. Please remove all ' +
-        'connections beforehand.'
+        'services beforehand.'
     }
   }
 };

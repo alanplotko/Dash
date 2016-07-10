@@ -64,7 +64,7 @@ describe('Dash user model', function() {
       var i;
       for (i = 0; i < numPosts; i++) {
         dummyPosts.push({
-          connection: 'Service',
+          service: 'Service',
           title: 'Update',
           content: 'Things are happening',
           timestamp: Date.now(),

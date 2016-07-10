@@ -6,15 +6,15 @@ block additionalStyles
 block content
   div.row
     div.col.s8.offset-s2
-      h1.page-heading.thin Connected Sites
+      h1.page-heading.thin Connected Services
 
   div.row
     if (message.length > 0)
       div#formMessage.center: p !{message}
-    div#connections.col.s8.offset-s2
-      a.waves-effect.waves-light.btn.btn-front.darken-3.left(href=typeof facebook === 'undefined' ? '/connect/auth/facebook' : '#', class=typeof facebook === 'undefined' ? 'grey' : 'btn-facebook dropdown-button', data-activates=typeof facebook === 'undefined' ? '' : 'facebook') Facebook
+    div#services.col.s8.offset-s2
+      a.waves-effect.waves-light.btn.btn-front.darken-3.left(href=typeof facebook === 'undefined' ? '/services/auth/facebook' : '#', class=typeof facebook === 'undefined' ? 'grey' : 'btn-facebook dropdown-button', data-activates=typeof facebook === 'undefined' ? '' : 'facebook') Facebook
         i.fa.fa-facebook-official.left
-      a.waves-effect.waves-light.btn.btn-front.darken-3.left(href=typeof youtube === 'undefined' ? '/connect/auth/youtube' : '#', class=typeof youtube === 'undefined' ? 'grey' : 'btn-youtube dropdown-button', data-activates=typeof youtube === 'undefined' ? '' : 'youtube') Youtube
+      a.waves-effect.waves-light.btn.btn-front.darken-3.left(href=typeof youtube === 'undefined' ? '/services/auth/youtube' : '#', class=typeof youtube === 'undefined' ? 'grey' : 'btn-youtube dropdown-button', data-activates=typeof youtube === 'undefined' ? '' : 'youtube') Youtube
         i.fa.fa-youtube.left
 
       <!-- Facebook Dropdown Structure -->
@@ -33,7 +33,7 @@ block content
         else
           li: a.modal-trigger(href='#', onclick='toggleModal("Facebook", true); return false;') Enable
             i.material-icons.left sync
-        li: a(href='/connect/remove/facebook') Remove
+        li: a(href='/services/remove/facebook') Remove
           i.material-icons.left clear
 
       <!-- YouTube Dropdown Structure -->
@@ -50,7 +50,7 @@ block content
         else
           li: a.modal-trigger(href='#', onclick='toggleModal("YouTube", true); return false;') Enable
             i.material-icons.left sync
-        li: a(href='/connect/remove/youtube') Remove
+        li: a(href='/services/remove/youtube') Remove
           i.material-icons.left clear
 
       <!-- Update Modal Structure -->
@@ -81,5 +81,5 @@ block content
           a#toggleConfirm.modal-action.modal-close.waves-effect.waves-blue.btn-flat(href='#', onclick='')
 
 block additionalScripts
-  script(src='/static/js/connectActions.js')
+  script(src='/static/js/serviceActions.js')
   script(src='/static/js/facebookHashFix.js')

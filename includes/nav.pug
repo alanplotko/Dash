@@ -1,9 +1,9 @@
 ul#user-dropdown.dropdown-content
   li: a(href='/settings') Dash Settings
     i.material-icons.left settings
-  li: a(href='/connect') Connected Sites
+  li: a(href='/services') Connected Services
     i.material-icons.left settings_input_antenna
-  //- Add other connections here later
+  //- Add other services here later
   if batches && batches.length > 0
     li: a(href='#', onclick='dismiss("all", null, $(".card")); return false;') Clear All Updates
       i.material-icons.left clear

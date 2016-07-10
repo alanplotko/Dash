@@ -1,6 +1,6 @@
 // --------- Environment Setup ---------
 var config = require.main.require('./config/settings')[process.env.NODE_ENV];
-config.CONNECTIONS = require.main.require('./config/settings').CONNECTIONS;
+config.SERVICES = require.main.require('./config/settings').SERVICES;
 var messages = require.main.require('./config/messages');
 
 // --------- Dependencies ---------
@@ -195,14 +195,14 @@ module.exports = function(passport, nev) {
 
   // Define Facebook strategy for passport
   var fbStrategy = new FacebookStrategy({
-    clientID: config.CONNECTIONS.FACEBOOK.CLIENT_ID,
-    clientSecret: config.CONNECTIONS.FACEBOOK.CLIENT_SECRET,
-    callbackURL: config.URL + '/connect/auth/facebook/callback',
+    clientID: config.SERVICES.FACEBOOK.CLIENT_ID,
+    clientSecret: config.SERVICES.FACEBOOK.CLIENT_SECRET,
+    callbackURL: config.URL + '/services/auth/facebook/callback',
     enableProof: true,
     passReqToCallback: true
   }, function(req, accessToken, refreshToken, profile, done) {
-    // Set up connection
-    var connection = {
+    // Set up service
+    var service = {
       profileId: profile.id,
       accessToken: accessToken,
       refreshToken: refreshToken,
@@ -211,15 +211,15 @@ module.exports = function(passport, nev) {
     };
 
     process.nextTick(function() {
-      User.addFacebook(req.user.id, connection, function(err, user) {
+      User.addFacebook(req.user.id, service, function(err, user) {
         // An error occurred
         if (err) {
-          return done(null, false, req.flash('connectMessage', err.toString()));
+          return done(null, false, req.flash('serviceMessage', err.toString()));
         }
 
-        // Connection added successfully
-        if (connection) {
-          return done(null, user, req.flash('connectMessage',
+        // Service added successfully
+        if (service) {
+          return done(null, user, req.flash('serviceMessage',
             messages.STATUS.FACEBOOK.CONNECTED));
         }
       });
@@ -233,13 +233,13 @@ module.exports = function(passport, nev) {
 
   // Define YouTube strategy for passport
   var ytStrategy = new YoutubeV3Strategy({
-    clientID: config.CONNECTIONS.YOUTUBE.CLIENT_ID,
-    clientSecret: config.CONNECTIONS.YOUTUBE.CLIENT_SECRET,
-    callbackURL: config.url + '/connect/auth/youtube/callback',
+    clientID: config.SERVICES.YOUTUBE.CLIENT_ID,
+    clientSecret: config.SERVICES.YOUTUBE.CLIENT_SECRET,
+    callbackURL: config.url + '/services/auth/youtube/callback',
     passReqToCallback: true
   }, function(req, accessToken, refreshToken, profile, done) {
-    // Set up connection
-    var connection = {
+    // Set up service
+    var service = {
       profileId: profile.id,
       accessToken: accessToken,
       refreshToken: refreshToken,
@@ -248,17 +248,17 @@ module.exports = function(passport, nev) {
     };
 
     process.nextTick(function() {
-      User.addYouTube(req.user.id, connection, function(err, user) {
+      User.addYouTube(req.user.id, service, function(err, user) {
         // An error occurred
         if (err) {
-          return done(null, false, req.flash('connectMessage',
+          return done(null, false, req.flash('serviceMessage',
             err.toString()));
         }
 
-        // Connection added successfully
-        if (connection) {
-          return done(null, user, req.flash('connectMessage',
-            messages.status.YouTube.connected));
+        // Service added successfully
+        if (service) {
+          return done(null, user, req.flash('serviceMessage',
+            messages.STATUS.YOUTUBE.CONNECTED));
         }
       });
 
