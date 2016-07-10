@@ -22,7 +22,7 @@ var PAGE_CENTER = module.exports.PAGE_CENTER = 2;
  * @return {res}                  Send a message back to the user that indicates
  *                                the status of the completed process
  */
-var responseHandler = module.exports.handleResponse = function(res, code,
+var handleResponse = module.exports.handleResponse = function(res, code,
     message, refresh) {
   return res.status(code).send({
     message: message || messages.ERROR.GENERAL,
@@ -74,7 +74,7 @@ module.exports.handlePagination = function(batches, currentPage, totalPosts) {
 
     // Ensure start page is NUM_PAGES_SHOWN - 1 away from the end page
     results.startPage = results.endPage - (NUM_PAGES_SHOWN - 1) <
-      results.startPage && results.endPage - (NUM_PAGES_SHOWN - 1) !== 0 ?
+      results.startPage && results.endPage - (NUM_PAGES_SHOWN - 1) > 0 ?
       results.endPage - (NUM_PAGES_SHOWN - 1) : results.startPage;
   }
 
@@ -102,14 +102,14 @@ module.exports.handlePostRefresh = function(serviceName, err, errorMessage,
     posts, req, res) {
   if (err && err.toString() === errorMessage) {
     req.flash('serviceMessage', messages.ERROR[serviceName].REFRESH);
-    return responseHandler(res, 500,
+    return handleResponse(res, 500,
       messages.STATUS[serviceName].ACCESS_PRIVILEGES, true);
   } else if (err) {
-    return responseHandler(res, 500, null, true);
+    return handleResponse(res, 500, null, true);
   } else if (posts) {
-    return responseHandler(res, 200, messages.STATUS.GENERAL.NEW_POSTS, true);
+    return handleResponse(res, 200, messages.STATUS.GENERAL.NEW_POSTS, true);
   }
-  return responseHandler(res, 200, messages.STATUS.GENERAL.NO_POSTS, false);
+  return handleResponse(res, 200, messages.STATUS.GENERAL.NO_POSTS, false);
 };
 
 /**
@@ -127,11 +127,11 @@ module.exports.handlePostRefresh = function(serviceName, err, errorMessage,
 module.exports.handlePostUpdate = function(successMessage, failureMessage, err,
     updateSuccess, req, res) {
   if (err) {
-    return responseHandler(res, 500, null, false);
+    return handleResponse(res, 500, null, false);
   } else if (updateSuccess) {
-    return responseHandler(res, 200, successMessage, true);
+    return handleResponse(res, 200, successMessage, true);
   }
-  return responseHandler(res, 200, failureMessage, false);
+  return handleResponse(res, 200, failureMessage, false);
 };
 
 /**
@@ -174,14 +174,14 @@ module.exports.handlePostRegistrationEmail = function(successMessage,
  * @param  {Object} req           The current request
  * @param  {Object} res           The response
  */
-var logoutHandler = module.exports.handleLogout = function(statusMessage,
+var handleLogout = module.exports.handleLogout = function(statusMessage,
     statusCode, req, res) {
   req.logout();
   req.session.destroy(function(err) {
     if (err) {
-      return responseHandler(res, 500, null, true);
+      return handleResponse(res, 500, null, true);
     }
-    return responseHandler(res, statusCode, statusMessage, true);
+    return handleResponse(res, statusCode, statusMessage, true);
   });
 };
 
@@ -204,7 +204,7 @@ module.exports.handleEmailChange = function(nev, returnedUser, newEmail, req,
       newTempUser) {
     // An error occurred
     if (err || existingPersistentUser) {
-      return responseHandler(res, 200, messages.SETTINGS.EMAIL.EXISTS, false);
+      return handleResponse(res, 200, messages.SETTINGS.EMAIL.EXISTS, false);
     }
 
     // New user creation successful; delete old one and verify email
@@ -212,20 +212,14 @@ module.exports.handleEmailChange = function(nev, returnedUser, newEmail, req,
       User.deleteUser(req.user._id, function(err, deleteSuccess) {
         // An error occurred
         if (err) {
-          return responseHandler(res, 500, null, false);
+          return handleResponse(res, 500, null, false);
         } else if (deleteSuccess) {
           var URL = newTempUser[nev.options.URLFieldName];
           nev.sendVerificationEmail(newEmail, URL, function(err, info) {
             if (err) {
-              return logoutHandler.handleLogout(
-                messages.SETTINGS.EMAIL.CHANGE_FAILED,
-                500
-              );
+              return handleLogout(messages.SETTINGS.EMAIL.CHANGE_FAILED, 500);
             }
-            return logoutHandler.handleLogout(
-              messages.SETTINGS.EMAIL.CHANGE_SUCCEEDED,
-              200
-            );
+            return handleLogout(messages.SETTINGS.EMAIL.CHANGE_SUCCEEDED, 200);
           });
         }
       });
@@ -242,15 +236,15 @@ module.exports.handleEmailChange = function(nev, returnedUser, newEmail, req,
  * @param  {Object} res            The response
  * @return {res}                   Send the user back a status message
  */
-var saveHandler = module.exports.handlePostSave = function(successMessage, err,
-    req, res) {
+var handlePostSave = module.exports.handlePostSave = function(successMessage,
+    err, req, res) {
   // An error occurred
   if (err) {
-    return responseHandler(res, 500, null, false);
+    return handleResponse(res, 500, null, false);
   }
 
   // Successfully changed password
-  return responseHandler(res, 200, successMessage, true);
+  return handleResponse(res, 200, successMessage, true);
 };
 
 /**
@@ -266,19 +260,19 @@ var saveHandler = module.exports.handlePostSave = function(successMessage, err,
 module.exports.handlePasswordChange = function(currentPass, newPass, req, res) {
   return User.findById(req.user._id, function(err, user) {
     if (err) {
-      return responseHandler(res, 500, null, false);
+      return handleResponse(res, 500, null, false);
     } else if (user) {
       if (currentPass === newPass) {
-        return responseHandler(res, 200, messages.SETTINGS.PASSWORD.NOT_NEW,
+        return handleResponse(res, 200, messages.SETTINGS.PASSWORD.NOT_NEW,
           false);
       }
       user.password = newPass;
       user.save(function(err) {
         var success = messages.SETTINGS.PASSWORD.CHANGE_SUCCEEDED;
-        return saveHandler(success, err, req, res);
+        return handlePostSave(success, err, req, res);
       });
     } else {
-      return responseHandler(res, 200, messages.SETTINGS.PASSWORD.CHANGE_FAILED,
+      return handleResponse(res, 200, messages.SETTINGS.PASSWORD.CHANGE_FAILED,
         false);
     }
   });

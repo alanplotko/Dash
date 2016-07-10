@@ -34,115 +34,38 @@ module.exports = function(app, passport, isLoggedIn) {
   }, passport.authenticate('facebook'));
 
   app.get('/setup/facebook/groups', isLoggedIn, function(req, res) {
-    User.setUpFacebookGroups(req.user._id, function(err, allGroups,
-        existingGroups) {
-      // An error occurred
-      if (err) {
-        handlers.handlePostSetupError('Facebook', err, '400-Facebook', req,
-          res);
-      // Found groups
-      } else if (Object.keys(allGroups).length > 0) {
-        // Fill in checkboxes for existing groups
-        if (existingGroups.length > 0) {
-          var groupIds = [];
-
-          existingGroups.forEach(function(group) {
-            groupIds.push(group.groupId);
-          });
-
-          for (var key in allGroups) {
-            if (groupIds.indexOf(allGroups[key].id) > -1) {
-              allGroups[key].checked = true;
-            } else {
-              allGroups[key].checked = false;
-            }
-          }
-        }
-
-        res.render('facebook-setup', {
-          message: req.flash('setupMessage'),
-          content: allGroups,
-          contentName: 'groups'
-        });
-      // No groups found; return to services page
-      } else {
-        req.flash('serviceMessage', messages.ERROR.FACEBOOK.REAUTH.GROUPS);
-        res.redirect('/services');
-      }
+    User.setUpFacebookGroups(req.user._id, function(err, allContent,
+        existingContent) {
+      var settings = {name: 'Facebook', error: '400-Facebook'};
+      var type = {id: 'groupId', name: 'groups'};
+      handlers.retrieveActivity(err, settings, allContent, existingContent,
+        type, req, res);
     });
   });
 
   app.post('/setup/facebook/groups', isLoggedIn, function(req, res) {
     User.saveFacebookGroups(req.user._id, Object.keys(req.body),
       function(err, data) {
-        var settings = {
-          error: {
-            target: 'setupMessage',
-            redirect: '/setup/facebook/groups'
-          },
-          success: {
-            target: 'serviceMessage',
-            message: messages.STATUS.FACEBOOK.GROUPS_UPDATED,
-            redirect: '/services'
-          }
-        };
-        handlers.handlePostSave(settings, err, req, res);
+        handlers.handlePostSave('/setup/facebook/groups',
+          messages.STATUS.FACEBOOK.GROUPS_UPDATED, err, req, res);
       });
   });
 
   app.get('/setup/facebook/pages', isLoggedIn, function(req, res) {
-    User.setUpFacebookPages(req.user._id, function(err, allPages,
-        existingPages) {
-      // An error occurred
-      if (err) {
-        handlers.handlePostSetupError('Facebook', err, '400-Facebook', req,
-          res);
-      } else if (Object.keys(allPages).length > 0) {
-        // Fill in checkboxes for existing pages
-        if (existingPages.length > 0) {
-          var pageIds = [];
-
-          existingPages.forEach(function(page) {
-            pageIds.push(page.pageId);
-          });
-
-          for (var key in allPages) {
-            if (pageIds.indexOf(allPages[key].id) > -1) {
-              allPages[key].checked = true;
-            } else {
-              allPages[key].checked = false;
-            }
-          }
-        }
-
-        res.render('facebook-setup', {
-          message: req.flash('setupMessage'),
-          content: allPages,
-          contentName: 'pages'
-        });
-      } else {
-        // No pages found; return to services page
-        req.flash('serviceMessage', messages.ERROR.FACEBOOK.REAUTH.PAGES);
-        res.redirect('/services');
-      }
+    User.setUpFacebookPages(req.user._id, function(err, allContent,
+        existingContent) {
+      var settings = {name: 'Facebook', error: '400-Facebook'};
+      var type = {id: 'pageId', name: 'pages'};
+      handlers.retrieveActivity(err, settings, allContent, existingContent,
+        type, req, res);
     });
   });
 
   app.post('/setup/facebook/pages', isLoggedIn, function(req, res) {
     User.saveFacebookPages(req.user._id, Object.keys(req.body), function(err,
       data) {
-      var settings = {
-        error: {
-          target: 'setupMessage',
-          redirect: '/setup/facebook/pages'
-        },
-        success: {
-          target: 'serviceMessage',
-          message: messages.STATUS.FACEBOOK.PAGES_UPDATED,
-          redirect: '/services'
-        }
-      };
-      handlers.handlePostSave(settings, err, req, res);
+      handlers.handlePostSave('/setup/facebook/pages',
+        messages.STATUS.FACEBOOK.PAGES_UPDATED, err, req, res);
     });
   });
 
