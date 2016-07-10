@@ -140,7 +140,7 @@ var UserSchema = new Schema({
 
     // YouTube Content
     subscriptions: [{
-      subId: {
+      subscriptionId: {
         type: String
       },
 

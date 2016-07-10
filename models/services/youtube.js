@@ -246,7 +246,7 @@ module.exports = function(UserSchema, messages) {
       subscriptions.forEach(function(sub) {
         var info = sub.split(';');
         user.youtube.subscriptions.push({
-          subId: info[0],
+          subscriptionId: info[0],
           name: info[1],
           thumbnail: info[2]
         });
@@ -374,9 +374,10 @@ module.exports = function(UserSchema, messages) {
       if (user.youtube.subscriptions.length > 0) {
         user.youtube.subscriptions.forEach(function(account) {
           var feedUrl = 'https://www.googleapis.com/youtube/v3/activities' +
-            '?part=snippet%2CcontentDetails&channelId=' + account.subId +
-            '&maxResults=50&publishedAfter=' + lastUpdateTime.toISOString() +
-            '&access_token=' + user.youtube.accessToken;
+            '?part=snippet%2CcontentDetails&channelId=' +
+            account.subscriptionId + '&maxResults=50&publishedAfter=' +
+            lastUpdateTime.toISOString() + '&access_token=' +
+            user.youtube.accessToken;
 
           getYouTubeUploads(feedUrl, null, [], account.name,
             function(err, content) {

@@ -3,7 +3,7 @@ var User = require.main.require('./models/user');
 var validator = require('validator');
 require.main.require('./config/custom-validation')(validator);
 var messages = require.main.require('./config/messages');
-var handlers = require.main.require('./routes/handlers');
+var handlers = require.main.require('./routes/routeHandlers');
 
 module.exports = function(app, passport, isLoggedIn, nev) {
   // --------- Front Page ---------
@@ -67,10 +67,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
     User.findById(req.user._id, function(err, user) {
       if (err) {
-        return res.status(500).send({
-          message: messages.ERROR.GENERAL,
-          refresh: false
-        });
+        return handlers.handleResponse(res, 500, null, false);
       }
 
       // Clear update time
@@ -90,47 +87,15 @@ module.exports = function(app, passport, isLoggedIn, nev) {
       });
 
       user.save(function(err) {
-        if (err) {
-          return res.status(500).send({
-            message: messages.ERROR.GENERAL,
-            refresh: false
-          });
-        }
-        return res.status(200).send({
-          message: messages.STATUS.GENERAL.RESET_SERVICE,
-          refresh: true
-        });
+        return handlers.handlePostSave(messages.STATUS.GENERAL.RESET_SERVICE,
+          err, req, res);
       });
     });
   });
 
   app.post('/refresh', isLoggedIn, function(req, res) {
     req.user.updateContent(function(err, posts) {
-      if (err && err.toString().indexOf('400') !== -1) {
-        var SERVICE = err.toString().split('-')[1];
-        req.flash('serviceMessage', messages.ERROR[SERVICE].REFRESH ||
-          messages.ERROR.GENERAL);
-        return res.status(500).send({
-          message: messages.STATUS[SERVICE].ACCESS_PRIVILEGES ||
-            messages.ERROR.GENERAL,
-          redirectToServices: true
-        });
-      } else if (err) {
-        return res.status(500).send({
-          message: messages.ERROR.GENERAL,
-          refresh: false
-        });
-      } else if (posts) {
-        return res.status(200).send({
-          message: messages.STATUS.GENERAL.NEW_POSTS,
-          refresh: true
-        });
-      }
-
-      return res.status(200).send({
-        message: messages.STATUS.GENERAL.NO_POSTS,
-        refresh: false
-      });
+      return handlers.handlePostRefresh('', err, '', posts, req, res);
     });
   });
 
@@ -215,10 +180,8 @@ module.exports = function(app, passport, isLoggedIn, nev) {
     if (validator.isValidDisplayName(displayName)) {
       settings.displayName = displayName;
     } else if (!validator.isValidDisplayName(displayName)) {
-      return res.status(200).send({
-        message: messages.SETTINGS.DISPLAY_NAME.INVALID,
-        refresh: false
-      });
+      return handlers.handleResponse(res, 200,
+        messages.SETTINGS.DISPLAY_NAME.INVALID, false);
     }
 
     // Update user settings
@@ -238,10 +201,8 @@ module.exports = function(app, passport, isLoggedIn, nev) {
     if (validator.isValidAvatar(avatarUrl)) {
       settings.avatar = avatarUrl;
     } else {
-      return res.status(200).send({
-        message: messages.SETTINGS.AVATAR.INVALID,
-        refresh: false
-      });
+      return handlers.handleResponse(res, 200, messages.SETTINGS.AVATAR.INVALID,
+        false);
     }
 
     // Update user settings
@@ -270,18 +231,13 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
     // Validate changes
     if (!validator.isEmail(newEmail) || newEmail.length === 0) {
-      return res.status(200).send({
-        message: messages.SETTINGS.EMAIL.INVALID,
-        refresh: false
-      });
+      return handlers.handleResponse(res, 200, messages.SETTINGS.EMAIL.INVALID,
+        false);
     }
 
     User.findOne({_id: req.user._id}, function(err, returnedUser) {
       if (err) {
-        return res.status(500).send({
-          message: messages.ERROR.GENERAL,
-          refresh: false
-        });
+        return handlers.handleResponse(res, 500, null, false);
       }
       returnedUser.email = newEmail;
       return handlers.handleEmailChange(nev, returnedUser, newEmail, req, res);
@@ -296,54 +252,40 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
     // Validate changes
     if (newPass !== newPassConfirm) {
-      return res.status(200).send({
-        message: messages.SETTINGS.PASSWORD.NO_MATCH,
-        refresh: false
-      });
+      return handlers.handleResponse(res, 200,
+        messages.SETTINGS.PASSWORD.NO_MATCH, false);
     } else if (validator.isValidPassword(newPass)) {
       settings.password = newPass;
       User.findById(req.user._id, function(err, user) {
         if (err) {
-          return res.status(500).send({
-            message: messages.ERROR.GENERAL,
-            refresh: false
-          });
+          return handlers.handleResponse(res, 500, null, false);
         }
         user.comparePassword(currentPass, function(err, isMatch) {
           if (err) {
-            return res.status(500).send({
-              message: messages.ERROR.GENERAL,
-              refresh: false
-            });
+            return handlers.handleResponse(res, 500, null, false);
           } else if (isMatch) {
             // Update user settings
             return handlers.handlePasswordChange(currentPass, newPass, req,
               res);
           }
 
-          return res.status(200).send({
-            message: messages.SETTINGS.PASSWORD.UNAUTHORIZED,
-            refresh: false
-          });
+          return handlers.handleResponse(res, 200,
+            messages.SETTINGS.PASSWORD.UNAUTHORIZED, false);
         });
       });
     } else {
-      return res.status(200).send({
-        message: messages.SETTINGS.PASSWORD.INVALID,
-        refresh: false
-      });
+      return handlers.handleResponse(res, 200,
+        messages.SETTINGS.PASSWORD.INVALID, false);
     }
   });
 
   app.post('/settings/account/delete', isLoggedIn, function(req, res) {
     var connected = req.user.facebook.profileId !== undefined ||
-    req.user.youtube.profileId !== undefined;
+      req.user.youtube.profileId !== undefined;
 
     if (connected) {
-      return res.status(200).send({
-        message: messages.SETTINGS.ACCOUNT.SERVICES_ACTIVE,
-        refresh: false
-      });
+      return handlers.handleResponse(res, 200,
+        messages.SETTINGS.ACCOUNT.SERVICES_ACTIVE, false);
     }
 
     User.deleteUser(req.user._id, function(err, deleteSuccess) {

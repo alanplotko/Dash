@@ -30,7 +30,7 @@ block content
                         input#displayName.border-blue(value=locals.displayName, type='text', name='displayName')
                         label(for='displayName') Display Name
               div.card-action
-                a(href='#', onclick='updateDisplayName(); return false;') Update Display Name
+                a(href='#', onclick='$("#displayNameForm").submit();') Update Display Name
           div.col.s12
             div.card.card-settings
               div.card-content
@@ -53,8 +53,8 @@ block content
                         label(for='avatar') Custom Avatar URL
               div.card-action
                 a(href='https://en.gravatar.com/', target='_blank') Visit Gravatar
-                a(href='#', onclick='updateAvatar(); return false;') Set Custom Avatar
-                a(href='#', onclick='resetAvatar(); return false;') Revert to Gravatar
+                a(onclick='$("#avatarForm").submit();') Set Custom Avatar
+                a(onclick='resetAvatar(); return false;') Revert to Gravatar
 
       div.row.no-margin
         div#account.col.s10.offset-s1
@@ -80,7 +80,7 @@ block content
                         input#email.border-blue(value=locals.email, type='text', name='email')
                         label(for='email') Email Address
               div.card-action
-                a(href='#', onclick='updateEmail(); return false;') Change Email Address
+                a(onclick='$("#emailForm").submit();') Change Email Address
           div.col.s12
             div.card.card-settings
               div.card-content
@@ -105,7 +105,7 @@ block content
                         input#newPassConfirm.border-blue(type='password', name='newPassConfirm')
                         label(for='newPassConfirm') Confirm New Password
               div.card-action
-                a(href='#', onclick='updatePassword(); return false;') Change Password
+                a(onclick='$("#passwordForm").submit();') Change Password
           div.col.s12
             div.card.card-settings
               div.card-content
@@ -114,7 +114,7 @@ block content
                   b Warning: After deletion, your account cannot be restored.
                   |  We do not retain any information or preferences upon account deletion. There is no turning back once done.
               div.card-action
-                a.modal-trigger(href='#', onclick='deleteModal(); return false;') Delete Account
+                a.modal-trigger(onclick='deleteModal(); return false;') Delete Account
 
   <!-- Account Removal Modal Structure -->
   div#deleteModal.modal
@@ -131,4 +131,5 @@ block additionalScripts
   script(src='/jquery/additional-methods.js')
   script(src='/static/js/validator.js')
   script(src='/static/js/settings.js')
+  script(src='/static/js/notify.js')
   script(src='/static/js/settingsActions.js')

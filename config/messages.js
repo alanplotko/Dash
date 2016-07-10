@@ -269,9 +269,12 @@ var messages = {
      */
     EMAIL: {
 
-      INVALID:
-        'Email address invalid. Please enter a valid email ' +
+      EXISTS:
+        'Email address already in use. Please enter a different email ' +
         'address.',
+
+      INVALID:
+        'Email address invalid. Please enter a valid email address.',
 
       INCORRECT:
         'Incorrect email address. You need to create an ' +
