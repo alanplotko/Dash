@@ -172,7 +172,6 @@ module.exports.handlePostRegistrationEmail = function(successMessage,
  * @param  {number} statusCode    The status code to send back
  * @param  {Object} req           The current request
  * @param  {Object} res           The response
- * @return {res}                  Send the user back a status message
  */
 var handler = module.exports.handleLogout = function(statusMessage,
     statusCode, req, res) {
@@ -233,12 +232,11 @@ module.exports.handleEmailChange = function(nev, returnedUser, newEmail, req,
                 messages.SETTINGS.EMAIL.CHANGE_FAILED,
                 500
               );
-            } else {
-              return handler.handleLogout(
-                messages.SETTINGS.EMAIL.CHANGE_SUCCEEDED,
-                200
-              );
             }
+            return handler.handleLogout(
+              messages.SETTINGS.EMAIL.CHANGE_SUCCEEDED,
+              200
+            );
           });
         }
       });

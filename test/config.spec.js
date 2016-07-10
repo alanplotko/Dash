@@ -7,7 +7,7 @@ mongoose.Promise = require('bluebird');
 // Define expected environment based on whether the test is running in Travis
 process.env.NODE_ENV = process.env.TRAVIS ? 'PROD' : 'DEV';
 
-// Define required properties for each environment property
+// Define required keys for each environment property
 var envProps = [
   'MONGO_URI',
   'URL',
@@ -16,8 +16,8 @@ var envProps = [
   'CONFIRM_EMAIL_FORMAT'
 ];
 
-// Define required properties for other properties
-var connectionProps = ['CLIENT_ID', 'CLIENT_SECRET'];   // Connections
+// Define required keys for other properties
+var serviceProps = ['CLIENT_ID', 'CLIENT_SECRET'];      // Services
 var emailProps = ['HOST', 'PORT', 'AUTH', 'SECURE'];    // Email Setup
 var formatProps = ['FROM', 'SUBJECT', 'HTML', 'TEXT'];  // Email Formatting
 
@@ -31,16 +31,16 @@ describe('Dash settings', function() {
     done();
   });
 
-  it('should have at least one connection configured', function(done) {
-    should.exist(config.CONNECTIONS);
-    Object.keys(config.CONNECTIONS).should.have.length.above(0);
+  it('should have at least one service configured', function(done) {
+    should.exist(config.SERVICES);
+    Object.keys(config.SERVICES).should.have.length.above(0);
     done();
   });
 
-  it('should have all required connection details defined', function(done) {
-    for (var key in config.CONNECTIONS) {
-      if (config.CONNECTIONS.hasOwnProperty(key)) {
-        config.CONNECTIONS[key].should.contain.all.keys(connectionProps);
+  it('should have all required service details defined', function(done) {
+    for (var key in config.SERVICES) {
+      if (config.SERVICES.hasOwnProperty(key)) {
+        config.SERVICES[key].should.contain.all.keys(serviceProps);
       }
     }
     done();

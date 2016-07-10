@@ -415,7 +415,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
       var success = messages.SETTINGS.EMAIL.VERIFIED;
       var failure = messages.SETTINGS.EMAIL.VERIFICATION_EXPIRED;
       return handlers.handlePostRegistrationEmail(success, failure, err,
-        userFound, req, res);
+        newPersistentUser, req, res);
     });
   });
 
