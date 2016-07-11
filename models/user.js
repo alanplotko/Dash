@@ -156,6 +156,54 @@ var UserSchema = new Schema({
 });
 
 /**
+ * User Handlers
+ */
+
+/**
+ * Handles post operation error checking.
+ * @param  {Object}           err        An error if one has occurred
+ * @param  {?boolean|Object=} onSuccess  An object, boolean, or null to send
+ *                                       back upon success for further
+ *                                       processing or indicating the status of
+ *                                       the operation
+ * @param  {Function}         done       The callback function to execute upon
+ *                                       completion
+ * @param  {?Object}          extra      An optional, additional parameter to
+ *                                       send back along with onSuccess
+ * @return {Function}                    Run the callback after error checking
+ */
+function completeOperation(err, onSuccess, done, extra) {
+  // Set extra parameter to null if not given
+  extra = extra || null;
+
+  // An error occurred
+  if (err) {
+    return done(err);
+  }
+
+  // Operation succeeded, check for extra parameter
+  if (extra) {
+    return done(null, onSuccess, extra);
+  }
+  return done(null, onSuccess);
+}
+
+/**
+ * Updates user information given the user id and settings to change.
+ * @param  {ObjectId} id        The current user's id in MongoDB
+ * @param  {Object}   settings  An object containing the names and values of
+ *                              the settings to update
+ * @param  {Function} done      The callback function to execute upon completion
+ * @return {Function}           Update the user information and run the callback
+ */
+function updateUserDetails(id, settings, done) {
+  return mongoose.models.User.update({_id: id}, settings, function(err,
+      numAffected) {
+    return completeOperation(err, true, done);
+  });
+}
+
+/**
  * User Account Functions
  */
 
@@ -313,11 +361,7 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
     if (user.isLocked) {
       // Increment login attempts if account is already locked
       return user.incLoginAttempts(function(err) {
-        // An error occurred
-        if (err) {
-          return done(err);
-        }
-        return done(null, null, reasons.MAX_ATTEMPTS);
+        return completeOperation(err, null, done, reasons.MAX_ATTEMPTS);
       });
     }
 
@@ -346,21 +390,13 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
         };
 
         return user.update(updates, function(err) {
-          // An error occurred
-          if (err) {
-            return done(err);
-          }
-          return done(null, user);
+          return completeOperation(err, user, done);
         });
       }
 
       // Password incorrect, so increment login attempts before responding
       user.incLoginAttempts(function(err) {
-        // An error occurred
-        if (err) {
-          return done(err);
-        }
-        return done(null, null, reasons.PASSWORD_INCORRECT);
+        return completeOperation(err, null, done, reasons.PASSWORD_INCORRECT);
       });
     });
   });
@@ -373,23 +409,14 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
  *                             the settings to update
  * @param  {Function} done     The callback function to execute upon completion
  */
-UserSchema.statics.updateUser = function(id, settings, done) {
-  mongoose.models.User.update({_id: id}, settings, function(err, numAffected) {
-    // An error occurred
-    if (err) {
-      return done(err);
-    }
-
-    // Update succeeded
-    return done(null, true);
-  });
-};
+UserSchema.statics.updateUser = updateUserDetails;
 
 /**
  * Update the user's avatar to the default Gravatar.
  * @param  {ObjectId} id    The current user's id in MongoDB
  * @param  {string}   email The email address received from the user
  * @param  {Function} done  The callback function to execute upon completion
+ * @return {Function}       Update the user information and run the callback
  */
 UserSchema.statics.resetAvatar = function(id, email, done) {
   var settings = {};
@@ -397,15 +424,7 @@ UserSchema.statics.resetAvatar = function(id, email, done) {
   var avatarUrl = 'https://gravatar.com/avatar/' + gravatar;
   settings.avatar = avatarUrl;
 
-  mongoose.models.User.update({_id: id}, settings, function(err, numAffected) {
-    // An error occurred
-    if (err) {
-      return done(err);
-    }
-
-    // Update succeeded
-    return done(null, true);
-  });
+  return updateUserDetails(id, settings, done);
 };
 
 /**
@@ -415,13 +434,7 @@ UserSchema.statics.resetAvatar = function(id, email, done) {
  */
 UserSchema.statics.deleteUser = function(id, done) {
   mongoose.models.User.findByIdAndRemove(id, function(err) {
-    // An error occurred
-    if (err) {
-      return done(err);
-    }
-
-    // Deletion succeeded
-    return done(null, true);
+    return completeOperation(err, true, done);
   });
 };
 
@@ -487,24 +500,12 @@ UserSchema.methods.updateContent = function(done) {
       if (newUpdate.posts.length > 0) {
         user.batches.push(newUpdate);
         user.save(function(err) {
-          // An error occurred
-          if (err) {
-            return done(err);
-          }
-
-          // Saved posts and update times; return new update
-          return done(null, newUpdate);
+          return completeOperation(err, newUpdate, done);
         });
         // No new posts, set new update time
       } else {
         user.save(function(err) {
-          // An error occurred
-          if (err) {
-            return done(err);
-          }
-
-          // Saved new update time
-          return done(null, null);
+          return completeOperation(err, null, done);
         });
       }
     });
