@@ -6,7 +6,7 @@ var messages = require.main.require('./config/messages');
 var handlers = require.main.require('./routes/services/serviceHandlers');
 
 module.exports = function(app, passport, isLoggedIn) {
-  app.get('/services/auth/youtube', isLoggedIn,
+  app.get('/services/auth/youtube', isLoggedIn, handlers.handleAuth,
     passport.authenticate('youtube', {
       scope: [
         'https://www.googleapis.com/auth/youtube.force-ssl',
@@ -20,21 +20,16 @@ module.exports = function(app, passport, isLoggedIn) {
       successRedirect: '/services'
     }));
 
-  app.get('/services/reauth/youtube', isLoggedIn, function(req, res, next) {
-    req.session.reauth = true;
-    next();
-  }, passport.authenticate('youtube', {
-    scope: [
-      'https://www.googleapis.com/auth/youtube.force-ssl',
-      'https://www.googleapis.com/auth/youtube.readonly'
-    ]
-  }));
+  app.get('/services/reauth/youtube', isLoggedIn, handlers.handleReauth,
+    passport.authenticate('youtube', {
+      scope: [
+        'https://www.googleapis.com/auth/youtube.force-ssl',
+        'https://www.googleapis.com/auth/youtube.readonly'
+      ]
+    }));
 
-  app.get('/services/refresh_token/youtube', isLoggedIn, function(req, res,
-      next) {
-    req.session.refreshAccessToken = true;
-    next();
-  }, passport.authenticate('youtube'));
+  app.get('/services/refresh_token/youtube', isLoggedIn,
+    handlers.handleTokenRefresh, passport.authenticate('youtube'));
 
   app.get('/setup/youtube/subscriptions', isLoggedIn, function(req, res) {
     User.setUpYouTubeSubs(req.user._id, function(err, allContent,

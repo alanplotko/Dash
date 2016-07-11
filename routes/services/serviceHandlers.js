@@ -2,6 +2,39 @@
 var messages = require.main.require('./config/messages');
 
 /**
+ * Handles token refresh by setting the flag in the user session.
+ * @param  {Object}   req  The current request
+ * @param  {Object}   res  The response
+ * @param  {Function} next Pass control to the next matching route
+ */
+module.exports.handleTokenRefresh = function(req, res, next) {
+  req.session.refreshAccessToken = true;
+  next();
+};
+
+/**
+ * Handles first-time authentication by setting the flag in the user session.
+ * @param  {Object}   req  The current request
+ * @param  {Object}   res  The response
+ * @param  {Function} next Pass control to the next matching route
+ */
+module.exports.handleAuth = function(req, res, next) {
+  req.session.reauth = false;
+  next();
+};
+
+/**
+ * Handles reauthentication by setting the flag in the user session.
+ * @param  {Object}   req  The current request
+ * @param  {Object}   res  The response
+ * @param  {Function} next Pass control to the next matching route
+ */
+module.exports.handleReauth = function(req, res, next) {
+  req.session.reauth = true;
+  next();
+};
+
+/**
  * Handles the last step of indicating the result of the process to the user.
  * @param  {string} errorRedirect The page to redirect to if an error occurs
  * @param  {string} message       The message to send to the user on success

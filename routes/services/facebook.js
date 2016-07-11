@@ -6,12 +6,10 @@ var messages = require.main.require('./config/messages');
 var handlers = require.main.require('./routes/services/serviceHandlers');
 
 module.exports = function(app, passport, isLoggedIn) {
-  app.get('/services/auth/facebook', isLoggedIn, function(req, res, next) {
-    req.session.reauth = false;
-    next();
-  }, passport.authenticate('facebook', {
-    scope: ['user_managed_groups', 'user_likes']
-  }));
+  app.get('/services/auth/facebook', isLoggedIn, handlers.handleAuth,
+    passport.authenticate('facebook', {
+      scope: ['user_managed_groups', 'user_likes']
+    }));
 
   app.get('/services/auth/facebook/callback', isLoggedIn,
     passport.authenticate('facebook', {
@@ -19,19 +17,14 @@ module.exports = function(app, passport, isLoggedIn) {
       successRedirect: '/services'
     }));
 
-  app.get('/services/reauth/facebook/', isLoggedIn, function(req, res, next) {
-    req.session.reauth = true;
-    next();
-  }, passport.authenticate('facebook', {
-    authType: 'rerequest',
-    scope: ['user_managed_groups', 'user_likes']
-  }));
+  app.get('/services/reauth/facebook/', isLoggedIn, handlers.handleReauth,
+    passport.authenticate('facebook', {
+      authType: 'rerequest',
+      scope: ['user_managed_groups', 'user_likes']
+    }));
 
-  app.get('/services/refresh_token/facebook', isLoggedIn, function(req, res,
-      next) {
-    req.session.refreshAccessToken = true;
-    next();
-  }, passport.authenticate('facebook'));
+  app.get('/services/refresh_token/facebook', isLoggedIn,
+    handlers.handleTokenRefresh, passport.authenticate('facebook'));
 
   app.get('/setup/facebook/groups', isLoggedIn, function(req, res) {
     User.setUpFacebookGroups(req.user._id, function(err, allContent,
