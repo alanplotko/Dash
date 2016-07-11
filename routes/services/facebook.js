@@ -7,7 +7,7 @@ var handlers = require.main.require('./routes/services/serviceHandlers');
 
 module.exports = function(app, passport, isLoggedIn) {
   app.get('/services/auth/facebook', isLoggedIn, function(req, res, next) {
-    handlers.handleSessionFlag('reauth', false, req, res, next);
+    handlers.handleSessionFlag('AUTH', req, res, next);
   }, passport.authenticate('facebook', {
     scope: ['user_managed_groups', 'user_likes']
   }));
@@ -19,7 +19,7 @@ module.exports = function(app, passport, isLoggedIn) {
     }));
 
   app.get('/services/reauth/facebook/', isLoggedIn, function(req, res, next) {
-    handlers.handleSessionFlag('reauth', true, req, res, next);
+    handlers.handleSessionFlag('REAUTH', req, res, next);
   }, passport.authenticate('facebook', {
     authType: 'rerequest',
     scope: ['user_managed_groups', 'user_likes']
@@ -27,7 +27,7 @@ module.exports = function(app, passport, isLoggedIn) {
 
   app.get('/services/refresh_token/facebook', isLoggedIn, function(req, res,
       next) {
-    handlers.handleSessionFlag('refreshAccessToken', true, req, res, next);
+    handlers.handleSessionFlag('REFRESH_TOKEN', req, res, next);
   }, passport.authenticate('facebook'));
 
   app.get('/setup/facebook/groups', isLoggedIn, function(req, res) {

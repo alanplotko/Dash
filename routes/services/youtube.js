@@ -7,7 +7,7 @@ var handlers = require.main.require('./routes/services/serviceHandlers');
 
 module.exports = function(app, passport, isLoggedIn) {
   app.get('/services/auth/youtube', isLoggedIn, function(req, res, next) {
-    handlers.handleSessionFlag('reauth', false, req, res, next);
+    handlers.handleSessionFlag('AUTH', req, res, next);
   }, passport.authenticate('youtube', {
     scope: [
       'https://www.googleapis.com/auth/youtube.force-ssl',
@@ -22,7 +22,7 @@ module.exports = function(app, passport, isLoggedIn) {
     }));
 
   app.get('/services/reauth/youtube', isLoggedIn, function(req, res, next) {
-    handlers.handleSessionFlag('reauth', true, req, res, next);
+    handlers.handleSessionFlag('REAUTH', req, res, next);
   }, passport.authenticate('youtube', {
     scope: [
       'https://www.googleapis.com/auth/youtube.force-ssl',
@@ -32,7 +32,7 @@ module.exports = function(app, passport, isLoggedIn) {
 
   app.get('/services/refresh_token/youtube', isLoggedIn, function(req, res,
       next) {
-    handlers.handleSessionFlag('refreshAccessToken', true, req, res, next);
+    handlers.handleSessionFlag('REFRESH_TOKEN', req, res, next);
   }, passport.authenticate('youtube'));
 
   app.get('/setup/youtube/subscriptions', isLoggedIn, function(req, res) {
