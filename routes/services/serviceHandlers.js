@@ -2,35 +2,16 @@
 var messages = require.main.require('./config/messages');
 
 /**
- * Handles token refresh by setting the flag in the user session.
- * @param  {Object}   req  The current request
- * @param  {Object}   res  The response
- * @param  {Function} next Pass control to the next matching route
+ * Handles authentication, reuathentication, token refreshes, and other
+ * operations by setting a flag in the user's session.
+ * @param  {Object}   key   The key to add into the user's session
+ * @param  {Object}   value The value to associate with the key
+ * @param  {Object}   req   The current request
+ * @param  {Object}   res   The response
+ * @param  {Function} next  Pass control to the next matching route
  */
-module.exports.handleTokenRefresh = function(req, res, next) {
-  req.session.refreshAccessToken = true;
-  next();
-};
-
-/**
- * Handles first-time authentication by setting the flag in the user session.
- * @param  {Object}   req  The current request
- * @param  {Object}   res  The response
- * @param  {Function} next Pass control to the next matching route
- */
-module.exports.handleAuth = function(req, res, next) {
-  req.session.reauth = false;
-  next();
-};
-
-/**
- * Handles reauthentication by setting the flag in the user session.
- * @param  {Object}   req  The current request
- * @param  {Object}   res  The response
- * @param  {Function} next Pass control to the next matching route
- */
-module.exports.handleReauth = function(req, res, next) {
-  req.session.reauth = true;
+module.exports.handleSessionFlag = function(key, value, req, res, next) {
+  req.session[key] = value;
   next();
 };
 
