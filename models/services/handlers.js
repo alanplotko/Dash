@@ -1,5 +1,20 @@
 // --------- Dependencies ---------
 var moment = require('moment');
+var crypto = require('crypto');
+var config = require('../../config/settings');
+
+/**
+ * Generates the app secret proof for authorizing Facebook API calls.
+ * @param  {string} token The user's Facebook access token
+ * @return {string}       A portion of the URL containing the app secret proof
+ *                        to attach to the full URL for the API call
+ */
+module.exports.generateAppSecretProof = function(token) {
+  return '&appsecret_proof=' + crypto
+    .createHmac('sha256', config.SERVICES.FACEBOOK.CLIENT_SECRET)
+    .update(token)
+    .digest('hex');
+};
 
 /**
  * Completes the refresh operation by saving the new content.

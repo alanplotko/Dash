@@ -9,7 +9,6 @@ var PostCollectionSchema = PostCollection.schema;
 var passportLocalMongoose = require('passport-local-mongoose');
 var bcrypt = require('bcrypt');
 var crypto = require('crypto');
-var config = require('../config/settings');
 var messages = require('../config/messages');
 
 // --------- Account Constants ---------
@@ -441,8 +440,8 @@ UserSchema.statics.deleteUser = function(id, done) {
 /**
  * Set Up Services
  */
-require('./services/common')(UserSchema, messages, config);
-require('./services/facebook')(UserSchema, messages, config);
+require('./services/common')(UserSchema, messages);
+require('./services/facebook')(UserSchema, messages);
 require('./services/youtube')(UserSchema, messages);
 
 /**

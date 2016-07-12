@@ -1,14 +1,10 @@
 // --------- Dependencies ---------
 var mongoose = require('mongoose');
-var crypto = require('crypto');
 var request = require('request');
 var async = require('async');
 var handlers = require('./handlers');
 
-module.exports = function(UserSchema, messages, configuration) {
-  var config = configuration[process.env.NODE_ENV];
-  config.SERVICES = configuration.SERVICES;
-
+module.exports = function(UserSchema, messages) {
   /**
    * Check if the user is connected to Facebook.
    * @return {Boolean} A status of whether the user has added this service
@@ -41,10 +37,8 @@ module.exports = function(UserSchema, messages, configuration) {
         return done(new Error(messages.STATUS.FACEBOOK.NOT_CONNECTED));
       }
 
-      var appSecretProof = '&appsecret_proof=' + crypto
-        .createHmac('sha256', config.SERVICES.FACEBOOK.CLIENT_SECRET)
-        .update(user.facebook.accessToken)
-        .digest('hex');
+      var appSecretProof = handlers.generateAppSecretProof(user.facebook
+        .accessToken);
 
       var url = 'https://graph.facebook.com/v2.5/' +
         user.facebook.profileId + '/permissions?access_token=' +
@@ -197,100 +191,59 @@ module.exports = function(UserSchema, messages, configuration) {
     });
   }
 
-  // --------- Setup: Facebook groups ---------
-
-  /**
-   * Retrieve Facebook groups to display on setup page.
-   * @param  {ObjectId} id          The current user's id in MongoDB
-   * @param  {Function} done        The callback function to execute upon
-   *                                completion
-   */
-  UserSchema.statics.setUpFacebookGroups = function(id, done) {
-    mongoose.models.User.findById(id, function(err, user) {
-      // Database Error
-      if (err) {
-        return done(err);
-      }
-
-      // Unexpected Error: User not found
-      if (!user) {
-        return done(null, null, new Error(messages.ERROR.GENERAL));
-      }
-
-      var appSecretProof = '&appsecret_proof=' + crypto
-        .createHmac('sha256', config.SERVICES.FACEBOOK.CLIENT_SECRET)
-        .update(user.facebook.accessToken)
-        .digest('hex');
-
-      var url = 'https://graph.facebook.com/v2.5/' + user.facebook.profileId +
-        '/groups?fields=cover,name,id,description,is_verified&access_token=' +
-        user.facebook.accessToken;
-
-      getFacebookContent(url, {}, appSecretProof, function(err, content) {
-        // Error while retrieving content
-        if (err) {
-          return done(err);
-        }
-
-        // Success: Retrieved groups
-        return done(null, content, user.facebook.groups);
-      });
-    });
-  };
-
-  // --------- Setup: Facebook pages ---------
-
-  /**
-   * Retrieve Facebook pages to display on setup page.
-   * @param  {ObjectId} id          The current user's id in MongoDB
-   * @param  {Function} done        The callback function to execute upon
-   *                                completion
-   */
-  UserSchema.statics.setUpFacebookPages = function(id, done) {
-    mongoose.models.User.findById(id, function(err, user) {
-      // Database Error
-      if (err) {
-        return done(err);
-      }
-
-      // Unexpected Error: User not found
-      if (!user) {
-        return done(null, null, new Error(messages.ERROR.GENERAL));
-      }
-
-      var appSecretProof = '&appsecret_proof=' + crypto
-        .createHmac('sha256', config.SERVICES.FACEBOOK.CLIENT_SECRET)
-        .update(user.facebook.accessToken)
-        .digest('hex');
-
-      var url = 'https://graph.facebook.com/v2.5/' + user.facebook.profileId +
-        '/likes?fields=cover,name,id,description,link,is_verified,best_page,' +
-        'about&access_token=' + user.facebook.accessToken;
-
-      getFacebookContent(url, {}, appSecretProof, function(err, content) {
-        // Error while retrieving content
-        if (err) {
-          return done(err);
-        }
-
-        // Success: Retrieved pages
-        return done(null, content, user.facebook.pages);
-      });
-    });
-  };
-
-  /**
-   * Save selected pages or groups to user's account.
-   * @param  {ObjectId} id          The current user's id in MongoDB
-   * @param  {Object[]} pages       A list of pages that the user selected
-   * @param  {Function} done        The callback function to execute upon
-   *                                completion
-   */
   ['page', 'group'].forEach(function(type) {
     var plural = type + 's';
-    var method = 'saveFacebook' + plural.charAt(0).toUpperCase() +
-      plural.slice(1);
-    UserSchema.statics[method] = function(id, content, done) {
+    var formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
+
+    // --------- Setup: Facebook pages and groups ---------
+
+    /**
+     * Retrieve Facebook pages and groups to display on setup page.
+     * @param  {ObjectId} id          The current user's id in MongoDB
+     * @param  {Function} done        The callback function to execute upon
+     *                                completion
+     */
+    UserSchema.statics['setUpFacebook' + formatted] = function(id, done) {
+      mongoose.models.User.findById(id, function(err, user) {
+        // Database Error
+        if (err) {
+          return done(err);
+        }
+
+        // Unexpected Error: User not found
+        if (!user) {
+          return done(null, null, new Error(messages.ERROR.GENERAL));
+        }
+
+        var appSecretProof = handlers.generateAppSecretProof(user.facebook
+          .accessToken);
+
+        var url = 'https://graph.facebook.com/v2.5/' + user.facebook.profileId +
+          '/groups?fields=cover,name,id,description,is_verified,best_page,' +
+          'about&access_token=' + user.facebook.accessToken;
+
+        getFacebookContent(url, {}, appSecretProof, function(err, content) {
+          // Error while retrieving content
+          if (err) {
+            return done(err);
+          }
+
+          // Success: Retrieved items
+          return done(null, content, user.facebook[plural]);
+        });
+      });
+    };
+
+    /**
+     * Save selected pages and groups to user's account.
+     * @param  {ObjectId} id          The current user's id in MongoDB
+     * @param  {Object[]} content     A list of content items that the user
+     *                                selected
+     * @param  {Function} done        The callback function to execute upon
+     *                                completion
+     */
+    UserSchema.statics['saveFacebook' + formatted] = function(id, content,
+        done) {
       mongoose.models.User.findById(id, function(err, user) {
         // Database Error
         if (err) {
@@ -339,74 +292,45 @@ module.exports = function(UserSchema, messages, configuration) {
       callback(null, Date.now());
     };
 
-    var appSecretProof = '&appsecret_proof=' + crypto
-      .createHmac('sha256', config.SERVICES.FACEBOOK.CLIENT_SECRET)
-      .update(user.facebook.accessToken)
-      .digest('hex');
+    var appSecretProof = handlers.generateAppSecretProof(user.facebook
+      .accessToken);
 
     var lastUpdateTime = handlers.getLastUpdateTime('Facebook', user);
 
-    // Retrieve page posts
-    calls.facebookPages = function(callback) {
-      var pagePosts = [];
-      var progress = 0;
-      if (user.facebook.pages.length > 0) {
-        user.facebook.pages.forEach(function(page) {
-          var feedUrl = 'https://graph.facebook.com/v2.5/' + page.pageId +
-            '/posts?fields=id,story,message,link,full_picture,created_time' +
-            '&since=' + lastUpdateTime + '&access_token=' +
-            user.facebook.accessToken;
+    // Retrieve page and group posts
+    ['page', 'group'].forEach(function(type) {
+      var plural = type + 's';
+      var prop = 'facebook' + plural.charAt(0).toUpperCase() + plural.slice(1);
+      calls[prop] = function(callback) {
+        var posts = [];
+        var progress = 0;
+        if (user.facebook[plural].length > 0) {
+          user.facebook[plural].forEach(function(item) {
+            var feedUrl = 'https://graph.facebook.com/v2.5/' +
+              item[type + 'Id'] + '/posts?fields=id,story,message,link,' +
+              'full_picture,created_time&since=' + lastUpdateTime +
+              '&access_token=' + user.facebook.accessToken;
 
-          getFacebookPosts(feedUrl, [], page.name, 'page', appSecretProof,
-            function(err, content) {
-              // An error occurred
-              if (err) {
-                return callback(err);
-              }
+            getFacebookPosts(feedUrl, [], item.name, type, appSecretProof,
+              function(err, content) {
+                // An error occurred
+                if (err) {
+                  return callback(err);
+                }
 
-              // Retrieved posts successfully
-              Array.prototype.push.apply(pagePosts, content);
-              progress++;
-              if (progress === user.facebook.pages.length) {
-                callback(null, pagePosts);
-              }
-            });
-        });
-      } else {
-        callback(null, []);
-      }
-    };
-
-    // Retrieve group posts
-    calls.facebookGroups = function(callback) {
-      var groupPosts = [];
-      var progress = 0;
-      if (user.facebook.groups.length > 0) {
-        user.facebook.groups.forEach(function(group) {
-          var feedUrl = 'https://graph.facebook.com/v2.5/' + group.groupId +
-            '/feed?fields=id,story,message,link,full_picture,created_time' +
-            '&since=' + lastUpdateTime + '&access_token=' +
-            user.facebook.accessToken;
-
-          getFacebookPosts(feedUrl, [], group.name, 'group', appSecretProof,
-            function(err, content) {
-              // An error occurred
-              if (err) {
-                return callback(err);
-              }
-
-              // Retrieved posts successfully
-              Array.prototype.push.apply(groupPosts, content);
-              progress++;
-              if (progress === user.facebook.groups.length) {
-                callback(null, groupPosts);
-              }
-            });
-        });
-      } else {
-        callback(null, []);
-      }
-    };
+                // Retrieved posts successfully
+                Array.prototype.push.apply(posts, content);
+                progress++;
+                if (progress === user.facebook[plural].length) {
+                  callback(null, posts);
+                }
+              });
+          });
+        } else {
+          callback(null, []);
+        }
+      };
+    });
 
     return calls;
   };
