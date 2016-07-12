@@ -15,7 +15,7 @@ var PAGE_CENTER = module.exports.PAGE_CENTER = 2;
  * Send a general error back to the user.
  * @param  {Object}   res         The response
  * @param  {number}   code        The status code
- * @param  {?string}   message    A custom message to send to the user or the
+ * @param  {?string}  message     A custom message to send to the user or the
  *                                general error message if null
  * @param  {boolean}  refresh     Whether to refresh the page after sending
  *                                the response
@@ -38,7 +38,8 @@ var handleResponse = module.exports.handleResponse = function(res, code,
  *                              across services
  * @return {Object}             The details needed for setting up pagination
  */
-module.exports.handlePagination = function(batches, currentPage, totalPosts) {
+var handlePagination = module.exports.handlePagination = function(batches,
+    currentPage, totalPosts) {
   var results = {
     batches: batches,
     currentPage: currentPage,
@@ -79,6 +80,43 @@ module.exports.handlePagination = function(batches, currentPage, totalPosts) {
   }
 
   return results;
+};
+
+/**
+ * Handles setting up the dashboard pagination for any page.
+ * @param  {Object} req   The current request
+ * @param  {Object} res   The response
+ * @return {res}          Redirect the user to the correct page and template
+ */
+module.exports.handleDashboardSetup = function(req, res) {
+  var totalPosts = 0;
+  req.user.batches.forEach(function(batch) {
+    totalPosts += batch.posts.length;
+  });
+  var numPages = Math.ceil(totalPosts / ITEMS_PER_PAGE);
+
+  var currentPage = req.params.page ? parseInt(req.params.page, 10) : null;
+  if (currentPage !== null && (currentPage === 1 || currentPage <= 0 ||
+      currentPage > numPages)) {
+    return res.redirect('/dashboard');
+  }
+
+  if (currentPage === null) {
+    currentPage = 1;
+  }
+
+  var results = handlePagination(req.user.batches, currentPage, totalPosts,
+    numPages);
+
+  res.render('dashboard', {
+    connected: req.user.facebook.profileId !== undefined ||
+      req.user.youtube.profileId !== undefined,
+    batches: results.batches,
+    currentPage: results.currentPage || null,
+    numPages: results.numPages || null,
+    startPage: results.startPage || null,
+    endPage: results.endPage || null
+  });
 };
 
 /**
@@ -124,14 +162,45 @@ module.exports.handlePostRefresh = function(serviceName, err, errorMessage,
  * @param  {Object} res            The response
  * @return {res}                   Send the user back a status message
  */
-module.exports.handlePostUpdate = function(successMessage, failureMessage, err,
-    updateSuccess, req, res) {
-  if (err) {
-    return handleResponse(res, 500, null, false);
-  } else if (updateSuccess) {
-    return handleResponse(res, 200, successMessage, true);
-  }
-  return handleResponse(res, 200, failureMessage, false);
+var handlePostUpdate = module.exports.handlePostUpdate =
+  function(successMessage, failureMessage, err, updateSuccess, req, res) {
+    if (err) {
+      return handleResponse(res, 500, null, false);
+    } else if (updateSuccess) {
+      return handleResponse(res, 200, successMessage, true);
+    }
+    return handleResponse(res, 200, failureMessage, false);
+  };
+
+/**
+ * Process a reset operation after making the necessary checks. Used usually for
+ * resetting a setting field or deleting an account.
+ * @param  {Object} success The message to pass on success
+ * @param  {Object} failure The message to pass on failure
+ * @param  {Object} method  The method to execute, based on what is being reset
+ * @param  {Object} req     The current request
+ * @param  {Object} res     The response
+ */
+module.exports.handlePostReset = function(success, failure, method, req, res) {
+  User[method](req.user._id, function(err, operationSuccess) {
+    return handlePostUpdate(success, failure, err, operationSuccess, req, res);
+  });
+};
+
+/**
+ * Handles a user update to a setting field.
+ * @param  {Object} settings       An object containing the settings to update
+ * @param  {string} field          The field for which to get the message to
+ *                                 send to the user
+ * @param  {Object} req            The current request
+ * @param  {Object} res            The response
+ */
+module.exports.handleUserUpdate = function(settings, field, req, res) {
+  User.updateUser(req.user._id, settings, function(err, updateSuccess) {
+    var success = messages.SETTINGS[field].CHANGE_SUCCEEDED;
+    var failure = messages.SETTINGS[field].CHANGE_FAILED;
+    return handlePostUpdate(success, failure, err, updateSuccess, req, res);
+  });
 };
 
 /**

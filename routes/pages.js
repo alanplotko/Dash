@@ -15,50 +15,8 @@ module.exports = function(app, passport, isLoggedIn, nev) {
   });
 
   // --------- User Dashboard ---------
-  app.get('/dashboard', isLoggedIn, function(req, res) {
-    var totalPosts = 0;
-    req.user.batches.forEach(function(batch) {
-      totalPosts += batch.posts.length;
-    });
-    var numPages = Math.ceil(totalPosts / handlers.ITEMS_PER_PAGE);
-
-    var results = handlers.handlePagination(req.user.batches, 1, totalPosts,
-      numPages);
-
-    res.render('dashboard', {
-      connected: req.user.facebook.profileId !== undefined ||
-        req.user.youtube.profileId !== undefined,
-      batches: results.batches,
-      currentPage: results.currentPage || null,
-      numPages: results.numPages || null,
-      startPage: results.startPage || null,
-      endPage: results.endPage || null
-    });
-  });
-
-  app.get('/dashboard/:page(\\d+)', isLoggedIn, function(req, res) {
-    var currentPage = parseInt(req.params.page, 10);
-    var totalPosts = 0;
-    req.user.batches.forEach(function(batch) {
-      totalPosts += batch.posts.length;
-    });
-    var numPages = Math.ceil(totalPosts / handlers.ITEMS_PER_PAGE);
-    if (currentPage === 1 || currentPage <= 0 || currentPage > numPages) {
-      return res.redirect('/dashboard');
-    }
-
-    var results = handlers.handlePagination(req.user.batches, currentPage,
-      totalPosts, numPages);
-
-    res.render('dashboard', {
-      connected: req.user.facebook.profileId !== undefined ||
-        req.user.youtube.profileId !== undefined,
-      batches: results.batches,
-      currentPage: results.currentPage || null,
-      numPages: results.numPages || null,
-      startPage: results.startPage || null,
-      endPage: results.endPage || null
-    });
+  ['/dashboard', '/dashboard/:page(\\d+)'].forEach(function(route) {
+    app.get(route, isLoggedIn, handlers.handleDashboardSetup);
   });
 
   app.post('/reset/:service', isLoggedIn, function(req, res) {
@@ -101,30 +59,19 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
   app.post('/refresh/:service', isLoggedIn, function(req, res) {
     var serviceName = req.params.service;
-    if (serviceName === 'facebook') {
-      req.user.refreshFacebook(function(err, posts) {
-        return handlers.handlePostRefresh(serviceName.toUpperCase(), err,
-          '400-Facebook', posts, req, res);
-      });
-    } else if (serviceName === 'youtube') {
-      req.user.refreshYouTube(function(err, posts) {
-        return handlers.handlePostRefresh(serviceName.toUpperCase(), err,
-          '400-YouTube', posts, req, res);
-      });
-    }
+    var method = (serviceName === 'Facebook') ? 'Facebook' : 'YouTube';
+    req.user['refresh' + method](function(err, posts) {
+      return handlers.handlePostRefresh(serviceName.toUpperCase(), err,
+        '400-' + method, posts, req, res);
+    });
   });
 
   app.post('/toggleUpdates/:service', isLoggedIn, function(req, res) {
     var serviceName = req.params.service;
-    if (serviceName === 'facebook') {
-      req.user.toggleFacebook(function(err, result) {
-        return handlers.handlePostUpdate(result, result, err, result, req, res);
-      });
-    } else if (serviceName === 'youtube') {
-      req.user.toggleYouTube(function(err, result) {
-        return handlers.handlePostUpdate(result, result, err, result, req, res);
-      });
-    }
+    var method = (serviceName === 'Facebook') ? 'Facebook' : 'YouTube';
+    req.user['toggle' + method](function(err, result) {
+      return handlers.handlePostUpdate(result, result, err, result, req, res);
+    });
   });
 
   app.post('/dismiss/all', isLoggedIn, function(req, res) {
@@ -183,14 +130,8 @@ module.exports = function(app, passport, isLoggedIn, nev) {
       return handlers.handleResponse(res, 200,
         messages.SETTINGS.DISPLAY_NAME.INVALID, false);
     }
-
     // Update user settings
-    User.updateUser(req.user._id, settings, function(err, updateSuccess) {
-      var success = messages.SETTINGS.DISPLAY_NAME.CHANGE_SUCCEEDED;
-      var failure = messages.SETTINGS.DISPLAY_NAME.CHANGE_FAILED;
-      return handlers.handlePostUpdate(success, failure, err, updateSuccess,
-        req, res);
-    });
+    return handlers.handleUserUpdate(settings, 'DISPLAY_NAME', req, res);
   });
 
   app.post('/settings/profile/avatar', isLoggedIn, function(req, res) {
@@ -206,23 +147,13 @@ module.exports = function(app, passport, isLoggedIn, nev) {
     }
 
     // Update user settings
-    User.updateUser(req.user._id, settings, function(err, updateSuccess) {
-      var success = messages.SETTINGS.AVATAR.CHANGE_SUCCEEDED;
-      var failure = messages.SETTINGS.AVATAR.CHANGE_FAILED;
-      return handlers.handlePostUpdate(success, failure, err, updateSuccess,
-        req, res);
-    });
+    return handlers.handleUserUpdate(settings, 'AVATAR', req, res);
   });
 
   app.post('/settings/profile/avatar/reset', isLoggedIn, function(req, res) {
     // Reset user's avatar to use Gravatar
-    User.resetAvatar(req.user._id, req.user.email, function(err,
-        updateSuccess) {
-      var success = messages.SETTINGS.AVATAR.RESET_SUCCEEDED;
-      var failure = messages.SETTINGS.AVATAR.RESET_FAILED;
-      return handlers.handlePostUpdate(success, failure, err, updateSuccess,
-        req, res);
-    });
+    return handlers.handlePostReset(messages.SETTINGS.AVATAR.RESET_SUCCEEDED,
+      messages.SETTINGS.AVATAR.RESET_FAILED, 'resetAvatar', req, res);
   });
 
   app.post('/settings/account/email', isLoggedIn, function(req, res) {
@@ -288,12 +219,8 @@ module.exports = function(app, passport, isLoggedIn, nev) {
         messages.SETTINGS.ACCOUNT.SERVICES_ACTIVE, false);
     }
 
-    User.deleteUser(req.user._id, function(err, deleteSuccess) {
-      var success = messages.SETTINGS.ACCOUNT.DELETE_SUCCEEDED;
-      var failure = messages.SETTINGS.ACCOUNT.DELETE_FAILED;
-      return handlers.handlePostUpdate(success, failure, err, deleteSuccess,
-        req, res);
-    });
+    return handlers.handlePostReset(messages.SETTINGS.ACCOUNT.DELETE_SUCCEEDED,
+      messages.SETTINGS.ACCOUNT.DELETE_FAILED, 'deleteUser', req, res);
   });
 
   // --------- User's Connected Services ---------
@@ -307,14 +234,15 @@ module.exports = function(app, passport, isLoggedIn, nev) {
     });
   });
 
-  // --------- Dash Login/Logout ---------
-  app.get('/login', function(req, res) {
-    if (req.isAuthenticated()) {
-      return res.redirect('/dashboard');
-    }
-
-    res.render('login', {
-      message: req.flash('loginMessage')
+  // --------- Dash Login/Logout & Registration ---------
+  ['login', 'register'].forEach(function(route) {
+    app.get('/' + route, function(req, res) {
+      if (req.isAuthenticated()) {
+        return res.redirect('/dashboard');
+      }
+      res.render(route, {
+        message: req.flash(route + 'Message')
+      });
     });
   });
 
@@ -335,17 +263,6 @@ module.exports = function(app, passport, isLoggedIn, nev) {
     });
   });
 
-  // --------- Dash Registration ---------
-  app.get('/register', function(req, res) {
-    if (req.isAuthenticated()) {
-      return res.redirect('/dashboard');
-    }
-
-    res.render('register', {
-      message: req.flash('registerMessage')
-    });
-  });
-
   app.post('/register', passport.authenticate('local-register', {
     successRedirect: '/login',
     failureRedirect: '/register'
@@ -354,10 +271,9 @@ module.exports = function(app, passport, isLoggedIn, nev) {
   // --------- Dash Email Verification ---------
   app.get('/verify/:token', function(req, res) {
     nev.confirmTempUser(req.params.token, function(err, newPersistentUser) {
-      var success = messages.SETTINGS.EMAIL.VERIFIED;
-      var failure = messages.SETTINGS.EMAIL.VERIFICATION_EXPIRED;
-      return handlers.handlePostRegistrationEmail(success, failure, err,
-        newPersistentUser, req, res);
+      var message = messages.SETTINGS.EMAIL;
+      return handlers.handlePostRegistrationEmail(message.VERIFIED,
+        message.VERIFICATION_EXPIRED, err, newPersistentUser, req, res);
     });
   });
 
