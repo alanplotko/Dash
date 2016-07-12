@@ -1,3 +1,13 @@
+// --------- Dependencies ---------
+var moment = require('moment');
+
+/**
+ * Completes the refresh operation by saving the new content.
+ * @param  {string}   serviceName The name of the service that was refreshed
+ * @param  {Object[]} newPosts    A list of new posts that have been received
+ * @param  {Object}   user        The user object
+ * @param  {Function} done        The callback function to execute
+ */
 module.exports.completeRefresh = function(serviceName, newPosts, user, done) {
   if (newPosts.length > 0) {
     var newUpdate = {
@@ -25,4 +35,48 @@ module.exports.completeRefresh = function(serviceName, newPosts, user, done) {
       return done(null, null);
     });
   }
+};
+
+/**
+ * Process service deauthorization by deleting unnecessary fields.
+ * @param  {string}   serviceName The name of the service that was refreshed
+ * @param  {Object}   user        The user object
+ * @param  {Function} done        The callback function to execute
+ */
+module.exports.processDeauthorization = function(serviceName, user, done) {
+  // Remove relevant service data
+  user[serviceName.toLowerCase()] =
+    user.lastUpdateTime[serviceName.toLowerCase()] = undefined;
+  user.save(function(err) {
+    // Database Error
+    if (err) {
+      return done(err);
+    }
+
+    // Success: Removed service
+    return done(null, user);
+  });
+};
+
+/**
+ * Gets the user's last update time for the service.
+ * @param  {string}   serviceName The name of the service that was refreshed
+ * @param  {Object}   user        The user object
+ * @return {Date}                 Return the last update's timestamp to the user
+ *                                formatted using the moment package
+ */
+module.exports.getLastUpdateTime = function(serviceName, user) {
+  return user.lastUpdateTime[serviceName.toLowerCase()] ?
+    user.lastUpdateTime[serviceName.toLowerCase()] :
+    moment().add(-1, 'days').toDate();
+};
+
+/**
+ * Compare method for post times.
+ * @param  {Date} a The date for content item a's release
+ * @param  {Date} b The date for content item b's release
+ * @return {number} Difference of a and b for use in sorting content
+ */
+module.exports.sortPosts = function(a, b) {
+  return new Date(a.timestamp) - new Date(b.timestamp);
 };

@@ -1,6 +1,5 @@
 // --------- Dependencies ---------
 var mongoose = require('mongoose');
-var moment = require('moment');
 var request = require('request');
 var refresh = require('passport-oauth2-refresh');
 var async = require('async');
@@ -48,16 +47,7 @@ module.exports = function(UserSchema, messages) {
         // Success: Deauthorized Dash app (or app already deauthorized)
         if (res.statusCode === 200) {
           // Remove relevant YouTube data
-          user.youtube = user.lastUpdateTime.youtube = undefined;
-          user.save(function(err) {
-            // Database Error
-            if (err) {
-              return done(err);
-            }
-
-            // Success: Removed YouTube service
-            return done(null, user);
-          });
+          return handlers.processDeauthorization('YouTube', user, done);
         }
       });
     });
@@ -302,9 +292,7 @@ module.exports = function(UserSchema, messages) {
       callback(null, Date.now());
     };
 
-    var lastUpdateTime = user.lastUpdateTime.youtube ?
-    user.lastUpdateTime.youtube :
-    moment().add(-1, 'days').toDate();
+    var lastUpdateTime = handlers.getLastUpdateTime('YouTube', user);
 
     // Retrieve video posts
     calls.youtubeVideos = function(callback) {
@@ -373,9 +361,7 @@ module.exports = function(UserSchema, messages) {
         }
 
         // Sort posts by timestamp
-        newPosts.sort(function(a, b) {
-          return new Date(a.timestamp) - new Date(b.timestamp);
-        });
+        newPosts.sort(handlers.sortPosts);
 
         return handlers.completeRefresh('YouTube', newPosts, user, done);
       });

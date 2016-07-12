@@ -1,6 +1,5 @@
 // --------- Dependencies ---------
 var mongoose = require('mongoose');
-var moment = require('moment');
 var crypto = require('crypto');
 var request = require('request');
 var async = require('async');
@@ -65,16 +64,7 @@ module.exports = function(UserSchema, messages, configuration) {
         // Success: Deauthorized Dash app
         if (body.success) {
           // Remove relevant Facebook data
-          user.facebook = user.lastUpdateTime.facebook = undefined;
-          user.save(function(err) {
-            // Database Error
-            if (err) {
-              return done(err);
-            }
-
-            // Success: Removed Facebook service
-            return done(null, user);
-          });
+          return handlers.processDeauthorization('Facebook', user, done);
         }
       });
     });
@@ -354,8 +344,7 @@ module.exports = function(UserSchema, messages, configuration) {
       .update(user.facebook.accessToken)
       .digest('hex');
 
-    var lastUpdateTime = user.lastUpdateTime.facebook ?
-      user.lastUpdateTime.facebook : moment().add(-1, 'days').toDate();
+    var lastUpdateTime = handlers.getLastUpdateTime('Facebook', user);
 
     // Retrieve page posts
     calls.facebookPages = function(callback) {
@@ -456,9 +445,7 @@ module.exports = function(UserSchema, messages, configuration) {
         }
 
         // Sort posts by timestamp
-        newPosts.sort(function(a, b) {
-          return new Date(a.timestamp) - new Date(b.timestamp);
-        });
+        newPosts.sort(handlers.sortPosts);
 
         return handlers.completeRefresh('Facebook', newPosts, user, done);
       });
