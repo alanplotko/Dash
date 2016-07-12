@@ -4,6 +4,7 @@ var moment = require('moment');
 var crypto = require('crypto');
 var request = require('request');
 var async = require('async');
+var handlers = require('./handlers');
 
 module.exports = function(UserSchema, messages, configuration) {
   var config = configuration[process.env.NODE_ENV];
@@ -459,63 +460,7 @@ module.exports = function(UserSchema, messages, configuration) {
           return new Date(a.timestamp) - new Date(b.timestamp);
         });
 
-        if (newPosts.length > 0) {
-          var newUpdate = {
-            posts: newPosts,
-            description: 'Checking in with Facebook for updates!'
-          };
-          user.batches.push(newUpdate);
-          user.save(function(err) {
-            // An error occurred
-            if (err) {
-              return done(err);
-            }
-
-            // Saved posts and update times; return new posts
-            return done(null, newPosts);
-          });
-        // No new posts, set new update time
-        } else {
-          user.save(function(err) {
-            // An error occurred
-            if (err) {
-              return done(err);
-            }
-            // Saved new update time
-            return done(null, null);
-          });
-        }
-      });
-    });
-  };
-
-  /**
-   * Enable or disable updates for Facebook.
-   * @param {Function} done The callback function to execute upon completion
-   */
-  UserSchema.methods.toggleFacebook = function(done) {
-    mongoose.models.User.findById(this._id, function(err, user) {
-      // Database Error
-      if (err) {
-        return done(err);
-      }
-
-      var message = messages.STATUS.FACEBOOK.NOT_CONFIGURED;
-      if (user.hasFacebook) {
-        message = user.facebook.acceptUpdates ?
-          messages.STATUS.FACEBOOK.UPDATES_DISABLED :
-          messages.STATUS.FACEBOOK.UPDATES_ENABLED;
-        user.facebook.acceptUpdates = !user.facebook.acceptUpdates;
-      }
-
-      user.save(function(err) {
-        // An error occurred
-        if (err) {
-          return done(err);
-        }
-
-        // Saved update preference
-        return done(null, message);
+        return handlers.completeRefresh('Facebook', newPosts, user, done);
       });
     });
   };

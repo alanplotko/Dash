@@ -66,5 +66,37 @@ module.exports = function(UserSchema, messages, configuration) {
     UserSchema.virtual('has' + serviceName).get(function() {
       return Boolean(this[serviceName.toLowerCase()].profileId);
     });
+
+    /**
+     * Enable or disable updates for a service.
+     * @param {Function} done The callback function to execute upon completion
+     */
+    UserSchema.methods['toggle' + serviceName] = function(done) {
+      mongoose.models.User.findById(this._id, function(err, user) {
+        // Database Error
+        if (err) {
+          return done(err);
+        }
+
+        var message = messages.STATUS[serviceName.toUpperCase()].NOT_CONFIGURED;
+        if (user['has' + serviceName]) {
+          message = user[serviceName.toLowerCase()].acceptUpdates ?
+            messages.STATUS[serviceName.toUpperCase()].UPDATES_DISABLED :
+            messages.STATUS[serviceName.toUpperCase()].UPDATES_ENABLED;
+          user[serviceName.toLowerCase()].acceptUpdates =
+            !user[serviceName.toLowerCase()].acceptUpdates;
+        }
+
+        user.save(function(err) {
+          // An error occurred
+          if (err) {
+            return done(err);
+          }
+
+          // Saved update preference
+          return done(null, message);
+        });
+      });
+    };
   });
 };

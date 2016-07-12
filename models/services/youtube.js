@@ -4,6 +4,7 @@ var moment = require('moment');
 var request = require('request');
 var refresh = require('passport-oauth2-refresh');
 var async = require('async');
+var handlers = require('./handlers');
 
 module.exports = function(UserSchema, messages) {
   /**
@@ -376,64 +377,7 @@ module.exports = function(UserSchema, messages) {
           return new Date(a.timestamp) - new Date(b.timestamp);
         });
 
-        if (newPosts.length > 0) {
-          var newUpdate = {
-            posts: newPosts,
-            description: 'Checking in with YouTube for updates!'
-          };
-          user.batches.push(newUpdate);
-          user.save(function(err) {
-            // An error occurred
-            if (err) {
-              return done(err);
-            }
-
-            // Saved posts and update times; return new posts
-            return done(null, newPosts);
-          });
-        } else {
-          // No new posts, set new update time
-          user.save(function(err) {
-            // An error occurred
-            if (err) {
-              return done(err);
-            }
-
-            // Saved update time
-            return done(null, null);
-          });
-        }
-      });
-    });
-  };
-
-  /**
-   * Enable or disable updates for YouTube.
-   * @param {Function} done The callback function to execute upon completion
-   */
-  UserSchema.methods.toggleYouTube = function(done) {
-    mongoose.models.User.findById(this._id, function(err, user) {
-      // Database Error
-      if (err) {
-        return done(err);
-      }
-
-      var message = messages.STATUS.YOUTUBE.NOT_CONFIGURED;
-      if (user.hasYouTube) {
-        message = user.youtube.acceptUpdates ?
-          messages.STATUS.YOUTUBE.UPDATES_DISABLED :
-          messages.STATUS.YOUTUBE.UPDATES_ENABLED;
-        user.youtube.acceptUpdates = !user.youtube.acceptUpdates;
-      }
-
-      user.save(function(err) {
-        // An error occurred
-        if (err) {
-          return done(err);
-        }
-
-        // Saved update preference
-        return done(null, message);
+        return handlers.completeRefresh('YouTube', newPosts, user, done);
       });
     });
   };

@@ -2,7 +2,7 @@
 var User = require.main.require('./models/user');
 var validator = require('validator');
 require.main.require('./config/custom-validation')(validator);
-var handlers = require.main.require('./routes/services/serviceHandlers');
+var handlers = require.main.require('./routes/services/handlers');
 
 module.exports = function(app, passport, isLoggedIn) {
   ['page', 'group'].forEach(function(type) {
