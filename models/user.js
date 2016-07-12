@@ -441,6 +441,7 @@ UserSchema.statics.deleteUser = function(id, done) {
 /**
  * Set Up Services
  */
+require('./services/common')(UserSchema, messages, config);
 require('./services/facebook')(UserSchema, messages, config);
 require('./services/youtube')(UserSchema, messages);
 

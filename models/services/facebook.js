@@ -1,9 +1,9 @@
 // --------- Dependencies ---------
 var mongoose = require('mongoose');
-var moment = require('moment');
 var crypto = require('crypto');
 var request = require('request');
 var async = require('async');
+var handlers = require('./handlers');
 
 module.exports = function(UserSchema, messages, configuration) {
   var config = configuration[process.env.NODE_ENV];
@@ -16,60 +16,6 @@ module.exports = function(UserSchema, messages, configuration) {
   UserSchema.virtual('hasFacebook').get(function() {
     return Boolean(this.facebook.profileId);
   });
-
-  /**
-   * Populate the user's Facebook identifiers and tokens.
-   * @param  {ObjectId} id          The current user's id in MongoDB
-   * @param  {Object}   service     User-specific details for the service
-   * @param  {Function} done        The callback function to execute upon
-   *                                completion
-   */
-  UserSchema.statics.addFacebook = function(id, service, done) {
-    mongoose.models.User.findById(id, function(err, user) {
-      // Database Error
-      if (err) {
-        return done(err);
-      }
-
-      // Unexpected Error: User not found
-      if (!user) {
-        return done(null, null, new Error(messages.ERROR.GENERAL));
-      }
-
-      if (service.reauth) {
-        return done(messages.STATUS.FACEBOOK.MISSING_PERMISSIONS);
-      } else if (service.refreshAccessToken) {
-        delete service.refreshAccessToken;
-        user.facebook = service;
-        user.save(function(err) {
-          // Database Error
-          if (err) {
-            return done(err);
-          }
-
-          // Success: Refreshed access token for Facebook service
-          return done(messages.STATUS.FACEBOOK.RENEWED);
-        });
-      } else if (user.hasFacebook) {
-        // Defined Error: Service already exists
-        return done(new Error(messages.STATUS.FACEBOOK.ALREADY_CONNECTED));
-      }
-
-      // Save service information (excluding other states) to account
-      delete service.reauth;
-      delete service.refreshAccessToken;
-      user.facebook = service;
-      user.save(function(err) {
-        // Database Error
-        if (err) {
-          return done(err);
-        }
-
-        // Success: Added Facebook service
-        return done(null, user);
-      });
-    });
-  };
 
   /**
    * Remove the user's Facebook identifiers and tokens and deauthorize Dash app
@@ -118,16 +64,7 @@ module.exports = function(UserSchema, messages, configuration) {
         // Success: Deauthorized Dash app
         if (body.success) {
           // Remove relevant Facebook data
-          user.facebook = user.lastUpdateTime.facebook = undefined;
-          user.save(function(err) {
-            // Database Error
-            if (err) {
-              return done(err);
-            }
-
-            // Success: Removed Facebook service
-            return done(null, user);
-          });
+          return handlers.processDeauthorization('Facebook', user, done);
         }
       });
     });
@@ -301,46 +238,6 @@ module.exports = function(UserSchema, messages, configuration) {
     });
   };
 
-  /**
-   * Save selected groups to the user's account.
-   * @param  {ObjectId} id          The current user's id in MongoDB
-   * @param  {Object[]} groups      A list of groups that the user selected
-   * @param  {Function} done        The callback function to execute upon
-   *                                completion
-   */
-  UserSchema.statics.saveFacebookGroups = function(id, groups, done) {
-    mongoose.models.User.findById(id, function(err, user) {
-      // Database Error
-      if (err) {
-        return done(err);
-      }
-
-      // Unexpected Error: User not found
-      if (!user) {
-        return done(null, null, new Error(messages.ERROR.GENERAL));
-      }
-
-      user.facebook.groups = [];
-
-      groups.forEach(function(group) {
-        user.facebook.groups.push({
-          groupId: group.substring(0, group.indexOf(':')),
-          name: group.substring(group.indexOf(':') + 1)
-        });
-      });
-
-      user.save(function(err) {
-        // Database Error
-        if (err) {
-          return done(err);
-        }
-
-        // Success: Saved selected Facebook groups
-        return done(null, user);
-      });
-    });
-  };
-
   // --------- Setup: Facebook pages ---------
 
   /**
@@ -383,44 +280,48 @@ module.exports = function(UserSchema, messages, configuration) {
   };
 
   /**
-   * Save selected pages to user's account.
+   * Save selected pages or groups to user's account.
    * @param  {ObjectId} id          The current user's id in MongoDB
    * @param  {Object[]} pages       A list of pages that the user selected
    * @param  {Function} done        The callback function to execute upon
    *                                completion
    */
-  UserSchema.statics.saveFacebookPages = function(id, pages, done) {
-    mongoose.models.User.findById(id, function(err, user) {
-      // Database Error
-      if (err) {
-        return done(err);
-      }
-
-      // Unexpected Error: User not found
-      if (!user) {
-        return done(null, null, new Error(messages.ERROR.GENERAL));
-      }
-
-      user.facebook.pages = [];
-
-      pages.forEach(function(page) {
-        user.facebook.pages.push({
-          pageId: page.substring(0, page.indexOf(':')),
-          name: page.substring(page.indexOf(':') + 1)
-        });
-      });
-
-      user.save(function(err) {
+  ['page', 'group'].forEach(function(type) {
+    var plural = type + 's';
+    var method = 'saveFacebook' + plural.charAt(0).toUpperCase() +
+      plural.slice(1);
+    UserSchema.statics[method] = function(id, content, done) {
+      mongoose.models.User.findById(id, function(err, user) {
         // Database Error
         if (err) {
           return done(err);
         }
 
-        // Success: Saved selected Facebook pages
-        return done(null, user);
+        // Unexpected Error: User not found
+        if (!user) {
+          return done(null, null, new Error(messages.ERROR.GENERAL));
+        }
+
+        user.facebook[plural] = [];
+
+        content.forEach(function(item) {
+          var itemFormatted = {name: item.substring(item.indexOf(':') + 1)};
+          itemFormatted[type + 'Id'] = item.substring(0, item.indexOf(':'));
+          user.facebook[plural].push(itemFormatted);
+        });
+
+        user.save(function(err) {
+          // Database Error
+          if (err) {
+            return done(err);
+          }
+
+          // Success: Saved selected Facebook items
+          return done(null, user);
+        });
       });
-    });
-  };
+    };
+  });
 
   // --------- Facebook content management ---------
 
@@ -443,8 +344,7 @@ module.exports = function(UserSchema, messages, configuration) {
       .update(user.facebook.accessToken)
       .digest('hex');
 
-    var lastUpdateTime = user.lastUpdateTime.facebook ?
-      user.lastUpdateTime.facebook : moment().add(-1, 'days').toDate();
+    var lastUpdateTime = handlers.getLastUpdateTime('Facebook', user);
 
     // Retrieve page posts
     calls.facebookPages = function(callback) {
@@ -545,67 +445,9 @@ module.exports = function(UserSchema, messages, configuration) {
         }
 
         // Sort posts by timestamp
-        newPosts.sort(function(a, b) {
-          return new Date(a.timestamp) - new Date(b.timestamp);
-        });
+        newPosts.sort(handlers.sortPosts);
 
-        if (newPosts.length > 0) {
-          var newUpdate = {
-            posts: newPosts,
-            description: 'Checking in with Facebook for updates!'
-          };
-          user.batches.push(newUpdate);
-          user.save(function(err) {
-            // An error occurred
-            if (err) {
-              return done(err);
-            }
-
-            // Saved posts and update times; return new posts
-            return done(null, newPosts);
-          });
-        // No new posts, set new update time
-        } else {
-          user.save(function(err) {
-            // An error occurred
-            if (err) {
-              return done(err);
-            }
-            // Saved new update time
-            return done(null, null);
-          });
-        }
-      });
-    });
-  };
-
-  /**
-   * Enable or disable updates for Facebook.
-   * @param {Function} done The callback function to execute upon completion
-   */
-  UserSchema.methods.toggleFacebook = function(done) {
-    mongoose.models.User.findById(this._id, function(err, user) {
-      // Database Error
-      if (err) {
-        return done(err);
-      }
-
-      var message = messages.STATUS.FACEBOOK.NOT_CONFIGURED;
-      if (user.hasFacebook) {
-        message = user.facebook.acceptUpdates ?
-          messages.STATUS.FACEBOOK.UPDATES_DISABLED :
-          messages.STATUS.FACEBOOK.UPDATES_ENABLED;
-        user.facebook.acceptUpdates = !user.facebook.acceptUpdates;
-      }
-
-      user.save(function(err) {
-        // An error occurred
-        if (err) {
-          return done(err);
-        }
-
-        // Saved update preference
-        return done(null, message);
+        return handlers.completeRefresh('Facebook', newPosts, user, done);
       });
     });
   };

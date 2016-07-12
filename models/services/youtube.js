@@ -1,73 +1,11 @@
 // --------- Dependencies ---------
 var mongoose = require('mongoose');
-var moment = require('moment');
 var request = require('request');
 var refresh = require('passport-oauth2-refresh');
 var async = require('async');
+var handlers = require('./handlers');
 
 module.exports = function(UserSchema, messages) {
-  /**
-   * Check if the user is connected to YouTube.
-   * @return {Boolean} A status of whether the user has added this service
-   */
-  UserSchema.virtual('hasYouTube').get(function() {
-    return Boolean(this.youtube.profileId);
-  });
-
-  /**
-   * Populate the user's YouTube identifiers and tokens.
-   * @param  {ObjectId} id          The current user's id in MongoDB
-   * @param  {Object}   service     User-specific details for the service
-   * @param  {Function} done        The callback function to execute upon
-   *                                completion
-   */
-  UserSchema.statics.addYouTube = function(id, service, done) {
-    mongoose.models.User.findById(id, function(err, user) {
-      // Database Error
-      if (err) {
-        return done(err);
-      }
-
-      // Unexpected Error: User not found
-      if (!user) {
-        return done(null, null, new Error(messages.ERROR.GENERAL));
-      }
-
-      if (service.reauth) {
-        return done(messages.STATUS.YOUTUBE.MISSING_PERMISSIONS);
-      } else if (service.refreshAccessToken) {
-        delete service.refreshAccessToken;
-        user.youtube = service;
-        user.save(function(err) {
-          // Database Error
-          if (err) {
-            return done(err);
-          }
-
-          // Success: Refreshed access token for YouTube service
-          return done(messages.STATUS.YOUTUBE.RENEWED);
-        });
-      } else if (user.hasYouTube) {
-        // Defined Error: Service already exists
-        return done(new Error(messages.STATUS.YOUTUBE.ALREADY_CONNECTED));
-      }
-
-      // Save service information (excluding other states) to account
-      delete service.reauth;
-      delete service.refreshAccessToken;
-      user.youtube = service;
-      user.save(function(err) {
-        // Database Error
-        if (err) {
-          return done(err);
-        }
-
-        // Success: Added YouTube service
-        return done(null, user);
-      });
-    });
-  };
-
   /**
    * Remove the user's YouTube identifiers and tokens and deauthorize Dash app
    * from the account.
@@ -93,7 +31,7 @@ module.exports = function(UserSchema, messages) {
       }
 
       var url = 'https://accounts.google.com/o/oauth2/revoke?token=' +
-      user.youtube.accessToken;
+        user.youtube.accessToken;
 
       request({url: url, json: true}, function(err, res, body) {
         // Request Error
@@ -109,16 +47,7 @@ module.exports = function(UserSchema, messages) {
         // Success: Deauthorized Dash app (or app already deauthorized)
         if (res.statusCode === 200) {
           // Remove relevant YouTube data
-          user.youtube = user.lastUpdateTime.youtube = undefined;
-          user.save(function(err) {
-            // Database Error
-            if (err) {
-              return done(err);
-            }
-
-            // Success: Removed YouTube service
-            return done(null, user);
-          });
+          return handlers.processDeauthorization('YouTube', user, done);
         }
       });
     });
@@ -363,9 +292,7 @@ module.exports = function(UserSchema, messages) {
       callback(null, Date.now());
     };
 
-    var lastUpdateTime = user.lastUpdateTime.youtube ?
-    user.lastUpdateTime.youtube :
-    moment().add(-1, 'days').toDate();
+    var lastUpdateTime = handlers.getLastUpdateTime('YouTube', user);
 
     // Retrieve video posts
     calls.youtubeVideos = function(callback) {
@@ -434,68 +361,9 @@ module.exports = function(UserSchema, messages) {
         }
 
         // Sort posts by timestamp
-        newPosts.sort(function(a, b) {
-          return new Date(a.timestamp) - new Date(b.timestamp);
-        });
+        newPosts.sort(handlers.sortPosts);
 
-        if (newPosts.length > 0) {
-          var newUpdate = {
-            posts: newPosts,
-            description: 'Checking in with YouTube for updates!'
-          };
-          user.batches.push(newUpdate);
-          user.save(function(err) {
-            // An error occurred
-            if (err) {
-              return done(err);
-            }
-
-            // Saved posts and update times; return new posts
-            return done(null, newPosts);
-          });
-        } else {
-          // No new posts, set new update time
-          user.save(function(err) {
-            // An error occurred
-            if (err) {
-              return done(err);
-            }
-
-            // Saved update time
-            return done(null, null);
-          });
-        }
-      });
-    });
-  };
-
-  /**
-   * Enable or disable updates for YouTube.
-   * @param {Function} done The callback function to execute upon completion
-   */
-  UserSchema.methods.toggleYouTube = function(done) {
-    mongoose.models.User.findById(this._id, function(err, user) {
-      // Database Error
-      if (err) {
-        return done(err);
-      }
-
-      var message = messages.STATUS.YOUTUBE.NOT_CONFIGURED;
-      if (user.hasYouTube) {
-        message = user.youtube.acceptUpdates ?
-          messages.STATUS.YOUTUBE.UPDATES_DISABLED :
-          messages.STATUS.YOUTUBE.UPDATES_ENABLED;
-        user.youtube.acceptUpdates = !user.youtube.acceptUpdates;
-      }
-
-      user.save(function(err) {
-        // An error occurred
-        if (err) {
-          return done(err);
-        }
-
-        // Saved update preference
-        return done(null, message);
+        return handlers.completeRefresh('YouTube', newPosts, user, done);
       });
     });
   };
