@@ -173,6 +173,18 @@ var handlePostUpdate = module.exports.handlePostUpdate =
   };
 
 /**
+ * Process the account deletion after making the necessary checks.
+ * @param  {Object} req   The current request
+ * @param  {Object} res   The response
+ */
+module.exports.handlePostAccountDeletion = function(req, res) {
+  User.deleteUser(req.user._id, function(err, deleteSuccess) {
+    return handlePostUpdate(messages.SETTINGS.ACCOUNT.DELETE_SUCCEEDED,
+      messages.SETTINGS.ACCOUNT.DELETE_FAILED, err, deleteSuccess, req, res);
+  });
+};
+
+/**
  * Handles a user update to a setting field.
  * @param  {Object} settings       An object containing the settings to update
  * @param  {string} field          The field for which to get the message to

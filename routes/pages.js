@@ -224,11 +224,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
         messages.SETTINGS.ACCOUNT.SERVICES_ACTIVE, false);
     }
 
-    User.deleteUser(req.user._id, function(err, deleteSuccess) {
-      var message = messages.SETTINGS.ACCOUNT;
-      return handlers.handlePostUpdate(message.DELETE_SUCCEEDED,
-        message.DELETE_FAILED, err, deleteSuccess, req, res);
-    });
+    return handlers.handlePostAccountDeletion(req, res);
   });
 
   // --------- User's Connected Services ---------
