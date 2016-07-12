@@ -7,68 +7,6 @@ var async = require('async');
 
 module.exports = function(UserSchema, messages) {
   /**
-   * Check if the user is connected to YouTube.
-   * @return {Boolean} A status of whether the user has added this service
-   */
-  UserSchema.virtual('hasYouTube').get(function() {
-    return Boolean(this.youtube.profileId);
-  });
-
-  /**
-   * Populate the user's YouTube identifiers and tokens.
-   * @param  {ObjectId} id          The current user's id in MongoDB
-   * @param  {Object}   service     User-specific details for the service
-   * @param  {Function} done        The callback function to execute upon
-   *                                completion
-   */
-  UserSchema.statics.addYouTube = function(id, service, done) {
-    mongoose.models.User.findById(id, function(err, user) {
-      // Database Error
-      if (err) {
-        return done(err);
-      }
-
-      // Unexpected Error: User not found
-      if (!user) {
-        return done(null, null, new Error(messages.ERROR.GENERAL));
-      }
-
-      if (service.reauth) {
-        return done(messages.STATUS.YOUTUBE.MISSING_PERMISSIONS);
-      } else if (service.refreshAccessToken) {
-        delete service.refreshAccessToken;
-        user.youtube = service;
-        user.save(function(err) {
-          // Database Error
-          if (err) {
-            return done(err);
-          }
-
-          // Success: Refreshed access token for YouTube service
-          return done(messages.STATUS.YOUTUBE.RENEWED);
-        });
-      } else if (user.hasYouTube) {
-        // Defined Error: Service already exists
-        return done(new Error(messages.STATUS.YOUTUBE.ALREADY_CONNECTED));
-      }
-
-      // Save service information (excluding other states) to account
-      delete service.reauth;
-      delete service.refreshAccessToken;
-      user.youtube = service;
-      user.save(function(err) {
-        // Database Error
-        if (err) {
-          return done(err);
-        }
-
-        // Success: Added YouTube service
-        return done(null, user);
-      });
-    });
-  };
-
-  /**
    * Remove the user's YouTube identifiers and tokens and deauthorize Dash app
    * from the account.
    *
@@ -93,7 +31,7 @@ module.exports = function(UserSchema, messages) {
       }
 
       var url = 'https://accounts.google.com/o/oauth2/revoke?token=' +
-      user.youtube.accessToken;
+        user.youtube.accessToken;
 
       request({url: url, json: true}, function(err, res, body) {
         // Request Error
