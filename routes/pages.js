@@ -152,13 +152,8 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
   app.post('/settings/profile/avatar/reset', isLoggedIn, function(req, res) {
     // Reset user's avatar to use Gravatar
-    User.resetAvatar(req.user._id, req.user.email, function(err,
-        updateSuccess) {
-      var success = messages.SETTINGS.AVATAR.RESET_SUCCEEDED;
-      var failure = messages.SETTINGS.AVATAR.RESET_FAILED;
-      return handlers.handlePostUpdate(success, failure, err, updateSuccess,
-        req, res);
-    });
+    return handlers.handlePostReset(messages.SETTINGS.AVATAR.RESET_SUCCEEDED,
+      messages.SETTINGS.AVATAR.RESET_FAILED, 'resetAvatar', req, res);
   });
 
   app.post('/settings/account/email', isLoggedIn, function(req, res) {
@@ -224,7 +219,8 @@ module.exports = function(app, passport, isLoggedIn, nev) {
         messages.SETTINGS.ACCOUNT.SERVICES_ACTIVE, false);
     }
 
-    return handlers.handlePostAccountDeletion(req, res);
+    return handlers.handlePostReset(messages.SETTINGS.ACCOUNT.DELETE_SUCCEEDED,
+      messages.SETTINGS.ACCOUNT.DELETE_FAILED, 'deleteUser', req, res);
   });
 
   // --------- User's Connected Services ---------

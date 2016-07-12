@@ -173,14 +173,17 @@ var handlePostUpdate = module.exports.handlePostUpdate =
   };
 
 /**
- * Process the account deletion after making the necessary checks.
- * @param  {Object} req   The current request
- * @param  {Object} res   The response
+ * Process a reset operation after making the necessary checks. Used usually for
+ * resetting a setting field or deleting an account.
+ * @param  {Object} success The message to pass on success
+ * @param  {Object} failure The message to pass on failure
+ * @param  {Object} method  The method to execute, based on what is being reset
+ * @param  {Object} req     The current request
+ * @param  {Object} res     The response
  */
-module.exports.handlePostAccountDeletion = function(req, res) {
-  User.deleteUser(req.user._id, function(err, deleteSuccess) {
-    return handlePostUpdate(messages.SETTINGS.ACCOUNT.DELETE_SUCCEEDED,
-      messages.SETTINGS.ACCOUNT.DELETE_FAILED, err, deleteSuccess, req, res);
+module.exports.handlePostReset = function(success, failure, method, req, res) {
+  User[method](req.user._id, function(err, operationSuccess) {
+    return handlePostUpdate(success, failure, err, operationSuccess, req, res);
   });
 };
 
