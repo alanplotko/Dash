@@ -155,6 +155,7 @@ function isLoggedIn(req, res, next) {
 
 // Set up app routes
 require('./routes/pages')(app, passport, isLoggedIn, nev);
+require('./routes/services/common')(app, passport, isLoggedIn);
 require('./routes/services/facebook')(app, passport, isLoggedIn);
 require('./routes/services/youtube')(app, passport, isLoggedIn);
 

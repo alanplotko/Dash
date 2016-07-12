@@ -2,6 +2,29 @@
 var messages = require.main.require('./config/messages');
 
 /**
+ * Enums for use with storing a key-value pair in the user's session.
+ */
+var ENUMS = module.exports.ENUMS = {
+  REFRESH_TOKEN: {key: 'refreshAccessToken', value: true},
+  AUTH: {key: 'reauth', value: false},
+  REAUTH: {key: 'reauth', value: true}
+};
+
+/**
+ * Handles authentication and token refreshes by setting the flag in the user's
+ * session.
+ * @param  {string}   flag The enum to look for setting the key-value pair in
+ *                         the user's session
+ * @param  {Object}   req  The current request
+ * @param  {Object}   res  The response
+ * @param  {Function} next Pass control to the next matching route
+ */
+module.exports.handleSessionFlag = function(flag, req, res, next) {
+  req.session[ENUMS[flag].key] = ENUMS[flag].value;
+  next();
+};
+
+/**
  * Handles the last step of indicating the result of the process to the user.
  * @param  {string} errorRedirect The page to redirect to if an error occurs
  * @param  {string} message       The message to send to the user on success
