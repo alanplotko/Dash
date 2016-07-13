@@ -1,7 +1,7 @@
 // --------- Dependencies ---------
 var mongoose = require('mongoose');
 
-module.exports = function(UserSchema, messages, configuration) {
+module.exports = function(UserSchema, messages) {
   ['Facebook', 'YouTube'].forEach(function(serviceName) {
     /**
      * Populate service identifiers and tokens.

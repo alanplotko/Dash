@@ -1,5 +1,46 @@
 // --------- Dependencies ---------
 var moment = require('moment');
+var crypto = require('crypto');
+var config = require('../../config/settings');
+
+/**
+ * Processes the posts retrieved from a service.
+ * @param  {Object}   err             An error, if one has occurred
+ * @param  {Object[]} content         The content retrieved from the service
+ * @param  {Object}   updates         Progress details tracked by the caller
+ * @param  {number}   expectedLength  The number of posts expected
+ * @param  {Function} callback        The callback function to execute upon
+ *                                    completion
+ * @return {Object}                   The updated progress and list of posts
+ */
+module.exports.processContent = function(err, content, updates, expectedLength,
+    callback) {
+  // An error occurred
+  if (err) {
+    return callback(err);
+  }
+
+  // Retrieved content successfully
+  Array.prototype.push.apply(updates.posts, content);
+  updates.progress++;
+  if (updates.progress === expectedLength) {
+    callback(null, updates.posts);
+  }
+  return {progress: updates.progress, posts: updates.posts};
+};
+
+/**
+ * Generates the app secret proof for authorizing Facebook API calls.
+ * @param  {string} token The user's Facebook access token
+ * @return {string}       A portion of the URL containing the app secret proof
+ *                        to attach to the full URL for the API call
+ */
+module.exports.generateAppSecretProof = function(token) {
+  return '&appsecret_proof=' + crypto
+    .createHmac('sha256', config.SERVICES.FACEBOOK.CLIENT_SECRET)
+    .update(token)
+    .digest('hex');
+};
 
 /**
  * Completes the refresh operation by saving the new content.

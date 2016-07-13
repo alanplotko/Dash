@@ -296,8 +296,10 @@ module.exports = function(UserSchema, messages) {
 
     // Retrieve video posts
     calls.youtubeVideos = function(callback) {
-      var videoPosts = [];
-      var progress = 0;
+      var updates = {
+        progress: 0,
+        posts: []
+      };
       if (user.youtube.subscriptions.length > 0) {
         user.youtube.subscriptions.forEach(function(account) {
           var feedUrl = 'https://www.googleapis.com/youtube/v3/activities' +
@@ -308,17 +310,8 @@ module.exports = function(UserSchema, messages) {
 
           getYouTubeUploads(feedUrl, null, [], account.name,
             function(err, content) {
-              // An error occurred
-              if (err) {
-                return callback(err);
-              }
-
-              // Retrieved posts successfully
-              Array.prototype.push.apply(videoPosts, content);
-              progress++;
-              if (progress === user.youtube.subscriptions.length) {
-                callback(null, videoPosts);
-              }
+              updates = handlers.processContent(err, content, updates,
+                user.youtube.subscriptions.length, callback);
             });
         });
       } else {
