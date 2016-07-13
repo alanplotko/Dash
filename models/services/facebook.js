@@ -191,8 +191,15 @@ module.exports = function(UserSchema, messages) {
     });
   }
 
-  ['page', 'group'].forEach(function(type) {
-    var plural = type + 's';
+  [{
+    key: 'page',
+    route: 'likes'
+  },
+  {
+    key: 'group',
+    route: 'groups'
+  }].forEach(function(type) {
+    var plural = type.key + 's';
     var formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
 
     // --------- Setup: Facebook pages and groups ---------
@@ -219,8 +226,8 @@ module.exports = function(UserSchema, messages) {
           .accessToken);
 
         var url = 'https://graph.facebook.com/v2.5/' + user.facebook.profileId +
-          '/groups?fields=cover,name,id,description,is_verified,best_page,' +
-          'about&access_token=' + user.facebook.accessToken;
+          '/' + type.route + '?fields=cover,name,id,description,is_verified,' +
+          'best_page,about&access_token=' + user.facebook.accessToken;
 
         getFacebookContent(url, {}, appSecretProof, function(err, content) {
           // Error while retrieving content
@@ -259,7 +266,7 @@ module.exports = function(UserSchema, messages) {
 
         content.forEach(function(item) {
           var itemFormatted = {name: item.substring(item.indexOf(':') + 1)};
-          itemFormatted[type + 'Id'] = item.substring(0, item.indexOf(':'));
+          itemFormatted[type.key + 'Id'] = item.substring(0, item.indexOf(':'));
           user.facebook[plural].push(itemFormatted);
         });
 
@@ -298,32 +305,32 @@ module.exports = function(UserSchema, messages) {
     var lastUpdateTime = handlers.getLastUpdateTime('Facebook', user);
 
     // Retrieve page and group posts
-    ['page', 'group'].forEach(function(type) {
-      var plural = type + 's';
+    [{
+      key: 'page',
+      route: 'posts'
+    },
+    {
+      key: 'group',
+      route: 'feed'
+    }].forEach(function(type) {
+      var plural = type.key + 's';
       var prop = 'facebook' + plural.charAt(0).toUpperCase() + plural.slice(1);
       calls[prop] = function(callback) {
-        var posts = [];
-        var progress = 0;
+        var updates = {
+          progress: 0,
+          posts: []
+        };
         if (user.facebook[plural].length > 0) {
           user.facebook[plural].forEach(function(item) {
             var feedUrl = 'https://graph.facebook.com/v2.5/' +
-              item[type + 'Id'] + '/posts?fields=id,story,message,link,' +
-              'full_picture,created_time&since=' + lastUpdateTime +
+              item[type.key + 'Id'] + '/' + type.route + '?fields=id,story,' +
+              'message,link,full_picture,created_time&since=' + lastUpdateTime +
               '&access_token=' + user.facebook.accessToken;
 
-            getFacebookPosts(feedUrl, [], item.name, type, appSecretProof,
+            getFacebookPosts(feedUrl, [], item.name, type.key, appSecretProof,
               function(err, content) {
-                // An error occurred
-                if (err) {
-                  return callback(err);
-                }
-
-                // Retrieved posts successfully
-                Array.prototype.push.apply(posts, content);
-                progress++;
-                if (progress === user.facebook[plural].length) {
-                  callback(null, posts);
-                }
+                updates = handlers.processContent(err, content, updates,
+                  user.facebook[plural].length, callback);
               });
           });
         } else {

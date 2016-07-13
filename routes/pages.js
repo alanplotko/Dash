@@ -59,7 +59,8 @@ module.exports = function(app, passport, isLoggedIn, nev) {
 
   app.post('/refresh/:service', isLoggedIn, function(req, res) {
     var serviceName = req.params.service;
-    var method = (serviceName === 'Facebook') ? 'Facebook' : 'YouTube';
+    var method = (serviceName.toLowerCase() === 'facebook') ? 'Facebook' :
+      'YouTube';
     req.user['refresh' + method](function(err, posts) {
       return handlers.handlePostRefresh(serviceName.toUpperCase(), err,
         '400-' + method, posts, req, res);

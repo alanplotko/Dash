@@ -91,7 +91,7 @@ var handlePostSetupError = module.exports.handlePostSetupError =
   };
 
 /**
- * [retrieveActivity description]
+ * Retrieves all new activity on the service.
  * @param  {Object}   settings        An object containing the service name and
  *                                    a singular term describing the content
  * @param  {Object}   err             An error, if one has occurred
