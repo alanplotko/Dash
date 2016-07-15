@@ -4,16 +4,18 @@ var chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 var should = chai.should();
 var mongoose = require('mongoose');
+var crypto = require('crypto');
 mongoose.Promise = require('bluebird');
 var config = require('../config/settings');
 var User;
 
+var emailField = {email: 'Dashbot@Dash'};
+var gravatar = crypto.createHash('md5').update(emailField.email).digest('hex');
 // Dummy account
-var email = {email: 'Dashbot@Dash'};
 var account = {
-  email: email.email,
+  email: emailField.email,
   displayName: 'Dashbot',
-  avatar: 'Dashbot.jpg',
+  avatar: 'https://gravatar.com/avatar/' + gravatar,
   password: 'DashRocks'
 };
 
@@ -40,16 +42,16 @@ describe('Dash user model', function() {
 
   it('should properly save a user', function(done) {
     var dummyUser = new User({
-      email: 'Dashbot@Dash',
-      displayName: 'Dashbot',
-      avatar: 'Dashbot.jpg',
-      password: 'DashRocks'
+      email: account.email,
+      displayName: account.displayName,
+      avatar: account.avatar,
+      password: account.password
     });
     dummyUser.save(done);
   });
 
   it('should find a valid user', function(done) {
-    mongoose.models.User.findOne(email, function(err, user) {
+    mongoose.models.User.findOne(emailField, function(err, user) {
       should.not.exist(err);
       should.exist(user);
       done();
@@ -57,7 +59,7 @@ describe('Dash user model', function() {
   });
 
   it('should properly maintain given registration data', function(done) {
-    mongoose.models.User.findOne(email, function(err, user) {
+    mongoose.models.User.findOne(emailField, function(err, user) {
       should.not.exist(err);
       should.exist(user);
       user.should.have.property('email', account.email);
@@ -74,7 +76,7 @@ describe('Dash user model', function() {
   });
 
   it('should properly accept activity updates', function(done) {
-    mongoose.models.User.findOne(email, function(err, user) {
+    mongoose.models.User.findOne(emailField, function(err, user) {
       should.not.exist(err);
       var dummyPosts = [];
       var numPosts = Math.floor(Math.random() * 10) + 1;
@@ -111,7 +113,7 @@ describe('Dash user model', function() {
   });
 
   it('should start at 0 login attempts', function(done) {
-    mongoose.models.User.findOne(email, function(err, user) {
+    mongoose.models.User.findOne(emailField, function(err, user) {
       should.not.exist(err);
       user.isLocked.should.be.false;
       user.loginAttempts.should.equal(0);
@@ -121,7 +123,7 @@ describe('Dash user model', function() {
 
   for (var i = 0; i < 5; i++) {
     it('can increase login attempts to ' + (i + 1), function(done) {
-      mongoose.models.User.findOne(email, function(err,
+      mongoose.models.User.findOne(emailField, function(err,
           user) {
         should.not.exist(err);
         user.incLoginAttempts(done);
@@ -130,7 +132,7 @@ describe('Dash user model', function() {
   }
 
   it('should lock out user on login attempt #5', function(done) {
-    mongoose.models.User.findOne(email, function(err, user) {
+    mongoose.models.User.findOne(emailField, function(err, user) {
       should.not.exist(err);
       user.loginAttempts.should.equal(5);
       user.isLocked.should.be.true;
@@ -146,7 +148,7 @@ describe('Dash user model', function() {
         reason.should.equal(mongoose.models.User.failedLogin.MAX_ATTEMPTS);
       });
 
-    mongoose.models.User.findOne(email, function(err, user) {
+    mongoose.models.User.findOne(emailField, function(err, user) {
       should.not.exist(err);
 
       // Update lock until time to force unlock for next test
@@ -157,7 +159,7 @@ describe('Dash user model', function() {
   });
 
   it('should unlock when lockout expires', function(done) {
-    mongoose.models.User.findOne(email, function(err, user) {
+    mongoose.models.User.findOne(emailField, function(err, user) {
       should.not.exist(err);
       user.loginAttempts.should.equal(1);
       user.isLocked.should.be.false;
@@ -166,7 +168,7 @@ describe('Dash user model', function() {
   });
 
   it('should properly serialize a user', function(done) {
-    mongoose.models.User.findOne(email, function(err, user) {
+    mongoose.models.User.findOne(emailField, function(err, user) {
       should.not.exist(err);
       mongoose.models.User.authSerializer(user, function(err, id) {
         should.not.exist(err);
@@ -177,7 +179,7 @@ describe('Dash user model', function() {
   });
 
   it('should properly deserialize a user', function(done) {
-    mongoose.models.User.findOne(email, function(err, user) {
+    mongoose.models.User.findOne(emailField, function(err, user) {
       should.not.exist(err);
       mongoose.models.User.authDeserializer(user._id.toString(), function(err,
           retrievedUser) {
@@ -223,11 +225,75 @@ describe('Dash user model', function() {
         });
     });*/
 
-  it('should properly delete a user', function(done) {
-    mongoose.models.User.findOne(email, function(err, user) {
+  it('should properly reset the user\'s avatar', function(done) {
+    var gravatar = crypto.createHash('md5').update(account.email).digest('hex');
+    var avatarUrl = 'https://gravatar.com/avatar/' + gravatar;
+    var id;
+    Promise.resolve(mongoose.models.User.findOne(emailField, function(err,
+        user) {
       should.not.exist(err);
-      user.remove(done);
+      id = user._id;
+    })).then(mongoose.models.User.resetAvatar(id, account.email, function(err,
+        onSuccess, extra) {
+      should.not.exist(err);
+      should.exist(onSuccess);
+      onSuccess.should.be.true;
+      should.not.exist(extra);
+      mongoose.models.User.findOne(emailField, function(err, user) {
+        should.not.exist(err);
+        user.avatar.should.equal(avatarUrl);
+        done();
+      });
+    }));
+  });
+
+  it('should properly return from an update with no services', function(done) {
+    mongoose.models.User.findOne(emailField, function(err, user) {
+      should.not.exist(err);
+      user.updateContent(done);
     });
   });
-});
 
+  it('should properly delete a user', function(done) {
+    mongoose.models.User.findOne(emailField, function(err, user) {
+      should.not.exist(err);
+      mongoose.models.User.deleteUser(user._id, done);
+    });
+  });
+
+  it('should catch errors while completing an operation', function(done) {
+    var error = new Error('test');
+    mongoose.models.User.completeOperation(error, null, function(err, onSuccess,
+        extra) {
+      should.exist(err);
+      err.should.equal(error);
+      should.not.exist(onSuccess);
+      should.not.exist(extra);
+      done();
+    }, null);
+  });
+
+  it('should return successfully upon completing an operation', function(done) {
+    mongoose.models.User.completeOperation(null, true, function(err, onSuccess,
+        extra) {
+      should.not.exist(err);
+      should.exist(onSuccess);
+      onSuccess.should.be.true;
+      should.not.exist(extra);
+      done();
+    }, null);
+  });
+
+  it('should return with extra parameter, when given, upon completing an ' +
+      'operation', function(done) {
+    mongoose.models.User.completeOperation(null, true, function(err, onSuccess,
+        extra) {
+      should.not.exist(err);
+      should.exist(onSuccess);
+      onSuccess.should.be.true;
+      should.exist(extra);
+      extra.should.be.true;
+      done();
+    }, true);
+  });
+});
