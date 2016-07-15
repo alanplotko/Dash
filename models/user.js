@@ -301,6 +301,19 @@ var reasons = UserSchema.statics.failedLogin = {
 };
 
 /**
+ * Fails user authentication stage due to incorrect credentials or locked
+ * account.
+ * @param  {User}     user   A mongoose document representing the user model
+ * @param  {enum}     reason The reason for which the user failed to login
+ * @param  {Function} done   The callback function to execute upon completion
+ */
+UserSchema.statics.failAuthentication = function(user, reason, done) {
+  user.incLoginAttempts(function(err) {
+    return mongoose.models.User.completeOperation(err, null, done, reason);
+  });
+};
+
+/**
  * Serialize function for use with passport.
  * @param  {Object}   user  A User object containing the user's account details
  * @param  {Function} done  The callback function to execute upon completion
@@ -344,10 +357,8 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
     // Check if account is currently locked
     if (user.isLocked) {
       // Increment login attempts if account is already locked
-      return user.incLoginAttempts(function(err) {
-        return mongoose.models.User.completeOperation(err, null, done,
-          reasons.MAX_ATTEMPTS);
-      });
+      return mongoose.models.User.failAuthentication(user, reasons.MAX_ATTEMPTS,
+        done);
     }
 
     // Test provided credentials for matching password
@@ -380,10 +391,8 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
       }
 
       // Password incorrect, so increment login attempts before responding
-      user.incLoginAttempts(function(err) {
-        return mongoose.models.User.completeOperation(err, null, done,
-          reasons.PASSWORD_INCORRECT);
-      });
+      return mongoose.models.User.failAuthentication(user,
+        reasons.PASSWORD_INCORRECT, done);
     });
   });
 };
