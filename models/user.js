@@ -171,7 +171,7 @@ var UserSchema = new Schema({
  *                                       send back along with onSuccess
  * @return {Function}                    Run the callback after error checking
  */
-function completeOperation(err, onSuccess, done, extra) {
+UserSchema.statics.completeOperation = function(err, onSuccess, done, extra) {
   // Set extra parameter to null if not given
   extra = extra || null;
 
@@ -185,22 +185,7 @@ function completeOperation(err, onSuccess, done, extra) {
     return done(null, onSuccess, extra);
   }
   return done(null, onSuccess);
-}
-
-/**
- * Updates user information given the user id and settings to change.
- * @param  {ObjectId} id        The current user's id in MongoDB
- * @param  {Object}   settings  An object containing the names and values of
- *                              the settings to update
- * @param  {Function} done      The callback function to execute upon completion
- * @return {Function}           Update the user information and run the callback
- */
-function updateUserDetails(id, settings, done) {
-  return mongoose.models.User.update({_id: id}, settings, function(err,
-      numAffected) {
-    return completeOperation(err, true, done);
-  });
-}
+};
 
 /**
  * User Account Functions
@@ -316,6 +301,19 @@ var reasons = UserSchema.statics.failedLogin = {
 };
 
 /**
+ * Fails user authentication stage due to incorrect credentials or locked
+ * account.
+ * @param  {User}     user   A mongoose document representing the user model
+ * @param  {enum}     reason The reason for which the user failed to login
+ * @param  {Function} done   The callback function to execute upon completion
+ */
+UserSchema.statics.failAuthentication = function(user, reason, done) {
+  user.incLoginAttempts(function(err) {
+    return mongoose.models.User.completeOperation(err, null, done, reason);
+  });
+};
+
+/**
  * Serialize function for use with passport.
  * @param  {Object}   user  A User object containing the user's account details
  * @param  {Function} done  The callback function to execute upon completion
@@ -359,9 +357,8 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
     // Check if account is currently locked
     if (user.isLocked) {
       // Increment login attempts if account is already locked
-      return user.incLoginAttempts(function(err) {
-        return completeOperation(err, null, done, reasons.MAX_ATTEMPTS);
-      });
+      return mongoose.models.User.failAuthentication(user, reasons.MAX_ATTEMPTS,
+        done);
     }
 
     // Test provided credentials for matching password
@@ -389,26 +386,31 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
         };
 
         return user.update(updates, function(err) {
-          return completeOperation(err, user, done);
+          return mongoose.models.User.completeOperation(err, user, done);
         });
       }
 
       // Password incorrect, so increment login attempts before responding
-      user.incLoginAttempts(function(err) {
-        return completeOperation(err, null, done, reasons.PASSWORD_INCORRECT);
-      });
+      return mongoose.models.User.failAuthentication(user,
+        reasons.PASSWORD_INCORRECT, done);
     });
   });
 };
 
 /**
- * Update the user's settings.
- * @param  {ObjectId} id       The current user's id in MongoDB
- * @param  {Object}   settings An object containing the names and values of
- *                             the settings to update
- * @param  {Function} done     The callback function to execute upon completion
+ * Updates user information given the user id and settings to change.
+ * @param  {ObjectId} id        The current user's id in MongoDB
+ * @param  {Object}   settings  An object containing the names and values of
+ *                              the settings to update
+ * @param  {Function} done      The callback function to execute upon completion
+ * @return {Function}           Update the user information and run the callback
  */
-UserSchema.statics.updateUser = updateUserDetails;
+UserSchema.statics.updateUser = function(id, settings, done) {
+  return mongoose.models.User.update({_id: id}, settings, function(err,
+      numAffected) {
+    return mongoose.models.User.completeOperation(err, true, done);
+  });
+};
 
 /**
  * Update the user's avatar to the default Gravatar.
@@ -423,7 +425,7 @@ UserSchema.statics.resetAvatar = function(id, email, done) {
   var avatarUrl = 'https://gravatar.com/avatar/' + gravatar;
   settings.avatar = avatarUrl;
 
-  return updateUserDetails(id, settings, done);
+  return mongoose.models.User.updateUser(id, settings, done);
 };
 
 /**
@@ -433,7 +435,7 @@ UserSchema.statics.resetAvatar = function(id, email, done) {
  */
 UserSchema.statics.deleteUser = function(id, done) {
   mongoose.models.User.findByIdAndRemove(id, function(err) {
-    return completeOperation(err, true, done);
+    return mongoose.models.User.completeOperation(err, true, done);
   });
 };
 
@@ -500,12 +502,12 @@ UserSchema.methods.updateContent = function(done) {
       if (newUpdate.posts.length > 0) {
         user.batches.push(newUpdate);
         user.save(function(err) {
-          return completeOperation(err, newUpdate, done);
+          return mongoose.models.User.completeOperation(err, newUpdate, done);
         });
         // No new posts, set new update time
       } else {
         user.save(function(err) {
-          return completeOperation(err, null, done);
+          return mongoose.models.User.completeOperation(err, null, done);
         });
       }
     });
