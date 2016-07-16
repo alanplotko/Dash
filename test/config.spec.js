@@ -19,7 +19,7 @@ var envProps = [
 // Define required keys for other properties
 var serviceProps = ['CLIENT_ID', 'CLIENT_SECRET'];      // Services
 var emailProps = ['HOST', 'PORT', 'AUTH', 'SECURE'];    // Email Setup
-var formatProps = ['FROM', 'SUBJECT', 'HTML', 'TEXT'];  // Email Formatting
+var formatProps = ['from', 'subject', 'html', 'text'];  // Email Formatting
 
 /**
  * Test for whether required settings are defined

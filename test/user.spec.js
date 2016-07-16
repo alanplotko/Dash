@@ -9,41 +9,58 @@ var sinon = require('sinon');
 require('sinon-mongoose');
 var sandbox;
 
-// Set up mongoose, user model, and mocks
+// Set up mongoose and user model
 var mongoose = require('mongoose');
 mongoose.Promise = require('bluebird');
 var User = require('../models/user');
 
 // Set up user model test dependencies
+var LOCK_TIME = 2 * 60 * 60 * 1000; // 2-hour lock
 var crypto = require('crypto');
 var config = require('../config/settings');
 var messages = require('../config/messages');
 var async = require('async');
 var bcrypt = require('bcrypt');
 
-// Set up dummy account
-var emailField = {email: 'Dashbot@Dash'};
-var gravatar = crypto.createHash('md5').update(emailField.email).digest('hex');
-var account = {
-  email: emailField.email,
+// Set up dummy account and query
+var email = 'Dashbot@Dash';
+var gravatar = crypto.createHash('md5').update(email).digest('hex');
+var dummyDetails = {
+  email: email,
   displayName: 'Dashbot',
   avatar: 'https://gravatar.com/avatar/' + gravatar,
   password: 'DashRocks'
 };
+var accountQuery = User.findOne({email: email});
 
 // Define expected environment based on whether the test is running in Travis
 process.env.NODE_ENV = process.env.TRAVIS ? 'PROD' : 'DEV';
 
 describe('Dash user model', function() {
+  /**
+   * Set up connection and run quick tests prior to starting.
+   */
   before(function(done) {
+    // Ensure user model exists
+    should.exist(User);
+
+    // Ensure dummy details are populated correctly
+    dummyDetails.should.have.all.keys([
+      'email',
+      'displayName',
+      'avatar',
+      'password'
+    ]);
+
+    // Connect to db
     mongoose.connect(config[process.env.NODE_ENV].MONGO_URI, function(err) {
       should.not.exist(err);
 
       // Ensure test user does not exist
-      User.findOne(emailField, function(err, user) {
+      accountQuery.exec(function(err, user) {
         should.not.exist(err);
         if (user) {
-          User.deleteUser(user._id, done);
+          User.findByIdAndRemove(user._id, done);
         } else {
           done();
         }
@@ -51,36 +68,161 @@ describe('Dash user model', function() {
     });
   });
 
+  /**
+   * Clean up and close the connection.
+   */
   after(function(done) {
-    mongoose.connection.close(done);
+    User.findOneAndRemove({email: email}, function(err, result) {
+      should.not.exist(err);
+      should.exist(result);
+      mongoose.connection.close(done);
+    });
   });
 
-  beforeEach(function() {
+  /**
+   * Create a sandbox environment for each test. This will allow for creating
+   * temporary stubs that will be cleaned up before the particular test is done.
+   *
+   * Additionally sets up and cleans up the test user for each test.
+   */
+  beforeEach(function(done) {
     sandbox = sinon.sandbox.create();
+    done();
   });
-
-  afterEach(function() {
+  afterEach(function(done) {
     sandbox.restore();
-  });
-
-  it('should exist', function(done) {
-    should.exist(User);
     done();
   });
 
-  it('should properly save a user', function(done) {
-    should.exist(account);
-    account.should.have.all.keys([
-      'email',
-      'displayName',
-      'avatar',
-      'password'
-    ]);
-    var dummyUser = new User(account);
-    dummyUser.save(done);
+  it('Create dummy user successfully', function(done) {
+    var user = new User(dummyDetails);
+    user.save().should.be.fulfilled.then(function() {
+      user.markModified('password');
+      user.save().should.be.fulfilled.notify(done);
+    });
   });
 
-  it('should find a valid user', function(done) {
+  /**
+   * Place all tests below. Ensure all branches and methods are covered.
+   */
+
+
+  describe('Model method: completeOperation', function() {
+    it('catches errors', function(done) {
+      var error = new Error('test');
+      var callback = function(err, onSuccess, extra) {
+        should.exist(err);
+        err.should.equal(error);
+        should.not.exist(onSuccess);
+        should.not.exist(extra);
+        done();
+      };
+      User.completeOperation(error, null, callback, null);
+    });
+
+    it('can return on success with extra parameter', function(done) {
+      var callback = function(err, onSuccess, extra) {
+        should.not.exist(err);
+        onSuccess.should.be.true;
+        extra.should.be.true;
+        done();
+      };
+      User.completeOperation(null, true, callback, true);
+    });
+
+    it('can return on success without extra parameter', function(done) {
+      var callback = function(err, onSuccess, extra) {
+        should.not.exist(err);
+        should.exist(onSuccess);
+        onSuccess.should.be.true;
+        should.not.exist(extra);
+        done();
+      };
+      User.completeOperation(null, true, callback, null);
+    });
+  });
+
+  describe('Virtual property: isLocked', function() {
+    it('returns true when locked', function(done) {
+      accountQuery.exec(function(err, user) {
+        should.not.exist(err);
+        should.exist(user);
+
+        // Create and test lock
+        User.findByIdAndUpdate(user._id, {
+          $set: {lockUntil: Date.now() + LOCK_TIME}
+        }, {new: true}, function(err, updatedUser) {
+          should.not.exist(err);
+          should.exist(updatedUser);
+          updatedUser.isLocked.should.be.ok;
+          done();
+        });
+      });
+    });
+    it('returns false when unlocked', function(done) {
+      accountQuery.exec(function(err, user) {
+        should.not.exist(err);
+        should.exist(user);
+
+        // By default, user should be unlocked
+        user.isLocked.should.not.be.ok;
+
+        // Create and test expired lock
+        User.findByIdAndUpdate(user._id, {
+          $set: {lockUntil: Date.now() - LOCK_TIME}
+        }, {new: true}, function(err, updatedUser) {
+          should.not.exist(err);
+          should.exist(updatedUser);
+          updatedUser.isLocked.should.not.be.ok;
+          done();
+        });
+      });
+    });
+  });
+
+  describe('Pre hook: save', function() {
+    /*it('should catch errors in User.findOne', function(done) {
+      accountQuery.exec(function(err, user) {
+        should.not.exist(err);
+        should.exist(user);
+        sandbox.stub(User, 'findOne').yields(new Error('MongoError'));
+        user.save().should.be.rejectedWith(messages.ERROR.GENERAL).notify(done);
+      });
+    });
+
+    it('should catch errors in bcrypt.genSalt', function(done) {
+      accountQuery.exec(function(err, user) {
+        should.not.exist(err);
+        should.exist(user);
+        sandbox.stub(bcrypt, 'genSalt').yields(new Error('SaltError'));
+        user.markModified('password');
+        user.save().should.be.rejectedWith(messages.ERROR.GENERAL).notify(done);
+      });
+    });
+
+    it('should catch errors in bcrypt.hash', function(done) {
+      accountQuery.exec(function(err, user) {
+        should.not.exist(err);
+        should.exist(user);
+        sandbox.stub(bcrypt, 'hash').yields(new Error('HashError'));
+        user.markModified('password');
+        user.save().should.be.rejectedWith(messages.ERROR.GENERAL).notify(done);
+      });
+    });
+
+    it('should successfully hash password', function(done) {
+      accountQuery.exec(function(err, user) {
+        should.not.exist(err);
+        should.exist(user);
+        user.markModified('password');
+        user.save().should.be.fulfilled.then(function() {
+          user.password.should.not.equal(dummyDetails.password);
+        }).should.notify(done);
+      });
+    });*/
+  });
+
+  /* it('should find a valid user', function(done) {
     User.findOne(emailField, function(err, user) {
       should.not.exist(err);
       should.exist(user);
@@ -96,12 +238,11 @@ describe('Dash user model', function() {
       user.should.have.property('displayName', account.displayName);
       user.should.have.property('avatar', account.avatar);
       user.should.have.property('password', account.password);
-      done();
-      /* user.comparePassword(account.password, function(err, isMatch) {
+      user.comparePassword(account.password, function(err, isMatch) {
         should.not.exist(err);
         isMatch.should.be.true;
         done();
-      }); */
+      });
     });
   });
 
@@ -155,7 +296,7 @@ describe('Dash user model', function() {
 
   it('can increase login attempts', function(done) {
     var task = function(callback) {
-      User.findOne(emailField, function(err, user) {
+      accountQuery.exec(function(err, user) {
         should.not.exist(err);
         should.exist(user);
         user.incLoginAttempts(function(err, result) {
@@ -169,7 +310,12 @@ describe('Dash user model', function() {
       for (var i = 0; i < 5; i++) {
         result[i].should.equal(i + 1);
       }
-      done();
+      accountQuery.exec(function(err, user) {
+        should.not.exist(err);
+        should.exist(user);
+        user.isLocked.should.be.ok;
+        done();
+      });
     });
   });
 
@@ -288,7 +434,7 @@ describe('Dash user model', function() {
       });
     });
 
-  /* it('should pass authentication given valid user credentials', function(done) {
+  it('should pass authentication given valid user credentials', function(done) {
     User.authenticateUser(account.email, account.password,
       function(err, retrievedUser, reason) {
         should.not.exist(err);
@@ -299,7 +445,7 @@ describe('Dash user model', function() {
         retrievedUser.loginAttempts.should.equal(0);
         done();
       });
-  });*/
+  });
 
   it('should properly reset the user\'s avatar', function(done) {
     var gravatar = crypto.createHash('md5').update(account.email).digest('hex');
@@ -349,56 +495,11 @@ describe('Dash user model', function() {
       });
     });
 
-  it('should catch errors in pre-save', function(done) {
-    User.findOne(emailField, function(err, user) {
-      should.not.exist(err);
-      should.exist(user);
-      sandbox.stub(User, 'findOne').yields(new Error('MongoError'));
-      user.save().should.be.rejectedWith(messages.ERROR.GENERAL).notify(done);
-    });
-  });
-
   it('should properly delete a user', function(done) {
     User.findOne(emailField, function(err, user) {
       should.not.exist(err);
       should.exist(user);
       User.deleteUser(user._id, done);
     });
-  });
-
-  it('should catch errors while completing an operation', function(done) {
-    var error = new Error('test');
-    User.completeOperation(error, null, function(err, onSuccess,
-        extra) {
-      should.exist(err);
-      err.should.equal(error);
-      should.not.exist(onSuccess);
-      should.not.exist(extra);
-      done();
-    }, null);
-  });
-
-  it('should return successfully upon completing an operation', function(done) {
-    User.completeOperation(null, true, function(err, onSuccess,
-        extra) {
-      should.not.exist(err);
-      should.exist(onSuccess);
-      onSuccess.should.be.true;
-      should.not.exist(extra);
-      done();
-    }, null);
-  });
-
-  it('should return with extra parameter, when given, upon completing an ' +
-      'operation', function(done) {
-    User.completeOperation(null, true, function(err, onSuccess,
-        extra) {
-      should.not.exist(err);
-      should.exist(onSuccess);
-      onSuccess.should.be.true;
-      should.exist(extra);
-      extra.should.be.true;
-      done();
-    }, true);
-  });
+  });*/
 });

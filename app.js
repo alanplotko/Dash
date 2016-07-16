@@ -18,49 +18,10 @@ var passport = require('passport');
 var flash = require('connect-flash');
 var mongoose = require('mongoose');
 mongoose.Promise = require('bluebird');
-var nev = require('email-verification')(mongoose);
-var smtpTransport = require('nodemailer-smtp-transport');
 require('express-mongoose');
 
 // Require models
-var User = require('./models/user');
-
-// Configure email verification options
-nev.configure({
-  verificationURL: config.URL + '/verify/${URL}',
-
-  // MongoDB Model Info
-  persistentUserModel: User,
-  tempUserCollection: 'unverified_users',
-  emailFieldName: 'email',
-  URLFieldName: 'verificationUrl',
-
-  // Emailing Options
-  transportOptions: smtpTransport(config.EMAIL_SETTINGS),
-  verifyMailOptions: config.VERIFY_EMAIL_FORMAT,
-  confirmMailOptions: config.CONFIRM_EMAIL_FORMAT,
-
-  // Log errors on console
-  verifySendMailCallback: function(err, info) {
-    if (err) {
-      console.error(err);
-    }
-  },
-  confirmSendMailCallback: function(err, info) {
-    if (err) {
-      console.error(err);
-    }
-  }
-}, function(err, options) {
-  if (err) {
-    console.error(err);
-  }
-});
-nev.generateTempUserModel(User, function(err, info) {
-  if (err) {
-    console.error(err);
-  }
-});
+require('./models/user');
 
 // --------- Support bodies ---------
 app.use(bodyParser.json());
@@ -77,7 +38,7 @@ mongoose.connect(config.MONGO_URI, function(err) {
 });
 
 // --------- Authentication Setup ---------
-require('./config/passport')(passport, nev);
+require('./config/passport')(passport);
 app.use(cookieParser());
 app.use(session({
   secret: '#ofi!af8_1b_edlif6h=o8b)f&)hc!8kx=w*$f2pi%hm)(@yx8',
@@ -154,7 +115,7 @@ function isLoggedIn(req, res, next) {
 }
 
 // Set up app routes
-require('./routes/pages')(app, passport, isLoggedIn, nev);
+require('./routes/pages')(app, passport, isLoggedIn);
 require('./routes/services/common')(app, passport, isLoggedIn);
 require('./routes/services/facebook')(app, passport, isLoggedIn);
 require('./routes/services/youtube')(app, passport, isLoggedIn);

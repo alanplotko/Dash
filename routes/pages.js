@@ -5,7 +5,7 @@ require.main.require('./config/custom-validation')(validator);
 var messages = require.main.require('./config/messages');
 var handlers = require.main.require('./routes/handlers');
 
-module.exports = function(app, passport, isLoggedIn, nev) {
+module.exports = function(app, passport, isLoggedIn) {
   // --------- Front Page ---------
   app.get('/', function(req, res) {
     if (req.isAuthenticated()) {
@@ -172,7 +172,7 @@ module.exports = function(app, passport, isLoggedIn, nev) {
         return handlers.handleResponse(res, 500, null, false);
       }
       returnedUser.email = newEmail;
-      return handlers.handleEmailChange(nev, returnedUser, newEmail, req, res);
+      return handlers.handleEmailChange(returnedUser, newEmail, req, res);
     });
   });
 
@@ -268,29 +268,4 @@ module.exports = function(app, passport, isLoggedIn, nev) {
     successRedirect: '/login',
     failureRedirect: '/register'
   }));
-
-  // --------- Dash Email Verification ---------
-  app.get('/verify/:token', function(req, res) {
-    nev.confirmTempUser(req.params.token, function(err, newPersistentUser) {
-      var message = messages.SETTINGS.EMAIL;
-      return handlers.handlePostRegistrationEmail(message.VERIFIED,
-        message.VERIFICATION_EXPIRED, err, newPersistentUser, req, res);
-    });
-  });
-
-  app.get('/resend/:email', function(req, res) {
-    // Clean and verify form input
-    var email = validator.trim(req.params.email);
-    if (!validator.isEmail(email) || email.length === 0) {
-      req.flash('registerMessage', messages.SETTINGS.EMAIL.INCORRECT);
-      return res.redirect('/register');
-    }
-
-    nev.resendVerificationEmail(email, function(err, userFound) {
-      var success = messages.SETTINGS.EMAIL.VERIFICATION_RESENT;
-      var failure = messages.SETTINGS.EMAIL.INCORRECT;
-      return handlers.handlePostRegistrationEmail(success, failure, err,
-        userFound, req, res);
-    });
-  });
 };

@@ -215,7 +215,7 @@ UserSchema.pre('save', function(next) {
   });
 
   // Only hash password if it has been modified or is new
-  if (user.isNew || !user.isModified('password')) {
+  if (!user.isNew || !user.isModified('password')) {
     return next();
   }
 

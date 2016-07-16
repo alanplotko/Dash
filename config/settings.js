@@ -23,32 +23,32 @@ var settings = {
       SECURE: true
     },
     VERIFY_EMAIL_FORMAT: {
-      FROM:
+      from:
         process.env.DASH_EMAIL_NAME + ' <' +
         process.env.DASH_EMAIL_USER + '>',
-      SUBJECT:
+      subject:
         'Pending: Dash Account Verification',
-      HTML:
+      html:
         '<div style="text-align: center;"><h1>Dash</h1><h2>' +
         '<i>Account Verification</i></h2></div><p>Click the ' +
         'following link to confirm your account:</p>' +
         '<p>${URL}</p><p>- DashBot</p>',
-      TEXT:
+      text:
         'Dash Account Verification: Please confirm your ' +
         'account by clicking the following link: ${URL} - DashBot'
     },
     CONFIRM_EMAIL_FORMAT: {
-      FROM:
+      from:
         process.env.DASH_EMAIL_NAME + ' <' +
         process.env.DASH_EMAIL_USER + '>',
-      SUBJECT:
+      subject:
         'Dash Account Verified!',
-      HTML:
+      html:
         '<div style="text-align: center;"><h1>Dash</h1><h2>' +
         '<i>Account Verification</i></h2></div><p>Your Dash ' +
         'account has been successfully verified. Welcome to Dash!</p>' +
         '<p>- DashBot</p>',
-      TEXT:
+      text:
         'Dash Account Verification: Your account has been ' +
         'successfully verified. Welcome to Dash! - DashBot'
     }
@@ -66,32 +66,32 @@ var settings = {
       SECURE: true
     },
     VERIFY_EMAIL_FORMAT: {
-      FROM:
+      from:
         process.env.DASH_EMAIL_NAME + ' <' +
         process.env.DASH_EMAIL_USER + '>',
-      SUBJECT:
+      subject:
         'Pending: Dash Account Verification',
-      HTML:
+      html:
         '<div style="text-align: center;"><h1>Dash</h1><h2>' +
         '<i>Account Verification</i></h2></div><p>Click the ' +
         'following link to confirm your account:</p>' +
         '<p>${URL}</p><p>- DashBot</p>',
-      TEXT:
+      text:
         'Dash Account Verification: Please confirm your ' +
         'account by clicking the following link: ${URL} - DashBot'
     },
     CONFIRM_EMAIL_FORMAT: {
-      FROM:
+      from:
         process.env.DASH_EMAIL_NAME + ' <' +
         process.env.DASH_EMAIL_USER + '>',
-      SUBJECT:
+      subject:
         'Dash Account Verified!',
-      HTML:
+      html:
         '<div style="text-align: center;"><h1>Dash</h1><h2>' +
         '<i>Account Verification</i></h2></div><p>Your Dash ' +
         'account has been successfully verified. Welcome to Dash!</p>' +
         '<p>- DashBot</p>',
-      TEXT:
+      text:
         'Dash Account Verification: Your account has been ' +
         'successfully verified. Welcome to Dash! - DashBot'
     }
