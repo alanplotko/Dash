@@ -262,33 +262,35 @@ UserSchema.methods.comparePassword = function(candidatePassword, done) {
  * @return {Function}       Update the login count and run the callback
  */
 UserSchema.methods.incLoginAttempts = function(done) {
+  var update;
   // If previous lock has expired, restart at 1
   if (this.lockUntil && this.lockUntil < Date.now()) {
-    return this.update({
+    update = {
       $set: {
         loginAttempts: 1
       },
       $unset: {
         lockUntil: 1
       }
-    }, done);
-  }
-
-  // Otherwise, increment login attempts count
-  var updates = {
-    $inc: {
-      loginAttempts: 1
-    }
-  };
-
-  // Lock account if max attempts reached and account is not already locked
-  if (this.loginAttempts + 1 >= MAX_LOGIN_ATTEMPTS && !this.isLocked) {
-    updates.$set = {
-      lockUntil: Date.now() + LOCK_TIME
     };
+  } else {
+    // Otherwise, increment login attempts count
+    update = {
+      $inc: {
+        loginAttempts: 1
+      }
+    };
+
+    // Lock account if max attempts reached and account is not already locked
+    if (this.loginAttempts + 1 >= MAX_LOGIN_ATTEMPTS && !this.isLocked) {
+      update.$set = {
+        lockUntil: Date.now() + LOCK_TIME
+      };
+    }
   }
 
-  return this.update(updates, done);
+  return mongoose.models.User.findByIdAndUpdate(this._id, update, {new: true},
+    done);
 };
 
 /**

@@ -1,17 +1,29 @@
 /* eslint-disable no-unused-expressions, no-loop-func */
-var chai = require('chai');
-var chaiAsPromised = require("chai-as-promised");
-chai.use(chaiAsPromised);
-var should = chai.should();
-var mongoose = require('mongoose');
-var crypto = require('crypto');
-mongoose.Promise = require('bluebird');
-var config = require('../config/settings');
-var User;
 
+// Set up testing libraries
+var chai = require('chai');
+var should = chai.should();
+var chaiAsPromised = require('chai-as-promised');
+chai.use(chaiAsPromised);
+var sinon = require('sinon');
+require('sinon-mongoose');
+var sandbox;
+
+// Set up mongoose, user model, and mocks
+var mongoose = require('mongoose');
+mongoose.Promise = require('bluebird');
+var User = require('../models/user');
+
+// Set up user model test dependencies
+var crypto = require('crypto');
+var config = require('../config/settings');
+var messages = require('../config/messages');
+var async = require('async');
+var bcrypt = require('bcrypt');
+
+// Set up dummy account
 var emailField = {email: 'Dashbot@Dash'};
 var gravatar = crypto.createHash('md5').update(emailField.email).digest('hex');
-// Dummy account
 var account = {
   email: emailField.email,
   displayName: 'Dashbot',
@@ -26,7 +38,16 @@ describe('Dash user model', function() {
   before(function(done) {
     mongoose.connect(config[process.env.NODE_ENV].MONGO_URI, function(err) {
       should.not.exist(err);
-      done();
+
+      // Ensure test user does not exist
+      User.findOne(emailField, function(err, user) {
+        should.not.exist(err);
+        if (user) {
+          User.deleteUser(user._id, done);
+        } else {
+          done();
+        }
+      });
     });
   });
 
@@ -34,24 +55,33 @@ describe('Dash user model', function() {
     mongoose.connection.close(done);
   });
 
+  beforeEach(function() {
+    sandbox = sinon.sandbox.create();
+  });
+
+  afterEach(function() {
+    sandbox.restore();
+  });
+
   it('should exist', function(done) {
-    User = require('../models/user');
     should.exist(User);
     done();
   });
 
   it('should properly save a user', function(done) {
-    var dummyUser = new User({
-      email: account.email,
-      displayName: account.displayName,
-      avatar: account.avatar,
-      password: account.password
-    });
+    should.exist(account);
+    account.should.have.all.keys([
+      'email',
+      'displayName',
+      'avatar',
+      'password'
+    ]);
+    var dummyUser = new User(account);
     dummyUser.save(done);
   });
 
   it('should find a valid user', function(done) {
-    mongoose.models.User.findOne(emailField, function(err, user) {
+    User.findOne(emailField, function(err, user) {
       should.not.exist(err);
       should.exist(user);
       done();
@@ -59,7 +89,7 @@ describe('Dash user model', function() {
   });
 
   it('should properly maintain given registration data', function(done) {
-    mongoose.models.User.findOne(emailField, function(err, user) {
+    User.findOne(emailField, function(err, user) {
       should.not.exist(err);
       should.exist(user);
       user.should.have.property('email', account.email);
@@ -76,8 +106,9 @@ describe('Dash user model', function() {
   });
 
   it('should properly accept activity updates', function(done) {
-    mongoose.models.User.findOne(emailField, function(err, user) {
+    User.findOne(emailField, function(err, user) {
       should.not.exist(err);
+      should.exist(user);
       var dummyPosts = [];
       var numPosts = Math.floor(Math.random() * 10) + 1;
       var numBatches = Math.floor(Math.random() * 10) + 1;
@@ -113,26 +144,37 @@ describe('Dash user model', function() {
   });
 
   it('should start at 0 login attempts', function(done) {
-    mongoose.models.User.findOne(emailField, function(err, user) {
+    User.findOne(emailField, function(err, user) {
       should.not.exist(err);
+      should.exist(user);
       user.isLocked.should.be.false;
       user.loginAttempts.should.equal(0);
       done();
     });
   });
 
-  for (var i = 0; i < 5; i++) {
-    it('can increase login attempts to ' + (i + 1), function(done) {
-      mongoose.models.User.findOne(emailField, function(err,
-          user) {
+  it('can increase login attempts', function(done) {
+    var task = function(callback) {
+      User.findOne(emailField, function(err, user) {
         should.not.exist(err);
-        user.incLoginAttempts(done);
+        should.exist(user);
+        user.incLoginAttempts(function(err, result) {
+          should.not.exist(err);
+          callback(null, result.loginAttempts);
+        });
       });
+    };
+    async.series([task, task, task, task, task], function(err, result) {
+      should.not.exist(err);
+      for (var i = 0; i < 5; i++) {
+        result[i].should.equal(i + 1);
+      }
+      done();
     });
-  }
+  });
 
   it('should lock out user on login attempt #5', function(done) {
-    mongoose.models.User.findOne(emailField, function(err, user) {
+    User.findOne(emailField, function(err, user) {
       should.not.exist(err);
       user.loginAttempts.should.equal(5);
       user.isLocked.should.be.true;
@@ -141,15 +183,16 @@ describe('Dash user model', function() {
   });
 
   it('should fail authentication if user is locked out', function(done) {
-    mongoose.models.User.authenticateUser(account.email, account.password,
+    User.authenticateUser(account.email, account.password,
       function(err, retrievedUser, reason) {
         should.not.exist(err);
         should.not.exist(retrievedUser);
-        reason.should.equal(mongoose.models.User.failedLogin.MAX_ATTEMPTS);
+        reason.should.equal(User.failedLogin.MAX_ATTEMPTS);
       });
 
-    mongoose.models.User.findOne(emailField, function(err, user) {
+    User.findOne(emailField, function(err, user) {
       should.not.exist(err);
+      should.exist(user);
 
       // Update lock until time to force unlock for next test
       var date = new Date();
@@ -159,8 +202,9 @@ describe('Dash user model', function() {
   });
 
   it('should unlock when lockout expires', function(done) {
-    mongoose.models.User.findOne(emailField, function(err, user) {
+    User.findOne(emailField, function(err, user) {
       should.not.exist(err);
+      should.exist(user);
       user.loginAttempts.should.equal(1);
       user.isLocked.should.be.false;
       done();
@@ -168,9 +212,10 @@ describe('Dash user model', function() {
   });
 
   it('should properly serialize a user', function(done) {
-    mongoose.models.User.findOne(emailField, function(err, user) {
+    User.findOne(emailField, function(err, user) {
       should.not.exist(err);
-      mongoose.models.User.authSerializer(user, function(err, id) {
+      should.exist(user);
+      User.authSerializer(user, function(err, id) {
         should.not.exist(err);
         user._id.toString().should.equal(id);
         done();
@@ -179,9 +224,10 @@ describe('Dash user model', function() {
   });
 
   it('should properly deserialize a user', function(done) {
-    mongoose.models.User.findOne(emailField, function(err, user) {
+    User.findOne(emailField, function(err, user) {
       should.not.exist(err);
-      mongoose.models.User.authDeserializer(user._id.toString(), function(err,
+      should.exist(user);
+      User.authDeserializer(user._id.toString(), function(err,
           retrievedUser) {
         should.not.exist(err);
         should.exist(retrievedUser);
@@ -191,55 +237,86 @@ describe('Dash user model', function() {
   });
 
   it('should fail authentication given invalid user email', function(done) {
-    mongoose.models.User.authenticateUser('invalidUser@Dash',
+    User.authenticateUser('invalidUser@Dash',
       account.password, function(err, retrievedUser, reason) {
         should.not.exist(err);
         should.not.exist(retrievedUser);
-        reason.should.equal(mongoose.models.User.failedLogin.NOT_FOUND);
+        reason.should.equal(User.failedLogin.NOT_FOUND);
         done();
       });
   });
 
   it('should fail authentication given invalid user password', function(done) {
-    mongoose.models.User.authenticateUser(account.email, 'invalidPassword',
+    User.authenticateUser(account.email, 'invalidPassword',
       function(err, retrievedUser, reason) {
         should.not.exist(err);
         should.not.exist(retrievedUser);
-        reason.should.equal(mongoose.models.User.failedLogin
+        reason.should.equal(User.failedLogin
           .PASSWORD_INCORRECT);
         done();
       });
   });
 
-  /* it('should pass authentication given valid user credentials',
+  it('should catch errors for finding users in authentication', function(done) {
+    var mongoError = new Error('MongoError');
+    sandbox.stub(User, 'findOne').yields(mongoError);
+    User.authenticateUser(account.email, 'invalidPassword',
+      function(err, retrievedUser, reason) {
+        should.exist(err);
+        err.should.equal(mongoError);
+        should.not.exist(retrievedUser);
+        should.not.exist(reason);
+        done();
+      });
+  });
+
+  it('should catch errors in comparing passwords in authentication',
     function(done) {
-      mongoose.models.User.authenticateUser(account.email, account.password,
-        function(err, retrievedUser, reason) {
-          should.not.exist(err);
-          should.exist(retrievedUser);
-          should.not.exist(reason);
-          retrievedUser.isLocked.should.be.false;
-          retrievedUser.loginAttempts.should.equal(0);
-          should.not.exist(retrievedUser.lockUntil);
-          done();
-        });
-    });*/
+      var comparePasswordError = new Error('ComparePasswordError');
+      User.findOne(emailField, function(err, user) {
+        should.not.exist(err);
+        should.exist(user);
+        sandbox.stub(bcrypt, 'compare').yields(comparePasswordError);
+        User.authenticateUser(account.email, 'invalidPassword',
+          function(err, retrievedUser, reason) {
+            should.exist(err);
+            err.should.equal(comparePasswordError);
+            should.not.exist(retrievedUser);
+            should.not.exist(reason);
+            done();
+          });
+      });
+    });
+
+  /* it('should pass authentication given valid user credentials', function(done) {
+    User.authenticateUser(account.email, account.password,
+      function(err, retrievedUser, reason) {
+        should.not.exist(err);
+        should.exist(retrievedUser);
+        should.not.exist(retrievedUser.lockUntil);
+        should.not.exist(reason);
+        retrievedUser.isLocked.should.be.false;
+        retrievedUser.loginAttempts.should.equal(0);
+        done();
+      });
+  });*/
 
   it('should properly reset the user\'s avatar', function(done) {
     var gravatar = crypto.createHash('md5').update(account.email).digest('hex');
     var avatarUrl = 'https://gravatar.com/avatar/' + gravatar;
     var id;
-    Promise.resolve(mongoose.models.User.findOne(emailField, function(err,
+    Promise.resolve(User.findOne(emailField, function(err,
         user) {
       should.not.exist(err);
+      should.exist(user);
       id = user._id;
-    })).then(mongoose.models.User.resetAvatar(id, account.email, function(err,
+    })).then(User.resetAvatar(id, account.email, function(err,
         onSuccess, extra) {
       should.not.exist(err);
       should.exist(onSuccess);
       onSuccess.should.be.true;
       should.not.exist(extra);
-      mongoose.models.User.findOne(emailField, function(err, user) {
+      User.findOne(emailField, function(err, user) {
         should.not.exist(err);
         user.avatar.should.equal(avatarUrl);
         done();
@@ -248,22 +325,50 @@ describe('Dash user model', function() {
   });
 
   it('should properly return from an update with no services', function(done) {
-    mongoose.models.User.findOne(emailField, function(err, user) {
+    User.findOne(emailField, function(err, user) {
       should.not.exist(err);
+      should.exist(user);
       user.updateContent(done);
     });
   });
 
-  it('should properly delete a user', function(done) {
-    mongoose.models.User.findOne(emailField, function(err, user) {
+  it('should catch errors for finding users in a content update',
+    function(done) {
+      var mongoError = new Error('MongoError');
+      sandbox.stub(User, 'findById').yields(mongoError);
+      User.findOne(emailField, function(err, user) {
+        should.not.exist(err);
+        should.exist(user);
+        user.updateContent(function(err, retrievedUser, reason) {
+          should.exist(err);
+          err.should.equal(mongoError);
+          should.not.exist(retrievedUser);
+          should.not.exist(reason);
+          done();
+        });
+      });
+    });
+
+  it('should catch errors in pre-save', function(done) {
+    User.findOne(emailField, function(err, user) {
       should.not.exist(err);
-      mongoose.models.User.deleteUser(user._id, done);
+      should.exist(user);
+      sandbox.stub(User, 'findOne').yields(new Error('MongoError'));
+      user.save().should.be.rejectedWith(messages.ERROR.GENERAL).notify(done);
+    });
+  });
+
+  it('should properly delete a user', function(done) {
+    User.findOne(emailField, function(err, user) {
+      should.not.exist(err);
+      should.exist(user);
+      User.deleteUser(user._id, done);
     });
   });
 
   it('should catch errors while completing an operation', function(done) {
     var error = new Error('test');
-    mongoose.models.User.completeOperation(error, null, function(err, onSuccess,
+    User.completeOperation(error, null, function(err, onSuccess,
         extra) {
       should.exist(err);
       err.should.equal(error);
@@ -274,7 +379,7 @@ describe('Dash user model', function() {
   });
 
   it('should return successfully upon completing an operation', function(done) {
-    mongoose.models.User.completeOperation(null, true, function(err, onSuccess,
+    User.completeOperation(null, true, function(err, onSuccess,
         extra) {
       should.not.exist(err);
       should.exist(onSuccess);
@@ -286,7 +391,7 @@ describe('Dash user model', function() {
 
   it('should return with extra parameter, when given, upon completing an ' +
       'operation', function(done) {
-    mongoose.models.User.completeOperation(null, true, function(err, onSuccess,
+    User.completeOperation(null, true, function(err, onSuccess,
         extra) {
       should.not.exist(err);
       should.exist(onSuccess);
