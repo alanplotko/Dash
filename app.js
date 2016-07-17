@@ -2,8 +2,8 @@
 process.env.NODE_ENV = (process.argv[2].toUpperCase() === 'DEV' ||
   process.argv[2].toUpperCase() === 'DEVELOPMENT') ? 'DEV' : 'PROD';
 var debug = (process.env.NODE_ENV.toUpperCase() === 'DEV');
-var config = require('./config/settings')[process.env.NODE_ENV];
-config.SERVICES = require('./config/settings').SERVICES;
+var settings = require('./config/settings');
+settings.ENV = settings[process.env.NODE_ENV];
 var messages = require('./config/messages');
 
 // --------- Dependencies ---------
@@ -28,7 +28,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
 // --------- MongoDB & Mongoose Setup ---------
-mongoose.connect(config.MONGO_URI, function(err) {
+mongoose.connect(settings.ENV.MONGO_URI, function(err) {
   if (err) {
     throw err;
   }

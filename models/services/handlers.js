@@ -1,7 +1,7 @@
 // --------- Dependencies ---------
 var moment = require('moment');
 var crypto = require('crypto');
-var config = require('../../config/settings');
+var settings = require('../../config/settings');
 
 /**
  * Processes the posts retrieved from a service.
@@ -37,7 +37,7 @@ module.exports.processContent = function(err, content, updates, expectedLength,
  */
 module.exports.generateAppSecretProof = function(token) {
   return '&appsecret_proof=' + crypto
-    .createHmac('sha256', config.SERVICES.FACEBOOK.CLIENT_SECRET)
+    .createHmac('sha256', settings.SERVICES.FACEBOOK.CLIENT_SECRET)
     .update(token)
     .digest('hex');
 };

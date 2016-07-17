@@ -1,6 +1,6 @@
 // --------- Environment Setup ---------
-var config = require.main.require('./config/settings')[process.env.NODE_ENV];
-config.SERVICES = require.main.require('./config/settings').SERVICES;
+var settings = require.main.require('./config/settings');
+settings.ENV = settings[process.env.NODE_ENV];
 var messages = require.main.require('./config/messages');
 
 // --------- Dependencies ---------
@@ -136,9 +136,9 @@ module.exports = function(passport) {
 
   // Define Facebook strategy for passport
   var fbStrategy = new FacebookStrategy({
-    clientID: config.SERVICES.FACEBOOK.CLIENT_ID,
-    clientSecret: config.SERVICES.FACEBOOK.CLIENT_SECRET,
-    callbackURL: config.URL + '/services/auth/facebook/callback',
+    clientID: settings.SERVICES.FACEBOOK.CLIENT_ID,
+    clientSecret: settings.SERVICES.FACEBOOK.CLIENT_SECRET,
+    callbackURL: settings.URL + '/services/auth/facebook/callback',
     enableProof: true,
     passReqToCallback: true
   }, function(req, accessToken, refreshToken, profile, done) {
@@ -174,9 +174,9 @@ module.exports = function(passport) {
 
   // Define YouTube strategy for passport
   var ytStrategy = new YoutubeV3Strategy({
-    clientID: config.SERVICES.YOUTUBE.CLIENT_ID,
-    clientSecret: config.SERVICES.YOUTUBE.CLIENT_SECRET,
-    callbackURL: config.URL + '/services/auth/youtube/callback',
+    clientID: settings.SERVICES.YOUTUBE.CLIENT_ID,
+    clientSecret: settings.SERVICES.YOUTUBE.CLIENT_SECRET,
+    callbackURL: settings.ENV.URL + '/services/auth/youtube/callback',
     passReqToCallback: true
   }, function(req, accessToken, refreshToken, profile, done) {
     // Set up service

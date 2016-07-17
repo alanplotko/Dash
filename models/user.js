@@ -9,12 +9,8 @@ var PostCollectionSchema = PostCollection.schema;
 var passportLocalMongoose = require('passport-local-mongoose');
 var bcrypt = require('bcrypt');
 var crypto = require('crypto');
+var settings = require('../config/settings');
 var messages = require('../config/messages');
-
-// --------- Account Constants ---------
-var SALT_WORK_FACTOR = 10;
-var MAX_LOGIN_ATTEMPTS = 5;
-var LOCK_TIME = 2 * 60 * 60 * 1000; // 2-hour lock
 
 // --------- User Fields ---------
 var UserSchema = new Schema({
@@ -220,7 +216,7 @@ UserSchema.pre('save', function(next) {
   }
 
   // Generate salt
-  bcrypt.genSalt(SALT_WORK_FACTOR, function(err, salt) {
+  bcrypt.genSalt(settings.ACCOUNT.SALT_WORK_FACTOR, function(err, salt) {
     // An error occurred
     if (err) {
       return next(new Error(messages.ERROR.GENERAL));
@@ -250,7 +246,7 @@ UserSchema.pre('save', function(next) {
 UserSchema.methods.comparePassword = function(candidatePassword, done) {
   bcrypt.compare(candidatePassword, this.password, function(err, isMatch) {
     if (err) {
-      return done(err);
+      return done(messages.ERROR.GENERAL);
     }
     done(null, isMatch);
   });
@@ -282,9 +278,10 @@ UserSchema.methods.incLoginAttempts = function(done) {
     };
 
     // Lock account if max attempts reached and account is not already locked
-    if (this.loginAttempts + 1 >= MAX_LOGIN_ATTEMPTS && !this.isLocked) {
+    if (this.loginAttempts + 1 >= settings.ACCOUNT.MAX_LOGIN_ATTEMPTS &&
+        !this.isLocked) {
       update.$set = {
-        lockUntil: Date.now() + LOCK_TIME
+        lockUntil: Date.now() + settings.ACCOUNT.LOCK_TIME
       };
     }
   }
@@ -333,6 +330,11 @@ UserSchema.statics.authDeserializer = function(id, done) {
   mongoose.models.User.findById(id, 'email displayName avatar batches ' +
     'facebook.profileId facebook.acceptUpdates youtube.profileId ' +
     'youtube.acceptUpdates', function(err, user) {
+      /**
+       * If err is not null, then User.findById failed and returned an error
+       * and null for user. Passport will respond by invalidating the session.
+       * No custom message for err is required.
+       */
       done(err, user);
     });
 };

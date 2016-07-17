@@ -6,14 +6,6 @@ var handlers = require('./handlers');
 
 module.exports = function(UserSchema, messages) {
   /**
-   * Check if the user is connected to Facebook.
-   * @return {Boolean} A status of whether the user has added this service
-   */
-  UserSchema.virtual('hasFacebook').get(function() {
-    return Boolean(this.facebook.profileId);
-  });
-
-  /**
    * Remove the user's Facebook identifiers and tokens and deauthorize Dash app
    * from the account.
    *
