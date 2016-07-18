@@ -1,6 +1,27 @@
 // --------- Dependencies ---------
 var mongoose = require('mongoose');
 
+/**
+ * Saves the update for the user into the database or returns a general error
+ * on failure.
+ * @param  {Object}   user    The user object
+ * @param  {Object}   obj     The object to return to the user
+ * @param  {string}   message The message to display on an error
+ * @param  {Function} done    The callback function to execute upon completion
+ * @return {Function}         Execute the callback function
+ */
+function saveUpdate(user, obj, message, done) {
+  return user.save(function(err) {
+    // An error occurred
+    if (err) {
+      return done(new Error(message));
+    }
+
+    // Saved object to user
+    return done(null, obj);
+  });
+}
+
 module.exports = function(UserSchema, messages) {
   ['Facebook', 'YouTube'].forEach(function(serviceName) {
     /**
@@ -46,15 +67,7 @@ module.exports = function(UserSchema, messages) {
           delete service.reauth;
           delete service.refreshAccessToken;
           user[serviceName.toLowerCase()] = service;
-          user.save(function(err) {
-            // Database Error
-            if (err) {
-              return done(new Error(messages.ERROR.GENERAL));
-            }
-
-            // Success: Added service
-            return done(null, user);
-          });
+          return saveUpdate(user, user, messages.ERROR.GENERAL, done);
         }
       });
     };
@@ -87,15 +100,7 @@ module.exports = function(UserSchema, messages) {
             !user[serviceName.toLowerCase()].acceptUpdates;
         }
 
-        user.save(function(err) {
-          // An error occurred
-          if (err) {
-            return done(new Error(messages.ERROR.GENERAL));
-          }
-
-          // Saved update preference
-          return done(null, message);
-        });
+        return saveUpdate(user, message, messages.ERROR.GENERAL, done);
       });
     };
   });
