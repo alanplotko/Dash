@@ -1,6 +1,6 @@
 var chai = require('chai');
 var should = chai.should();
-var settings = require('../config/settings');
+var settings = require('../../config/settings');
 var mongoose = require('mongoose');
 mongoose.Promise = require('bluebird');
 

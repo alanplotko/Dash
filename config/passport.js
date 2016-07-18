@@ -138,7 +138,7 @@ module.exports = function(passport) {
   var fbStrategy = new FacebookStrategy({
     clientID: settings.SERVICES.FACEBOOK.CLIENT_ID,
     clientSecret: settings.SERVICES.FACEBOOK.CLIENT_SECRET,
-    callbackURL: settings.URL + '/services/auth/facebook/callback',
+    callbackURL: settings.ENV.URL + '/services/auth/facebook/callback',
     enableProof: true,
     passReqToCallback: true
   }, function(req, accessToken, refreshToken, profile, done) {
@@ -159,10 +159,8 @@ module.exports = function(passport) {
         }
 
         // Service added successfully
-        if (service) {
-          return done(null, user, req.flash('serviceMessage',
-            messages.STATUS.FACEBOOK.CONNECTED));
-        }
+        return done(null, user, req.flash('serviceMessage', messages.STATUS
+          .FACEBOOK.CONNECTED));
       });
       delete req.session.reauth;
       delete req.session.refreshAccessToken;
@@ -197,10 +195,8 @@ module.exports = function(passport) {
         }
 
         // Service added successfully
-        if (service) {
-          return done(null, user, req.flash('serviceMessage',
-            messages.STATUS.YOUTUBE.CONNECTED));
-        }
+        return done(null, user, req.flash('serviceMessage', messages.STATUS
+          .YOUTUBE.CONNECTED));
       });
 
       delete req.session.reauth;

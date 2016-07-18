@@ -14,12 +14,12 @@ module.exports = function(UserSchema, messages) {
       mongoose.models.User.findById(id, function(err, user) {
         // Database Error
         if (err) {
-          return done(err);
+          return done(new Error(messages.ERROR.GENERAL));
         }
 
         // Unexpected Error: User not found
         if (!user) {
-          return done(null, null, new Error(messages.ERROR.GENERAL));
+          return done(new Error(messages.ERROR.GENERAL));
         }
 
         if (service.reauth) {
@@ -31,7 +31,7 @@ module.exports = function(UserSchema, messages) {
           user.save(function(err) {
             // Database Error
             if (err) {
-              return done(err);
+              return done(new Error(messages.ERROR.GENERAL));
             }
 
             // Success: Refreshed access token for service
@@ -41,21 +41,21 @@ module.exports = function(UserSchema, messages) {
           // Defined Error: Service already exists
           return done(new Error(messages.STATUS[serviceName.toUpperCase()]
             .ALREADY_CONNECTED));
+        } else {
+          // Save service information (excluding other states) to account
+          delete service.reauth;
+          delete service.refreshAccessToken;
+          user[serviceName.toLowerCase()] = service;
+          user.save(function(err) {
+            // Database Error
+            if (err) {
+              return done(new Error(messages.ERROR.GENERAL));
+            }
+
+            // Success: Added service
+            return done(null, user);
+          });
         }
-
-        // Save service information (excluding other states) to account
-        delete service.reauth;
-        delete service.refreshAccessToken;
-        user[serviceName.toLowerCase()] = service;
-        user.save(function(err) {
-          // Database Error
-          if (err) {
-            return done(err);
-          }
-
-          // Success: Added service
-          return done(null, user);
-        });
       });
     };
 
@@ -75,7 +75,7 @@ module.exports = function(UserSchema, messages) {
       mongoose.models.User.findById(this._id, function(err, user) {
         // Database Error
         if (err) {
-          return done(err);
+          return done(new Error(messages.ERROR.GENERAL));
         }
 
         var message = messages.STATUS[serviceName.toUpperCase()].NOT_CONFIGURED;
@@ -90,7 +90,7 @@ module.exports = function(UserSchema, messages) {
         user.save(function(err) {
           // An error occurred
           if (err) {
-            return done(err);
+            return done(new Error(messages.ERROR.GENERAL));
           }
 
           // Saved update preference

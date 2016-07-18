@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-expressions, no-loop-func */
 
 // Set up testing libraries
+var common = require('../common/setup.js');
 var chai = require('chai');
 var should = chai.should();
 var chaiAsPromised = require('chai-as-promised');
@@ -9,28 +10,20 @@ var sinon = require('sinon');
 require('sinon-mongoose');
 var sandbox;
 
-// Set up mongoose and user model
+// Set up mongoose
 var mongoose = require('mongoose');
 mongoose.Promise = require('bluebird');
-var User = require('../models/user');
 
 // Set up user model test dependencies
-var crypto = require('crypto');
-var config = require('../config/settings');
-var messages = require('../config/messages');
+var User = require('../../models/user');
+var config = require('../../config/settings');
+var messages = require('../../config/messages');
 var async = require('async');
 var bcrypt = require('bcrypt');
 
-// Set up dummy account and query
-var email = 'Dashbot@Dash';
-var gravatar = crypto.createHash('md5').update(email).digest('hex');
-var dummyDetails = {
-  email: email,
-  displayName: 'Dashbot',
-  avatar: 'https://gravatar.com/avatar/' + gravatar,
-  password: 'DashRocks'
-};
-var accountQuery = User.findOne({email: email});
+// Set up dummy account
+var dummyDetails = common.dummyDetails;
+var accountQuery = common.accountQuery;
 
 // Define expected environment based on whether the test is running in Travis
 process.env.NODE_ENV = process.env.TRAVIS ? 'PROD' : 'DEV';
