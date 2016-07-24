@@ -10,6 +10,9 @@ services:
   - mongodb
 before_install:
   - npm config set python python2.7
+before_script:
+  - sleep 15
+  - mongo dash_test --eval 'db.createUser({user: "dashbot", pwd: "dash", roles: ["dbOwner"]});'
 after_success:
   - codeclimate-test-reporter < coverage/lcov.info
 addons:
@@ -24,6 +27,3 @@ addons:
       - mongodb-org-shell
   code_climate:
     repo_token: 9bdb3725e114168adb4377551910c6c01e8e77d04b63c8b1fa5d2f75e1f461e1
-before_script:
-  - sleep 15
-  - mongo dash_test --eval 'db.createUser({user: "dashbot", pwd: "dash", roles: ["dbOwner"]});'
