@@ -337,28 +337,18 @@ describe('Dash user model', function() {
           var reasons = User.failedLogin;
           var keys = Object.keys(User.failedLogin);
           var randomReason = keys[Math.floor(Math.random() * keys.length)];
-          Promise.resolve(User.failAuthentication(user, reasons[randomReason],
-            function() {})).then(callback(null, user));
+          User.failAuthentication(user, reasons[randomReason], callback);
         });
       };
 
-      // Checks whether login attempt counter increased by 1
-      var loginAttemptCheck = function(callback) {
-        accountQuery.exec(function(err, updatedUser) {
-          should.not.exist(err);
-          should.exist(updatedUser);
-          updatedUser.loginAttempts.should.equal(1);
-          callback(null, updatedUser);
-        });
-      };
-
-      async.series([failAuth, loginAttemptCheck], function(err, result) {
+      async.series([failAuth], function(err, result) {
         should.not.exist(err);
-        should.exist(result);
-        for (var i = 0; i < result.length; i++) {
-          result[i].loginAttempts.should.equal(i);
-        }
-        done();
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.loginAttempts.should.equal(1);
+          done();
+        });
       });
     });
   });
