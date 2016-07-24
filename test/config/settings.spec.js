@@ -5,7 +5,6 @@ var mongoose = require('mongoose');
 mongoose.Promise = require('bluebird');
 
 // Define expected environment based on whether the test is running in Travis
-process.env.NODE_ENV = process.env.TRAVIS ? 'PROD' : 'DEV';
 settings.ENV = settings[process.env.NODE_ENV];
 
 // Define required keys for each environment property
