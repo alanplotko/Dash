@@ -1,19 +1,32 @@
 sudo: false
+
 language: node_js
+
 notifications:
   email: false
+
 node_js: '6'
+
 env:
   - CXX=g++-4.8
+
 services:
   - docker
   - mongodb
+
 before_install:
   - npm config set python python2.7
+
 before_script:
   - sleep 15
+  - mongo dash_test --eval 'db.createUser({user:"dashbot",pwd:"dash",roles:["readWrite","dbAdmin"]});'
+
+after_script:
+  - mongo --version
+
 after_success:
   - codeclimate-test-reporter < coverage/lcov.info
+
 addons:
   apt:
     sources:
