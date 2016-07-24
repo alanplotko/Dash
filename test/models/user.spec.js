@@ -25,9 +25,6 @@ var bcrypt = require('bcrypt');
 var dummyDetails = common.dummyDetails;
 var accountQuery = common.accountQuery;
 
-// Define expected environment based on whether the test is running in Travis
-process.env.NODE_ENV = process.env.TRAVIS ? 'PROD' : 'DEV';
-
 describe('Dash user model', function() {
   /**
    * Set up connection and run quick tests prior to starting.

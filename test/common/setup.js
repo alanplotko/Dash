@@ -13,3 +13,15 @@ module.exports.dummyDetails = {
 
 var User = require('../../models/user');
 module.exports.accountQuery = User.findOne({email: email});
+
+// Set up environment defaults
+process.env.NODE_ENV = 'DEV';
+
+// Define dummy environment variable values when running in Travis
+if (process.env.TRAVIS) {
+  process.env.NODE_ENV = 'PROD';
+  process.env.DASH_FACEBOOK_APP_ID = 'DashFacebookAppId';
+  process.env.DASH_FACEBOOK_APP_SECRET = 'DashFacebookAppSecret';
+  process.env.DASH_YOUTUBE_APP_ID = 'DashYouTubeAppId';
+  process.env.DASH_YOUTUBE_APP_SECRET = 'DashYouTubeAppSecret';
+}
