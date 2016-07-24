@@ -19,7 +19,7 @@ before_install:
 
 before_script:
   - sleep 15
-  - mongo dash_test --eval 'db.createUser({user: "dashbot", pwd: "dash", roles: ["readWrite", "dbAdmin"]});'
+  - mongo dash_test --eval 'db.createUser({user:"dashbot",pwd:"dash",roles:["readWrite","dbAdmin"]});'
 
 after_script:
   - mongo --version
