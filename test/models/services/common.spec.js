@@ -84,15 +84,19 @@ describe('Common service methods', function() {
    * Place all tests below. Ensure all branches and methods are covered.
    */
 
-  describe('Model method: add[Service]', function() {
-    it('should catch errors in User.findById', function(done) {
-      sandbox.stub(User, 'findById').yields(new Error('MongoError'));
+  describe('Helper function: saveUpdate', function() {
+    /**
+     * Successful save tested in model method add[Service].
+     */
+    it('should catch errors in user.save', function(done) {
       var id;
-      var service = {};
+      var tasks = [];
 
       // Get user id
       var getId = function(callback) {
         accountQuery.exec(function(err, user) {
+          sandbox.stub(user, 'save').yields(new Error('MongoError'));
+          sandbox.stub(User, 'findById').yields(null, user);
           should.not.exist(err);
           should.exist(user);
           id = user._id;
@@ -100,46 +104,35 @@ describe('Common service methods', function() {
         });
       };
 
-      // Test User.add[Service]
-      var task = function(callback) {
-        services.forEach(function(serviceName) {
-          User['add' + serviceName](id, service, callback);
-        });
-      };
+      tasks.push(getId);
 
-      async.series([getId, task], function(err, result) {
+      // Test User.add[Service]
+      services.forEach(function(serviceName) {
+        tasks.push(function(callback) {
+          User['add' + serviceName](id, {
+            profileId: 'ProfileId',
+            accessToken: 'AccessToken',
+            refreshToken: 'RefreshToken'
+          }, callback);
+        });
+      });
+
+      async.series(tasks, function(err, result) {
         should.exist(err);
         var error = new Error(messages.ERROR.GENERAL);
         err.toString().should.equal(error.toString());
         should.exist(result);
-        result.should.have.lengthOf(2);
         result[0].should.equal(id);
         should.not.exist(result[1]);
         done();
       });
     });
+  });
 
-    it('should return a general error on an invalid user id', function(done) {
-      var id = 'InvalidId';
-      var service = {};
-      sandbox.stub(User, 'findById').yields(null, null);
-
-      services.forEach(function(serviceName) {
-        User['add' + serviceName](id, service, function(err, result) {
-          should.exist(err);
-          var error = new Error(messages.ERROR.GENERAL);
-          err.toString().should.equal(error.toString());
-          should.not.exist(result);
-        });
-      });
-      done();
-    });
-
-    it('should return a missing permissions error on reauth', function(done) {
+  describe('Model method: add[Service]', function() {
+    it('should catch errors in User.findById', function(done) {
+      sandbox.stub(User, 'findById').yields(new Error('MongoError'));
       var id;
-      var service = {
-        reauth: 'Reauth'
-      };
       var tasks = [];
 
       // Get user id
@@ -157,7 +150,74 @@ describe('Common service methods', function() {
       // Test User.add[Service]
       services.forEach(function(serviceName) {
         tasks.push(function(callback) {
-          User['add' + serviceName](id, service, function(err, result) {
+          User['add' + serviceName](id, {}, function(err, result) {
+            callback(null, err);
+          });
+        });
+      });
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        result.should.have.lengthOf(services.length + 1);
+        result[0].should.equal(id);
+        var error = new Error(messages.ERROR.GENERAL);
+        for (var i = 0; i < services.length; i++) {
+          should.exist(result[i + 1]);
+          result[i + 1].toString().should.equal(error.toString());
+        }
+        done();
+      });
+    });
+
+    it('should return a general error on an invalid user id', function(done) {
+      var id = 'InvalidId';
+      var tasks = [];
+      sandbox.stub(User, 'findById').yields(null, null);
+
+      services.forEach(function(serviceName) {
+        tasks.push(function(callback) {
+          User['add' + serviceName](id, {}, function(err, result) {
+            callback(null, err);
+          });
+        });
+      });
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        result.should.have.lengthOf(services.length);
+        var error = new Error(messages.ERROR.GENERAL);
+        for (var i = 0; i < services.length; i++) {
+          should.exist(result[i]);
+          result[i].toString().should.equal(error.toString());
+        }
+        done();
+      });
+    });
+
+    it('should return a missing permissions error on reauth', function(done) {
+      var id;
+      var tasks = [];
+
+      // Get user id
+      var getId = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          id = user._id;
+          callback(err, user._id);
+        });
+      };
+
+      tasks.push(getId);
+
+      // Test User.add[Service]
+      services.forEach(function(serviceName) {
+        tasks.push(function(callback) {
+          User['add' + serviceName](id, {
+            reauth: true
+          }, function(err, result) {
             callback(null, err);
           });
         });
@@ -201,7 +261,7 @@ describe('Common service methods', function() {
       services.forEach(function(serviceName) {
         tasks.push(function(callback) {
           User['add' + serviceName](id, {
-            refreshAccessToken: 'RefreshAccessToken',
+            refreshAccessToken: true,
             accessToken: 'AccessToken'
           }, function(err, result) {
             callback(null, err);
@@ -250,7 +310,7 @@ describe('Common service methods', function() {
       services.forEach(function(serviceName) {
         tasks.push(function(callback) {
           User['add' + serviceName](id, {
-            refreshAccessToken: 'RefreshAccessToken',
+            refreshAccessToken: true,
             accessToken: 'AccessToken'
           }, function(err, result) {
             callback(null, err);
@@ -331,6 +391,226 @@ describe('Common service methods', function() {
           );
           should.exist(result[j + 2]);
           result[j + 2].toString().should.equal(error.toString());
+        }
+        done();
+      });
+    });
+
+    it('should return on successfully adding a service', function(done) {
+      var id;
+      var tasks = [];
+
+      // Get user id
+      var getId = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          id = user._id;
+          callback(err, user._id);
+        });
+      };
+
+      tasks.push(getId);
+
+      // Test User.add[Service]
+      services.forEach(function(serviceName) {
+        tasks.push(function(callback) {
+          User['add' + serviceName](id, {
+            profileId: 'ProfileId',
+            accessToken: 'AccessToken',
+            refreshToken: 'RefreshToken'
+          }, function(err, result) {
+            callback(err, result);
+          });
+        });
+      });
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        result.should.have.lengthOf(services.length + 1);
+        result[0].should.equal(id);
+        for (var j = 0; j < services.length; j++) {
+          should.exist(result[j + 1]);
+
+          should.exist(result[j + 1][services[j].toLowerCase()].profileId);
+          result[j + 1][services[j].toLowerCase()].profileId
+            .should.equal('ProfileId');
+
+          should.exist(result[j + 1][services[j].toLowerCase()].accessToken);
+          result[j + 1][services[j].toLowerCase()].accessToken
+            .should.equal('AccessToken');
+
+          should.exist(result[j + 1][services[j].toLowerCase()].refreshToken);
+          result[j + 1][services[j].toLowerCase()].refreshToken
+            .should.equal('RefreshToken');
+        }
+        done();
+      });
+    });
+  });
+
+  describe('Document method: toggle[Service]', function() {
+    it('should catch errors in User.findById', function(done) {
+      var tasks = [];
+      sandbox.stub(User, 'findById').yields(new Error('MongoError'));
+
+      // Generate test function by service name
+      var test = function(serviceName) {
+        return function(callback) {
+          accountQuery.exec(function(err, user) {
+            should.not.exist(err);
+            should.exist(user);
+            user['toggle' + serviceName](callback);
+          });
+        };
+      };
+
+      // Test User.toggle[Service]
+      services.forEach(function(serviceName) {
+        tasks.push(test(serviceName));
+      });
+
+      async.series(tasks, function(err, result) {
+        should.exist(err);
+        var error = new Error(messages.ERROR.GENERAL);
+        err.toString().should.equal(error.toString());
+        should.exist(result);
+        result.should.have.lengthOf(1);
+        should.not.exist(result[0]);
+        done();
+      });
+    });
+
+    it('should return correct message for missing service', function(done) {
+      var tasks = [];
+
+      // Generate test function by service name
+      var test = function(serviceName) {
+        return function(callback) {
+          accountQuery.exec(function(err, user) {
+            should.not.exist(err);
+            should.exist(user);
+            user['toggle' + serviceName](callback);
+          });
+        };
+      };
+
+      // Test User.toggle[Service]
+      services.forEach(function(serviceName) {
+        tasks.push(test(serviceName));
+      });
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        result.should.have.lengthOf(2);
+        for (var i = 0; i < result.length; i++) {
+          should.exist(result[i]);
+          result[i].should
+            .equal(messages.STATUS[services[i].toUpperCase()].NOT_CONFIGURED);
+        }
+        done();
+      });
+    });
+
+    it('should return correct message for existing service', function(done) {
+      var id;
+      var tasks = [];
+
+      // Get user id
+      var getId = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          id = user._id;
+          callback(err, user._id);
+        });
+      };
+
+      tasks.push(getId);
+
+      // Add service
+      services.forEach(function(serviceName) {
+        tasks.push(function(callback) {
+          User['add' + serviceName](id, {
+            profileId: 'ProfileId',
+            accessToken: 'AccessToken',
+            refreshToken: 'RefreshToken'
+          }, function(err, result) {
+            callback(err, result);
+          });
+        });
+      });
+
+      // Generate test function by service name
+      var test = function(serviceName) {
+        return function(callback) {
+          accountQuery.exec(function(err, user) {
+            should.not.exist(err);
+            should.exist(user);
+            user['toggle' + serviceName](callback);
+          });
+        };
+      };
+
+      // Test User.toggle[Service] (disable services)
+      services.forEach(function(serviceName) {
+        tasks.push(test(serviceName));
+      });
+
+      // Confirm updates were disabled
+      services.forEach(function(serviceName) {
+        tasks.push(function(callback) {
+          accountQuery.exec(function(err, user) {
+            should.not.exist(err);
+            should.exist(user);
+            callback(null, user[serviceName.toLowerCase()].acceptUpdates);
+          });
+        });
+      });
+
+      // Test User.toggle[Service] (enable services)
+      services.forEach(function(serviceName) {
+        tasks.push(test(serviceName));
+      });
+
+      // Confirm updates were enabled
+      services.forEach(function(serviceName) {
+        tasks.push(function(callback) {
+          accountQuery.exec(function(err, user) {
+            should.not.exist(err);
+            should.exist(user);
+            callback(null, user[serviceName.toLowerCase()].acceptUpdates);
+          });
+        });
+      });
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        result.should.have.lengthOf((services.length * 5) + 1);
+        should.exist(result[0]);
+        result[0].should.equal(id);
+        for (var i = 1; i < result.length; i++) {
+          should.exist(result[i]);
+        }
+
+        var j;
+        // Check whether toggle messages are correct
+        for (j = 0; j < services.length; j++) {
+          result[j + services.length + 1].should
+            .equal(messages.STATUS[services[j].toUpperCase()].UPDATES_DISABLED);
+        }
+        for (j = 0; j < services.length; j++) {
+          result[j + (services.length * 2) + 1].should.be.false;
+        }
+        for (j = 0; j < services.length; j++) {
+          result[j + (services.length * 3) + 1].should
+            .equal(messages.STATUS[services[j].toUpperCase()].UPDATES_ENABLED);
+        }
+        for (j = 0; j < services.length; j++) {
+          result[j + (services.length * 4) + 1].should.be.true;
         }
         done();
       });
