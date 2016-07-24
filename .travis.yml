@@ -8,11 +8,13 @@ notifications:
 node_js: '6'
 
 env:
-  - CXX=g++-4.8
-  - DASH_FACEBOOK_APP_ID='DashFacebookAppId'
-  - DASH_FACEBOOK_APP_SECRET='DashFacebookAppSecret'
-  - DASH_YOUTUBE_APP_ID='DashYouTubeAppId'
-  - DASH_YOUTUBE_APP_SECRET='DashYouTubeAppSecret'
+  global:
+    - DASH_FACEBOOK_APP_ID='DashFacebookAppId'
+    - DASH_FACEBOOK_APP_SECRET='DashFacebookAppSecret'
+    - DASH_YOUTUBE_APP_ID='DashYouTubeAppId'
+    - DASH_YOUTUBE_APP_SECRET='DashYouTubeAppSecret'
+  matrix:
+    - CXX=g++-4.8
 
 services:
   - docker
