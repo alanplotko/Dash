@@ -1,6 +1,6 @@
 // --------- Environment Setup ---------
-var config = require.main.require('./config/settings')[process.env.NODE_ENV];
-config.SERVICES = require.main.require('./config/settings').SERVICES;
+var settings = require.main.require('./config/settings');
+settings.ENV = settings[process.env.NODE_ENV];
 var messages = require.main.require('./config/messages');
 
 // --------- Dependencies ---------
@@ -12,59 +12,8 @@ var User = require.main.require('./models/user');
 var validator = require('validator');
 require.main.require('./config/custom-validation')(validator);
 var crypto = require('crypto');
-var bcrypt = require('bcrypt');
 
-// Define constants for account
-var SALT_WORK_FACTOR = 10;
-
-/**
- * Registers a new user with the details contained in the User object and
- * returns via the provided callback.
- * @param  {Object}   nev     The email-verification module imported from app.js
- * @param  {Object}   newUser The new User object containing user details
- * @param  {string}   email   The new user's email address
- * @param  {Object}   req     The current request
- * @param  {done}     done    The callback function to execute
- * @return {done}             Run the callback to complete registration
- */
-function registerNewUser(nev, newUser, email, req, done) {
-  return nev.createTempUser(newUser, function(err, existingPersistentUser,
-      newTempUser) {
-    // An error occurred
-    if (err) {
-      return done(null, false, req.flash('registerMessage',
-        err.toString()));
-    }
-
-    /**
-     * Registration succeeded; next step is email
-     * verification
-     */
-    if (newTempUser) {
-      var URL = newTempUser[nev.options.URLFieldName];
-      nev.sendVerificationEmail(email, URL, function(err, info) {
-        if (err) {
-          return done(null, false, req.flash('registerMessage',
-            err.toString()));
-        }
-        req.flash('loginMessage',
-          messages.ERROR.CREDENTIALS.REGISTER_SUCCESS);
-        return done(null, newTempUser);
-      });
-    } else if (existingPersistentUser) {
-      /**
-       * User already exists in the verified
-       * user collection
-       */
-      return done(null, false, req.flash('registerMessage',
-        messages.ERROR.CREDENTIALS.ACCOUNT_EXISTS + ' Perhaps ' +
-        '<a href="/resend/' + email + '"> resend a verification ' +
-        'email?</a>'));
-    }
-  });
-}
-
-module.exports = function(passport, nev) {
+module.exports = function(passport) {
   /**
    * Let passport use the serialize and deserialize functions defined in
    * the mongoose user schema
@@ -134,12 +83,12 @@ module.exports = function(passport, nev) {
     // Clean and verify form input
     var email = validator.trim(emailAddress);
     var gravatar = crypto.createHash('md5').update(email).digest('hex');
-    var display = validator.trim(req.body.displayName);
-    if (display.length === 0) {
-      display = email.split('@')[0];
+    var displayName = validator.trim(req.body.displayName);
+    if (displayName.length === 0) {
+      displayName = email.split('@')[0];
     }
-    if (!validator.isValidDisplayName(display)) {
-      display = 'User';
+    if (!validator.isValidDisplayName(displayName)) {
+      displayName = 'User';
     }
     if (!validator.isEmail(email) || email.length === 0 ||
         password.length === 0 || !validator.isValidPassword(password)) {
@@ -157,47 +106,39 @@ module.exports = function(passport, nev) {
       if (err) {
         return done(new Error(messages.ERROR.GENERAL));
       }
-
-      if (!returnedUser) {
-        // If validation passes, proceed to register user
-        process.nextTick(function() {
-          // Generate salt
-          bcrypt.genSalt(SALT_WORK_FACTOR, function(err, salt) {
-            // An error occurred
-            if (err) {
-              return done(new Error(messages.ERROR.GENERAL));
-            }
-
-            // Hash password using new salt
-            bcrypt.hash(password, salt, function(err, hash) {
-              if (err) {
-                return done(new Error(messages.ERROR.GENERAL));
-              }
-
-              // Set hashed password back on document
-              var newUser = new User({
-                email: email,
-                displayName: display,
-                password: hash,
-                avatar: 'https://gravatar.com/avatar/' + gravatar
-              });
-
-              return registerNewUser(nev, newUser, email, req, done);
-            });
-          });
-        });
+      if (returnedUser) {
+        return done(null, false, req.flash('registerMessage',
+          messages.ERROR.CREDENTIALS.ACCOUNT_EXISTS));
       }
+      // If validation passes, proceed to register user
+      process.nextTick(function() {
+        var newUser = new User({
+          email: email,
+          displayName: displayName,
+          password: password,
+          avatar: 'https://gravatar.com/avatar/' + gravatar
+        });
 
-      return done(null, false, req.flash('registerMessage',
-        messages.ERROR.CREDENTIALS.ACCOUNT_EXISTS));
+        newUser.save(function(err) {
+          // An error occurred
+          if (err) {
+            return done(null, false, req.flash('registerMessage',
+              messages.ERROR.CREDENTIALS.REGISTRATION_FAILURE));
+          }
+
+          // Registration succeeded
+          return done(null, newUser, req.flash('registerMessage',
+            messages.ERROR.CREDENTIALS.REGISTRATION_SUCCESS));
+        });
+      });
     });
   }));
 
   // Define Facebook strategy for passport
   var fbStrategy = new FacebookStrategy({
-    clientID: config.SERVICES.FACEBOOK.CLIENT_ID,
-    clientSecret: config.SERVICES.FACEBOOK.CLIENT_SECRET,
-    callbackURL: config.URL + '/services/auth/facebook/callback',
+    clientID: settings.SERVICES.FACEBOOK.CLIENT_ID,
+    clientSecret: settings.SERVICES.FACEBOOK.CLIENT_SECRET,
+    callbackURL: settings.ENV.URL + '/services/auth/facebook/callback',
     enableProof: true,
     passReqToCallback: true
   }, function(req, accessToken, refreshToken, profile, done) {
@@ -218,10 +159,8 @@ module.exports = function(passport, nev) {
         }
 
         // Service added successfully
-        if (service) {
-          return done(null, user, req.flash('serviceMessage',
-            messages.STATUS.FACEBOOK.CONNECTED));
-        }
+        return done(null, user, req.flash('serviceMessage', messages.STATUS
+          .FACEBOOK.CONNECTED));
       });
       delete req.session.reauth;
       delete req.session.refreshAccessToken;
@@ -233,9 +172,9 @@ module.exports = function(passport, nev) {
 
   // Define YouTube strategy for passport
   var ytStrategy = new YoutubeV3Strategy({
-    clientID: config.SERVICES.YOUTUBE.CLIENT_ID,
-    clientSecret: config.SERVICES.YOUTUBE.CLIENT_SECRET,
-    callbackURL: config.URL + '/services/auth/youtube/callback',
+    clientID: settings.SERVICES.YOUTUBE.CLIENT_ID,
+    clientSecret: settings.SERVICES.YOUTUBE.CLIENT_SECRET,
+    callbackURL: settings.ENV.URL + '/services/auth/youtube/callback',
     passReqToCallback: true
   }, function(req, accessToken, refreshToken, profile, done) {
     // Set up service
@@ -256,10 +195,8 @@ module.exports = function(passport, nev) {
         }
 
         // Service added successfully
-        if (service) {
-          return done(null, user, req.flash('serviceMessage',
-            messages.STATUS.YOUTUBE.CONNECTED));
-        }
+        return done(null, user, req.flash('serviceMessage', messages.STATUS
+          .YOUTUBE.CONNECTED));
       });
 
       delete req.session.reauth;

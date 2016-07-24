@@ -1,6 +1,27 @@
 // --------- Dependencies ---------
 var mongoose = require('mongoose');
 
+/**
+ * Saves the update for the user into the database or returns a general error
+ * on failure.
+ * @param  {Object}   user    The user object
+ * @param  {Object}   obj     The object to return to the user
+ * @param  {string}   message The message to display on an error
+ * @param  {Function} done    The callback function to execute upon completion
+ * @return {Function}         Execute the callback function
+ */
+function saveUpdate(user, obj, message, done) {
+  return user.save(function(err) {
+    // An error occurred
+    if (err) {
+      return done(new Error(message));
+    }
+
+    // Saved object to user
+    return done(null, obj);
+  });
+}
+
 module.exports = function(UserSchema, messages) {
   ['Facebook', 'YouTube'].forEach(function(serviceName) {
     /**
@@ -14,12 +35,12 @@ module.exports = function(UserSchema, messages) {
       mongoose.models.User.findById(id, function(err, user) {
         // Database Error
         if (err) {
-          return done(err);
+          return done(new Error(messages.ERROR.GENERAL));
         }
 
         // Unexpected Error: User not found
         if (!user) {
-          return done(null, null, new Error(messages.ERROR.GENERAL));
+          return done(new Error(messages.ERROR.GENERAL));
         }
 
         if (service.reauth) {
@@ -31,7 +52,7 @@ module.exports = function(UserSchema, messages) {
           user.save(function(err) {
             // Database Error
             if (err) {
-              return done(err);
+              return done(new Error(messages.ERROR.GENERAL));
             }
 
             // Success: Refreshed access token for service
@@ -41,21 +62,13 @@ module.exports = function(UserSchema, messages) {
           // Defined Error: Service already exists
           return done(new Error(messages.STATUS[serviceName.toUpperCase()]
             .ALREADY_CONNECTED));
+        } else {
+          // Save service information (excluding other states) to account
+          delete service.reauth;
+          delete service.refreshAccessToken;
+          user[serviceName.toLowerCase()] = service;
+          return saveUpdate(user, user, messages.ERROR.GENERAL, done);
         }
-
-        // Save service information (excluding other states) to account
-        delete service.reauth;
-        delete service.refreshAccessToken;
-        user[serviceName.toLowerCase()] = service;
-        user.save(function(err) {
-          // Database Error
-          if (err) {
-            return done(err);
-          }
-
-          // Success: Added service
-          return done(null, user);
-        });
       });
     };
 
@@ -75,7 +88,7 @@ module.exports = function(UserSchema, messages) {
       mongoose.models.User.findById(this._id, function(err, user) {
         // Database Error
         if (err) {
-          return done(err);
+          return done(new Error(messages.ERROR.GENERAL));
         }
 
         var message = messages.STATUS[serviceName.toUpperCase()].NOT_CONFIGURED;
@@ -87,15 +100,7 @@ module.exports = function(UserSchema, messages) {
             !user[serviceName.toLowerCase()].acceptUpdates;
         }
 
-        user.save(function(err) {
-          // An error occurred
-          if (err) {
-            return done(err);
-          }
-
-          // Saved update preference
-          return done(null, message);
-        });
+        return saveUpdate(user, message, messages.ERROR.GENERAL, done);
       });
     };
   });

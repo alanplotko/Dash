@@ -36,8 +36,7 @@ var messages = {
     CREDENTIALS: {
 
       MISSING:
-        'An error occurred. Please check if you\'ve typed in ' +
-        'your credentials.',
+        'ERROR: Please check if you\'ve typed in your credentials.',
 
       INCORRECT:
         'ERROR: The email address or password is incorrect.',
@@ -54,6 +53,9 @@ var messages = {
         'receive an email momentarily for verifying your ' +
         'email address. Click on the link in that email ' +
         'to proceed.',
+
+      REGISTER_FAILURE:
+        'ERROR: Registration failed. Please try again in a few minutes.',
 
       ACCOUNT_EXISTS:
         'ERROR: you already have an account. ' +
