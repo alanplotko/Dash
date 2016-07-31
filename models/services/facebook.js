@@ -229,10 +229,7 @@ module.exports = function(UserSchema, messages) {
         getFacebookContent(url, {}, appSecretProof, function(err, content) {
           // Error while retrieving content
           if (err) {
-            if (err === '400-Facebook') {
-              return done(err);
-            }
-            return done(new Error(messages.ERROR.GENERAL));
+            return handlers.checkIfRefreshEligible(err, 'Facebook', done);
           }
 
           // Success: Retrieved items
@@ -270,15 +267,8 @@ module.exports = function(UserSchema, messages) {
           user.facebook[plural].push(itemFormatted);
         });
 
-        user.save(function(err) {
-          // Database Error
-          if (err) {
-            return done(new Error(messages.ERROR.GENERAL));
-          }
-
-          // Success: Saved selected Facebook items
-          return done(null, user);
-        });
+        // Save selected Facebook items
+        return handlers.saveToUser(user, user, done);
       });
     };
   });
@@ -362,10 +352,7 @@ module.exports = function(UserSchema, messages) {
 
       async.parallel(calls, function(err, results) {
         if (err) {
-          if (err === '400-Facebook') {
-            return done(err);
-          }
-          return done(new Error(messages.ERROR.GENERAL));
+          return handlers.checkIfRefreshEligible(err, 'Facebook', done);
         }
 
         var newPosts = [];

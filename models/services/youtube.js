@@ -198,15 +198,9 @@ module.exports = function(UserSchema, messages) {
           thumbnail: info[2]
         });
       });
-      user.save(function(err) {
-        // Database Error
-        if (err) {
-          return done(new Error(messages.ERROR.GENERAL));
-        }
 
-        // Success: Saved selected YouTube subscriptions
-        return done(null, user);
-      });
+      // Save selected YouTube subscriptions
+      return handlers.saveToUser(user, user, done);
     });
   };
 
