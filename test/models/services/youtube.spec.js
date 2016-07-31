@@ -787,7 +787,12 @@ describe('YouTube service', function() {
         result[2].toString().should.equal(
           (new Error(messages.STATUS.YOUTUBE.REFRESHED_TOKEN)).toString()
         );
-        done();
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.youtube.accessToken.should.equal('NewAccessToken');
+          done();
+        });
       });
     });
 
@@ -1131,5 +1136,703 @@ describe('YouTube service', function() {
         done();
       });
     });
+  });
+
+  /**
+   * This also tests the helper function, getYouTubeUploads, and the document
+   * method, updateYouTube.
+   */
+  describe('Document method: refreshYouTube', function() {
+    it('should catch errors in User.findById', function(done) {
+      var tasks = [];
+
+      // Test user.refreshFacebook
+      var test = function(callback) {
+        accountQuery.exec(function(err, user) {
+          sandbox.stub(User, 'findById').yields(new Error('MongoError'));
+          should.not.exist(err);
+          should.exist(user);
+          user.refreshFacebook(function(err, result) {
+            callback(null, err);
+          });
+        });
+      };
+
+      tasks.push(test);
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        result[0].toString().should.equal((new Error(messages.ERROR.GENERAL))
+          .toString());
+        done();
+      });
+    });
+
+    it('should catch errors in async.parallel', function(done) {
+      var tasks = [];
+
+      // Test user.refreshFacebook
+      var test = function(callback) {
+        accountQuery.exec(function(err, user) {
+          sandbox.stub(async, 'parallel').yields(new Error('ParallelError'));
+          should.not.exist(err);
+          should.exist(user);
+          user.refreshFacebook(function(err, result) {
+            callback(null, err);
+          });
+        });
+      };
+
+      tasks.push(test);
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        result[0].toString().should.equal((new Error(messages.ERROR.GENERAL))
+          .toString());
+        done();
+      });
+    });
+
+    it('should return successfully on no new posts', function(done) {
+      var tasks = [];
+      sandbox.stub(request, 'get').yields(null, null, {
+        data: [
+          // Non-Facebook page test
+          {link: 'Link'},
+
+          // Merged page test
+          {best_page: 'BestPage'}, // eslint-disable-line camelcase
+
+          /**
+           * Test: has no cover, no description, is not verified, and provides
+           * no link
+           */
+          {id: 'Id', name: 'Name1'},
+
+          // Test: has cover, description, is verified, and provides link
+          {
+            id: 'Id',
+            name: 'Name2',
+            cover: {source: 'CoverImageSource'},
+            description: 'Description',
+            isVerified: 'IsVerified',
+            link: 'https://www.facebook.com'
+          },
+
+          // Test: as previous test with about instead of description
+          {
+            id: 'Id',
+            name: 'Name3',
+            cover: {source: 'CoverImageSource'},
+            about: 'About',
+            isVerified: 'IsVerified',
+            link: 'https://www.facebook.com'
+          }
+        ]
+      });
+
+      // Add profileId
+      var addProfileId = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.facebook.profileId = 'ProfileId';
+          user.facebook.accessToken = 'AccessToken';
+          user.save().then(function(result) {
+            callback(null, result);
+          });
+        });
+      };
+
+      tasks.push(addProfileId);
+
+      // Test user.refreshFacebook
+      var test = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.refreshFacebook(callback);
+        });
+      };
+
+      tasks.push(test);
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        should.exist(result[0].facebook);
+        result[0].facebook.profileId.should.equal('ProfileId');
+        result[0].facebook.accessToken.should.equal('AccessToken');
+        should.not.exist(result[1]);
+        done();
+      });
+    });
+
+    it('should return errors if get request fails', function(done) {
+      var tasks = [];
+      sandbox.stub(request, 'get').yields(new Error('RequestError'));
+
+      // Add profileId
+      var addProfileId = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.facebook.profileId = 'ProfileId';
+          user.facebook.accessToken = 'AccessToken';
+          for (var i = 0; i < contentTypes.length; i++) {
+            if (contentTypes[i] === 'group') {
+              user.facebook[contentTypes[i].key + 's'][i] = {
+                groupId: 'GroupId',
+                name: 'Name'
+              };
+            } else {
+              user.facebook[contentTypes[i].key + 's'][i] = {
+                pageId: 'PageId',
+                name: 'Name'
+              };
+            }
+          }
+          user.save().then(function(result) {
+            callback(null, result);
+          });
+        });
+      };
+
+      tasks.push(addProfileId);
+
+      // Test user.refreshFacebook
+      var test = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.refreshFacebook(function(err, result) {
+            callback(null, err);
+          });
+        });
+      };
+
+      tasks.push(test);
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        should.exist(result[0].facebook);
+        result[0].facebook.profileId.should.equal('ProfileId');
+        result[0].facebook.accessToken.should.equal('AccessToken');
+        result[1].toString().should.equal((new Error(messages.ERROR.GENERAL))
+          .toString());
+        done();
+      });
+    });
+
+    it('should return error with expired access token', function(done) {
+      var tasks = [];
+      sandbox.stub(request, 'get').yields(null, null, {
+        error: {
+          code: 190
+        }
+      });
+
+      // Add profileId
+      var addProfileId = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.facebook.profileId = 'ProfileId';
+          user.facebook.accessToken = 'AccessToken';
+          contentTypes.forEach(function(type) {
+            if (type.key === 'group') {
+              user.facebook[type.key + 's'].push({
+                groupId: 'GroupId',
+                name: 'Name'
+              });
+            } else {
+              user.facebook[type.key + 's'].push({
+                pageId: 'PageId',
+                name: 'Name'
+              });
+            }
+          });
+          user.save().then(function(result) {
+            callback(null, result);
+          });
+        });
+      };
+
+      tasks.push(addProfileId);
+
+      // Test user.refreshFacebook
+      var test = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.refreshFacebook(function(err, result) {
+            callback(null, err);
+          });
+        });
+      };
+
+      tasks.push(test);
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        should.exist(result[0].facebook);
+        result[0].facebook.profileId.should.equal('ProfileId');
+        result[0].facebook.accessToken.should.equal('AccessToken');
+        result[1].should.equal('400-Facebook');
+        done();
+      });
+    });
+
+    it('should return successfully on body.data', function(done) {
+      var tasks = [];
+      var currentTime = Date.now();
+      sandbox.stub(request, 'get').yields(null, null, {
+        data: [
+          // Test: skip posts with no message property
+          {
+            id: 'A_B'
+          },
+          // Test: has message and timestamp, but no story property
+          {
+            id: 'A_B',
+            message: 'Message',
+            created_time: currentTime     // eslint-disable-line camelcase
+          },
+          // Test: has all properties
+          {
+            id: 'A_B',
+            message: 'Message',
+            story: 'Story',
+            created_time: currentTime,    // eslint-disable-line camelcase
+            full_picture: 'FullPicture',  // eslint-disable-line camelcase
+            link: 'Link'
+          },
+          // Test: same as previous test, but with story requiring formatting
+          {
+            id: 'A_B',
+            message: 'Message',
+            story: 'Story: Name',
+            created_time: currentTime,    // eslint-disable-line camelcase
+            full_picture: 'FullPicture',  // eslint-disable-line camelcase
+            link: 'Link'
+          }
+        ]
+      });
+
+      // Add profileId
+      var addProfileId = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.facebook.profileId = 'ProfileId';
+          user.facebook.accessToken = 'AccessToken';
+          contentTypes.forEach(function(type) {
+            if (type.key === 'group') {
+              user.facebook[type.key + 's'].push({
+                groupId: 'GroupId',
+                name: 'Name'
+              });
+            } else {
+              user.facebook[type.key + 's'].push({
+                pageId: 'PageId',
+                name: 'Name'
+              });
+            }
+          });
+          user.save().then(function(result) {
+            callback(null, result);
+          });
+        });
+      };
+
+      tasks.push(addProfileId);
+
+      // Test user.refreshFacebook
+      var test = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.refreshFacebook(function(err, result) {
+            callback(err, result);
+          });
+        });
+      };
+
+      tasks.push(test);
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        should.exist(result[0].facebook);
+        result[0].facebook.profileId.should.equal('ProfileId');
+        result[0].facebook.accessToken.should.equal('AccessToken');
+
+        var matchingData = [
+          {
+            service: 'facebook',
+            title: 'Name',
+            actionDescription: '',
+            content: 'Message',
+            timestamp: currentTime,
+            permalink: 'https://www.facebook.com/A/posts/B',
+            picture: '',
+            url: '',
+            postType: 'page'
+          },
+          {
+            service: 'facebook',
+            title: 'Name',
+            actionDescription: 'Story',
+            content: 'Message',
+            timestamp: currentTime,
+            permalink: 'https://www.facebook.com/A/posts/B',
+            picture: 'FullPicture',
+            url: 'Link',
+            postType: 'page'
+          },
+          {
+            service: 'facebook',
+            title: 'Name',
+            actionDescription: 'Story',
+            content: 'Message',
+            timestamp: currentTime,
+            permalink: 'https://www.facebook.com/A/posts/B',
+            picture: 'FullPicture',
+            url: 'Link',
+            postType: 'page'
+          },
+          {
+            service: 'facebook',
+            title: 'Name',
+            actionDescription: '',
+            content: 'Message',
+            timestamp: currentTime,
+            permalink: 'https://www.facebook.com/groupsA/permalink/B',
+            picture: '',
+            url: '',
+            postType: 'group'
+          },
+          {
+            service: 'facebook',
+            title: 'Name',
+            actionDescription: 'Story',
+            content: 'Message',
+            timestamp: currentTime,
+            permalink: 'https://www.facebook.com/groupsA/permalink/B',
+            picture: 'FullPicture',
+            url: 'Link',
+            postType: 'group'
+          },
+          {
+            service: 'facebook',
+            title: 'Name',
+            actionDescription: 'Story',
+            content: 'Message',
+            timestamp: currentTime,
+            permalink: 'https://www.facebook.com/groupsA/permalink/B',
+            picture: 'FullPicture',
+            url: 'Link',
+            postType: 'group'
+          }
+        ];
+
+        should.exist(result[1]);
+        result[1].should.have.lengthOf(matchingData.length);
+        for (var i = 0; i < result[1].length; i++) {
+          result[1][i].should.have.all.keys(matchingData[i]);
+        }
+        done();
+      });
+    });
+
+    it('should traverse pages correctly', function(done) {
+      var tasks = [];
+      var currentTime = Date.now();
+
+      var callback = sandbox.stub(request, 'get');
+
+      var firstCall = {
+        paging: {next: 'Next'},
+        data: [
+          // Test: skip posts with no message property
+          {
+            id: 'A_B'
+          },
+          // Test: has message and timestamp, but no story property
+          {
+            id: 'A_B',
+            message: 'Message',
+            created_time: currentTime     // eslint-disable-line camelcase
+          },
+          // Test: has all properties
+          {
+            id: 'A_B',
+            message: 'Message',
+            story: 'Story',
+            created_time: currentTime,    // eslint-disable-line camelcase
+            full_picture: 'FullPicture',  // eslint-disable-line camelcase
+            link: 'Link'
+          },
+          // Test: same as previous test, but with story requiring formatting
+          {
+            id: 'A_B',
+            message: 'Message',
+            story: 'Story: Name',
+            created_time: currentTime,    // eslint-disable-line camelcase
+            full_picture: 'FullPicture',  // eslint-disable-line camelcase
+            link: 'Link'
+          }
+        ]
+      };
+
+      var secondCall = {
+        data: [
+          // Test: skip posts with no message property
+          {
+            id: 'A_B'
+          },
+          // Test: has message and timestamp, but no story property
+          {
+            id: 'A_B',
+            message: 'Message',
+            created_time: currentTime     // eslint-disable-line camelcase
+          },
+          // Test: has all properties
+          {
+            id: 'A_B',
+            message: 'Message',
+            story: 'Story',
+            created_time: currentTime,    // eslint-disable-line camelcase
+            full_picture: 'FullPicture',  // eslint-disable-line camelcase
+            link: 'Link'
+          },
+          // Test: same as previous test, but with story requiring formatting
+          {
+            id: 'A_B',
+            message: 'Message',
+            story: 'Story: Name',
+            created_time: currentTime,    // eslint-disable-line camelcase
+            full_picture: 'FullPicture',  // eslint-disable-line camelcase
+            link: 'Link'
+          }
+        ]
+      };
+
+      callback
+        .onCall(0).yields(null, null, firstCall)
+        .onCall(1).yields(null, null, secondCall)
+        .onCall(2).yields(null, null, firstCall)
+        .onCall(3).yields(null, null, secondCall);
+
+      // Add profileId
+      var addProfileId = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.facebook.profileId = 'ProfileId';
+          user.facebook.accessToken = 'AccessToken';
+          contentTypes.forEach(function(type) {
+            if (type.key === 'group') {
+              user.facebook[type.key + 's'].push({
+                groupId: 'GroupId',
+                name: 'Name'
+              });
+            } else {
+              user.facebook[type.key + 's'].push({
+                pageId: 'PageId',
+                name: 'Name'
+              });
+            }
+          });
+          user.save().then(function(result) {
+            callback(null, result);
+          });
+        });
+      };
+
+      tasks.push(addProfileId);
+
+      // Test user.refreshFacebook
+      var test = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.refreshFacebook(function(err, result) {
+            callback(err, result);
+          });
+        });
+      };
+
+      tasks.push(test);
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        should.exist(result[0].facebook);
+        result[0].facebook.profileId.should.equal('ProfileId');
+        result[0].facebook.accessToken.should.equal('AccessToken');
+
+        var matchingData = [
+          {
+            service: 'facebook',
+            title: 'Name',
+            actionDescription: '',
+            content: 'Message',
+            timestamp: currentTime,
+            permalink: 'https://www.facebook.com/A/posts/B',
+            picture: '',
+            url: '',
+            postType: 'page'
+          },
+          {
+            service: 'facebook',
+            title: 'Name',
+            actionDescription: 'Story',
+            content: 'Message',
+            timestamp: currentTime,
+            permalink: 'https://www.facebook.com/A/posts/B',
+            picture: 'FullPicture',
+            url: 'Link',
+            postType: 'page'
+          },
+          {
+            service: 'facebook',
+            title: 'Name',
+            actionDescription: 'Story',
+            content: 'Message',
+            timestamp: currentTime,
+            permalink: 'https://www.facebook.com/A/posts/B',
+            picture: 'FullPicture',
+            url: 'Link',
+            postType: 'page'
+          },
+          {
+            service: 'facebook',
+            title: 'Name',
+            actionDescription: '',
+            content: 'Message',
+            timestamp: currentTime,
+            permalink: 'https://www.facebook.com/groupsA/permalink/B',
+            picture: '',
+            url: '',
+            postType: 'group'
+          },
+          {
+            service: 'facebook',
+            title: 'Name',
+            actionDescription: 'Story',
+            content: 'Message',
+            timestamp: currentTime,
+            permalink: 'https://www.facebook.com/groupsA/permalink/B',
+            picture: 'FullPicture',
+            url: 'Link',
+            postType: 'group'
+          },
+          {
+            service: 'facebook',
+            title: 'Name',
+            actionDescription: 'Story',
+            content: 'Message',
+            timestamp: currentTime,
+            permalink: 'https://www.facebook.com/groupsA/permalink/B',
+            picture: 'FullPicture',
+            url: 'Link',
+            postType: 'group'
+          }
+        ];
+
+        should.exist(result[1]);
+        result[1].should.have.lengthOf(matchingData.length * 2);
+        for (var i = 0; i < result[1].length; i++) {
+          result[1][i].should.have.all.keys(
+            matchingData[i % matchingData.length]
+          );
+        }
+        done();
+      });
+    });
+
+    it('should return successfully on no body.data', function(done) {
+      var tasks = [];
+      sandbox.stub(request, 'get').yields(null, null, {});
+
+      // Add profileId
+      var addProfileId = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.facebook.profileId = 'ProfileId';
+          user.facebook.accessToken = 'AccessToken';
+          contentTypes.forEach(function(type) {
+            if (type.key === 'group') {
+              user.facebook[type.key + 's'].push({
+                groupId: 'GroupId',
+                name: 'Name'
+              });
+            } else {
+              user.facebook[type.key + 's'].push({
+                pageId: 'PageId',
+                name: 'Name'
+              });
+            }
+          });
+          user.save().then(function(result) {
+            callback(null, result);
+          });
+        });
+      };
+
+      tasks.push(addProfileId);
+
+      // Test user.refreshFacebook
+      var test = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.refreshFacebook(function(err, result) {
+            callback(err, result);
+          });
+        });
+      };
+
+      tasks.push(test);
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        should.exist(result[0].facebook);
+        result[0].facebook.profileId.should.equal('ProfileId');
+        result[0].facebook.accessToken.should.equal('AccessToken');
+        should.not.exist(result[1]);
+        done();
+      });
+    });
+
+    it('should return successfully if not connected to Facebook',
+      function(done) {
+        var tasks = [];
+
+        // Test user.refreshFacebook
+        var test = function(callback) {
+          accountQuery.exec(function(err, user) {
+            should.not.exist(err);
+            should.exist(user);
+            user.refreshFacebook(callback);
+          });
+        };
+
+        tasks.push(test);
+
+        async.series(tasks, function(err, result) {
+          should.not.exist(err);
+          should.exist(result);
+          should.not.exist(result[0]);
+          done();
+        });
+      });
   });
 });
