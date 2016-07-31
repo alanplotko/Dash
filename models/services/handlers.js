@@ -1,6 +1,7 @@
 // --------- Dependencies ---------
 var moment = require('moment');
 var crypto = require('crypto');
+var messages = require('../../config/messages');
 var settings = require('../../config/settings');
 
 /**
@@ -24,7 +25,7 @@ module.exports.processContent = function(err, content, updates, expectedLength,
   Array.prototype.push.apply(updates.posts, content);
   updates.progress++;
   if (updates.progress === expectedLength) {
-    callback(null, updates.posts);
+    return callback(null, updates.posts);
   }
   return {progress: updates.progress, posts: updates.posts};
 };
@@ -59,7 +60,7 @@ module.exports.completeRefresh = function(serviceName, newPosts, user, done) {
     user.save(function(err) {
       // An error occurred
       if (err) {
-        return done(err);
+        return done(new Error(messages.ERROR.GENERAL));
       }
 
       // Saved posts and update times; return new posts
@@ -70,7 +71,7 @@ module.exports.completeRefresh = function(serviceName, newPosts, user, done) {
     user.save(function(err) {
       // An error occurred
       if (err) {
-        return done(err);
+        return done(new Error(messages.ERROR.GENERAL));
       }
       // Saved new update time
       return done(null, null);
@@ -91,7 +92,7 @@ module.exports.processDeauthorization = function(serviceName, user, done) {
   user.save(function(err) {
     // Database Error
     if (err) {
-      return done(err);
+      return done(new Error(messages.ERROR.GENERAL));
     }
 
     // Success: Removed service

@@ -58,9 +58,13 @@ module.exports.handlePostSave = function(errorRedirect, message, err, req,
 module.exports.handlePostRemoveError = function(serviceName, err, errorMessage,
     req, res) {
   // Get new access token if current token was deemed invalid
-  if (err && err.toString() === errorMessage) {
-    req.flash('serviceMessage',
-      messages.STATUS[serviceName.toUpperCase()].REFRESH);
+  if (err) {
+    if (err.toString() === errorMessage) {
+      req.flash('serviceMessage',
+        messages.STATUS[serviceName.toUpperCase()].REFRESH);
+    } else {
+      req.flash('serviceMessage', messages.ERROR.GENERAL);
+    }
   } else {
     req.flash('serviceMessage',
       messages.STATUS[serviceName.toUpperCase()].REMOVED);

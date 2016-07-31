@@ -86,15 +86,16 @@ describe('Dash user model', function() {
 
   describe('Model method: completeOperation', function() {
     it('catches errors', function(done) {
-      var error = new Error('test');
       var callback = function(err, onSuccess, extra) {
         should.exist(err);
-        err.should.equal(error);
+        err.toString().should.equal((new Error(messages.ERROR.GENERAL))
+          .toString());
         should.not.exist(onSuccess);
         should.not.exist(extra);
         done();
       };
-      User.completeOperation(error, null, callback, null);
+      User.completeOperation(new Error(messages.ERROR.GENERAL), null, callback,
+        null);
     });
 
     it('can return on success with extra parameter', function(done) {
@@ -366,14 +367,14 @@ describe('Dash user model', function() {
 
   describe('Model method: authDeserializer', function() {
     it('should catch errors in User.findById', function(done) {
-      var mongoError = new Error('MongoError');
-      sandbox.stub(User, 'findById').yields(mongoError);
+      sandbox.stub(User, 'findById').yields(new Error('MongoError'));
       accountQuery.exec(function(err, user) {
         should.not.exist(err);
         should.exist(user);
         User.authDeserializer(user._id.toString(), function(err, result) {
           should.exist(err);
-          err.should.equal(mongoError);
+          err.toString().should.equal((new Error(messages.ERROR.GENERAL))
+            .toString());
           should.not.exist(result);
           done();
         });
@@ -401,7 +402,8 @@ describe('Dash user model', function() {
       User.authenticateUser(dummyDetails.email, 'invalidPassword', function(err,
           retrievedUser, reason) {
         should.exist(err);
-        err.should.equal(mongoError);
+        err.toString().should.equal((new Error(messages.ERROR.GENERAL))
+          .toString());
         should.not.exist(retrievedUser);
         should.not.exist(reason);
         done();
@@ -611,7 +613,8 @@ describe('Dash user model', function() {
           User.updateUser(user._id, {displayName: 'NewName'}, function(err,
               onSuccess, extra) {
             should.exist(err);
-            err.should.equal(mongoError);
+            err.toString().should.equal((new Error(messages.ERROR.GENERAL))
+              .toString());
             should.not.exist(onSuccess);
             should.not.exist(extra);
             callback(err, true);
@@ -621,7 +624,8 @@ describe('Dash user model', function() {
 
       async.series([updateUser], function(err, result) {
         should.exist(err);
-        err.should.equal(mongoError);
+        err.toString().should.equal((new Error(messages.ERROR.GENERAL))
+          .toString());
         should.exist(result);
         result[0].should.be.true;
         accountQuery.exec(function(err, user) {
@@ -749,7 +753,8 @@ describe('Dash user model', function() {
           should.exist(user);
           User.deleteUser(user._id, function(err, onSuccess, extra) {
             should.exist(err);
-            err.should.equal(mongoError);
+            err.toString().should.equal((new Error(messages.ERROR.GENERAL))
+              .toString());
             should.not.exist(onSuccess);
             should.not.exist(extra);
             callback(err, true);
@@ -759,7 +764,8 @@ describe('Dash user model', function() {
 
       async.series([deleteUser], function(err, result) {
         should.exist(err);
-        err.should.equal(mongoError);
+        err.toString().should.equal((new Error(messages.ERROR.GENERAL))
+          .toString());
         should.exist(result);
         result[0].should.be.true;
         accountQuery.exec(function(err, user) {
@@ -780,7 +786,8 @@ describe('Dash user model', function() {
         should.exist(user);
         user.updateContent(function(err, onSuccess, extra) {
           should.exist(err);
-          err.should.equal(mongoError);
+          err.toString().should.equal((new Error(messages.ERROR.GENERAL))
+            .toString());
           should.not.exist(onSuccess);
           should.not.exist(extra);
           done();
@@ -864,12 +871,12 @@ describe('Dash user model', function() {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
             should.exist(user);
-            var mongoError = new Error('MongoError');
-            sandbox.stub(user, 'save').yields(mongoError);
+            sandbox.stub(user, 'save').yields(new Error('mongoError'));
             sandbox.stub(User, 'findById').yields(null, user);
             user.updateContent(function(err, onSuccess, extra) {
               should.exist(err);
-              err.should.equal(mongoError);
+              err.toString().should.equal((new Error(messages.ERROR.GENERAL))
+                .toString());
               should.not.exist(onSuccess);
               should.not.exist(extra);
               done();
@@ -910,11 +917,11 @@ describe('Dash user model', function() {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
-          var parallelError = new Error('ParallelError');
-          sandbox.stub(async, 'parallel').yields(parallelError);
+          sandbox.stub(async, 'parallel').yields(new Error('ParallelError'));
           user.updateContent(function(err, onSuccess, extra) {
             should.exist(err);
-            err.should.equal(parallelError);
+            err.toString().should.equal((new Error(messages.ERROR.GENERAL))
+              .toString());
             should.not.exist(onSuccess);
             should.not.exist(extra);
             done();

@@ -16,7 +16,7 @@ module.exports = function(UserSchema, messages) {
     mongoose.models.User.findById(id, function(err, user) {
       // Database Error
       if (err) {
-        return done(err);
+        return done(new Error(messages.ERROR.GENERAL));
       }
 
       // Unexpected Error: User not found
@@ -39,7 +39,7 @@ module.exports = function(UserSchema, messages) {
       request.del({url: url, json: true}, function(err, res, body) {
         // Request Error
         if (err) {
-          return done(err);
+          return done(new Error(messages.ERROR.GENERAL));
         }
 
         // Access Token Error
@@ -52,6 +52,9 @@ module.exports = function(UserSchema, messages) {
           // Remove relevant Facebook data
           return handlers.processDeauthorization('Facebook', user, done);
         }
+
+        // Return general error message
+        return done(new Error(messages.ERROR.GENERAL));
       });
     });
   };
@@ -65,10 +68,11 @@ module.exports = function(UserSchema, messages) {
    *                                   completion
    */
   function getFacebookContent(url, content, appSecretProof, done) {
-    request({url: url + appSecretProof, json: true}, function(err, res, body) {
+    request.get({url: url + appSecretProof, json: true}, function(err, res,
+        body) {
       // Request Error
       if (err) {
-        return done(err);
+        return done(new Error(messages.ERROR.GENERAL));
       }
 
       // Access Token Error
@@ -125,10 +129,11 @@ module.exports = function(UserSchema, messages) {
    *                                   completion
    */
   function getFacebookPosts(url, content, name, type, appSecretProof, done) {
-    request({url: url + appSecretProof, json: true}, function(err, res, body) {
+    request.get({url: url + appSecretProof, json: true}, function(err, res,
+        body) {
       // Request Error
       if (err) {
-        return done(err);
+        return done(new Error(messages.ERROR.GENERAL));
       }
 
       // Access Token Error
@@ -206,7 +211,7 @@ module.exports = function(UserSchema, messages) {
       mongoose.models.User.findById(id, function(err, user) {
         // Database Error
         if (err) {
-          return done(err);
+          return done(new Error(messages.ERROR.GENERAL));
         }
 
         // Unexpected Error: User not found
@@ -224,7 +229,10 @@ module.exports = function(UserSchema, messages) {
         getFacebookContent(url, {}, appSecretProof, function(err, content) {
           // Error while retrieving content
           if (err) {
-            return done(err);
+            if (err === '400-Facebook') {
+              return done(err);
+            }
+            return done(new Error(messages.ERROR.GENERAL));
           }
 
           // Success: Retrieved items
@@ -246,7 +254,7 @@ module.exports = function(UserSchema, messages) {
       mongoose.models.User.findById(id, function(err, user) {
         // Database Error
         if (err) {
-          return done(err);
+          return done(new Error(messages.ERROR.GENERAL));
         }
 
         // Unexpected Error: User not found
@@ -265,7 +273,7 @@ module.exports = function(UserSchema, messages) {
         user.save(function(err) {
           // Database Error
           if (err) {
-            return done(err);
+            return done(new Error(messages.ERROR.GENERAL));
           }
 
           // Success: Saved selected Facebook items
@@ -342,7 +350,7 @@ module.exports = function(UserSchema, messages) {
     mongoose.models.User.findById(this._id, function(err, user) {
       // Database Error
       if (err) {
-        return done(err);
+        return done(new Error(messages.ERROR.GENERAL));
       }
 
       // Set up async calls
@@ -354,7 +362,10 @@ module.exports = function(UserSchema, messages) {
 
       async.parallel(calls, function(err, results) {
         if (err) {
-          return done(err);
+          if (err === '400-Facebook') {
+            return done(err);
+          }
+          return done(new Error(messages.ERROR.GENERAL));
         }
 
         var newPosts = [];
