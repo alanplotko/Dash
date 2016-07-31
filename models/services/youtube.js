@@ -17,7 +17,7 @@ module.exports = function(UserSchema, messages) {
     mongoose.models.User.findById(id, function(err, user) {
       // Database Error
       if (err) {
-        return done(err);
+        return done(new Error(messages.ERROR.GENERAL));
       }
 
       // Unexpected Error: User not found
@@ -33,10 +33,10 @@ module.exports = function(UserSchema, messages) {
       var url = 'https://accounts.google.com/o/oauth2/revoke?token=' +
         user.youtube.accessToken;
 
-      request({url: url, json: true}, function(err, res, body) {
+      request.get({url: url, json: true}, function(err, res, body) {
         // Request Error
         if (err) {
-          return done(err);
+          return done(new Error(messages.ERROR.GENERAL));
         }
 
         // Access Token Error
@@ -49,6 +49,9 @@ module.exports = function(UserSchema, messages) {
           // Remove relevant YouTube data
           return handlers.processDeauthorization('YouTube', user, done);
         }
+
+        // Return general error message
+        return done(new Error(messages.ERROR.GENERAL));
       });
     });
   };
@@ -63,10 +66,11 @@ module.exports = function(UserSchema, messages) {
    *                                   completion
    */
   function getYouTubeContent(url, nextPageToken, content, done) {
-    request({url: url + nextPageToken, json: true}, function(err, res, body) {
+    request.get({url: url + nextPageToken, json: true}, function(err, res,
+        body) {
       // Request Error
       if (err) {
-        return done(err);
+        return done(new Error(messages.ERROR.GENERAL));
       }
 
       // Access Token Error
@@ -78,10 +82,18 @@ module.exports = function(UserSchema, messages) {
 
       if (body.items && body.items.length > 0) {
         body.items.forEach(function(element) {
+          var thumbnail = '';
+          if (element.snippet.thumbnails) {
+            if (element.snippet.thumbnails.high) {
+              thumbnail = element.snippet.thumbnails.high.url;
+            } else if (element.snippet.thumbnails.default) {
+              thumbnail = element.snippet.thumbnails.default.url;
+            }
+          }
+
           content[element.snippet.title] = {
             id: element.snippet.resourceId.channelId,
-            thumbnail: element.snippet.thumbnails.high.url ||
-              element.snippet.thumbnails.default.url,
+            thumbnail: thumbnail,
             description: element.snippet.description ||
               'No description provided.'
           };
@@ -111,7 +123,7 @@ module.exports = function(UserSchema, messages) {
     mongoose.models.User.findById(id, function(err, user) {
       // Database Error
       if (err) {
-        return done(err);
+        return done(new Error(messages.ERROR.GENERAL));
       }
 
       // Unexpected Error: User not found
@@ -125,28 +137,34 @@ module.exports = function(UserSchema, messages) {
 
       getYouTubeContent(url, '', {}, function(err, content) {
         // Error while retrieving content
-        if (err && err === '400-YouTube') {
-          refresh.requestNewAccessToken('youtube', user.youtube.refreshToken,
-            function(err, accessToken, refreshToken) {
-              // Request Error
-              if (err) {
-                return done(err);
-              }
-
-              user.youtube.accessToken = accessToken;
-              user.save(function(err) {
-                // Database Error
+        if (err) {
+          if (err === '400-YouTube') {
+            return refresh.requestNewAccessToken('youtube',
+              user.youtube.refreshToken,
+              function(err, accessToken, refreshToken) {
+                // Request Error
                 if (err) {
-                  return done(err);
+                  return done(new Error(messages.ERROR.GENERAL));
                 }
 
-                // Successfully refreshed access token
-                return done(new Error(messages.STATUS.YOUTUBE.REFRESHED_TOKEN));
+                user.youtube.accessToken = accessToken;
+                user.save(function(err) {
+                  // Database Error
+                  if (err) {
+                    return done(new Error(messages.ERROR.GENERAL));
+                  }
+
+                  // Successfully refreshed access token
+                  return done(
+                    new Error(messages.STATUS.YOUTUBE.REFRESHED_TOKEN)
+                  );
+                });
               });
-            });
-        } else {
-          return done(null, content, user.youtube.subscriptions);
+          }
+          return done(new Error(messages.ERROR.GENERAL));
         }
+
+        return done(null, content, user.youtube.subscriptions);
       });
     });
   };
@@ -163,7 +181,7 @@ module.exports = function(UserSchema, messages) {
     mongoose.models.User.findById(id, function(err, user) {
       // Database Error
       if (err) {
-        return done(err);
+        return done(new Error(messages.ERROR.GENERAL));
       }
 
       // Unexpected Error: User not found
@@ -180,15 +198,9 @@ module.exports = function(UserSchema, messages) {
           thumbnail: info[2]
         });
       });
-      user.save(function(err) {
-        // Database Error
-        if (err) {
-          return done(err);
-        }
 
-        // Success: Saved selected YouTube subscriptions
-        return done(null, user);
-      });
+      // Save selected YouTube subscriptions
+      return handlers.saveToUser(user, user, done);
     });
   };
 
@@ -204,14 +216,14 @@ module.exports = function(UserSchema, messages) {
    *                                   completion
    */
   function getYouTubeUploads(url, nextPageToken, content, name, done) {
-    request({
+    request.get({
       url: url + ((nextPageToken === null) ? '' : '&pageToken=' +
         nextPageToken),
       json: true
     }, function(err, res, body) {
       // Request Error
       if (err) {
-        return done(err);
+        return done(new Error(messages.ERROR.GENERAL));
       }
 
       // Access Token Error
@@ -330,7 +342,7 @@ module.exports = function(UserSchema, messages) {
     mongoose.models.User.findById(this._id, function(err, user) {
       // Database Error
       if (err) {
-        return done(err);
+        return done(new Error(messages.ERROR.GENERAL));
       }
 
       var calls = {};
@@ -341,7 +353,7 @@ module.exports = function(UserSchema, messages) {
 
       async.parallel(calls, function(err, results) {
         if (err) {
-          return done(err);
+          return done(new Error(messages.ERROR.GENERAL));
         }
 
         var newPosts = [];

@@ -1,7 +1,50 @@
 // --------- Dependencies ---------
 var moment = require('moment');
 var crypto = require('crypto');
+var messages = require('../../config/messages');
 var settings = require('../../config/settings');
+
+/**
+ * Saves the items to the user document successfully or returns a general error.
+ * @param  {Object}   user        The user object
+ * @param  {Object}   returnObj   The object to return via the callback
+ * @param  {Function} done        The callback function to execute
+ * @return {done}                 Execute the callback upon return with the
+ *                                error and the object to return, if either
+ *                                are present
+ */
+var saveToUser = module.exports.saveToUser = function(user, returnObj, done) {
+  return user.save(function(err) {
+    // An error occurred
+    if (err) {
+      return done(new Error(messages.ERROR.GENERAL));
+    }
+
+    // Complete save
+    return done(null, returnObj);
+  });
+};
+
+/**
+ * Checks if the error message indicates that a refresh is possible for the
+ * access token associated with the service. Returns the same error if it is
+ * eligible or a general error if it is not. It will proceed past this method
+ * only if it is eligible for a refresh; otherwise, it will return a general
+ * error and thus exit the control flow for a refresh.
+ * @param  {Object}   err         The error to check
+ * @param  {string}   serviceName The name of the service associated with
+ *                                the error
+ * @param  {Function} done        The callback function to execute
+ * @return {done}                 Execute the callback upon return with the
+ *                                error and the object to return, if either
+ *                                are present
+ */
+module.exports.checkIfRefreshEligible = function(err, serviceName, done) {
+  if (err === '400-' + serviceName) {
+    return done(err);
+  }
+  return done(new Error(messages.ERROR.GENERAL));
+};
 
 /**
  * Processes the posts retrieved from a service.
@@ -24,7 +67,7 @@ module.exports.processContent = function(err, content, updates, expectedLength,
   Array.prototype.push.apply(updates.posts, content);
   updates.progress++;
   if (updates.progress === expectedLength) {
-    callback(null, updates.posts);
+    return callback(null, updates.posts);
   }
   return {progress: updates.progress, posts: updates.posts};
 };
@@ -48,6 +91,8 @@ module.exports.generateAppSecretProof = function(token) {
  * @param  {Object[]} newPosts    A list of new posts that have been received
  * @param  {Object}   user        The user object
  * @param  {Function} done        The callback function to execute
+ * @return {Function}             Executes the saveToUser function to save any
+ *                                available user data to the user document
  */
 module.exports.completeRefresh = function(serviceName, newPosts, user, done) {
   if (newPosts.length > 0) {
@@ -56,26 +101,13 @@ module.exports.completeRefresh = function(serviceName, newPosts, user, done) {
       description: 'Checking in with ' + serviceName + ' for updates!'
     };
     user.batches.push(newUpdate);
-    user.save(function(err) {
-      // An error occurred
-      if (err) {
-        return done(err);
-      }
 
-      // Saved posts and update times; return new posts
-      return done(null, newPosts);
-    });
-  // No new posts, set new update time
-  } else {
-    user.save(function(err) {
-      // An error occurred
-      if (err) {
-        return done(err);
-      }
-      // Saved new update time
-      return done(null, null);
-    });
+    // Saved posts and update times; return new posts
+    return saveToUser(user, newPosts, done);
   }
+
+  // No new posts, set new update time
+  return saveToUser(user, null, done);
 };
 
 /**
@@ -83,20 +115,16 @@ module.exports.completeRefresh = function(serviceName, newPosts, user, done) {
  * @param  {string}   serviceName The name of the service that was refreshed
  * @param  {Object}   user        The user object
  * @param  {Function} done        The callback function to execute
+ * @return {Function}             Executes the saveToUser function to save any
+ *                                available user data to the user document
  */
 module.exports.processDeauthorization = function(serviceName, user, done) {
   // Remove relevant service data
   user[serviceName.toLowerCase()] =
     user.lastUpdateTime[serviceName.toLowerCase()] = undefined;
-  user.save(function(err) {
-    // Database Error
-    if (err) {
-      return done(err);
-    }
 
-    // Success: Removed service
-    return done(null, user);
-  });
+  // Remove service
+  return saveToUser(user, user, done);
 };
 
 /**

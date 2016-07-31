@@ -173,7 +173,7 @@ UserSchema.statics.completeOperation = function(err, onSuccess, done, extra) {
 
   // An error occurred
   if (err) {
-    return done(err);
+    return done(new Error(messages.ERROR.GENERAL));
   }
 
   // Operation succeeded, check for extra parameter
@@ -333,9 +333,12 @@ UserSchema.statics.authDeserializer = function(id, done) {
       /**
        * If err is not null, then User.findById failed and returned an error
        * and null for user. Passport will respond by invalidating the session.
-       * No custom message for err is required.
        */
-      done(err, user);
+      if (err) {
+        done(new Error(messages.ERROR.GENERAL), null);
+      } else {
+        done(null, user);
+      }
     });
 };
 
@@ -350,7 +353,7 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
   this.findOne({email: email}, function(err, user) {
     // An error occurred
     if (err) {
-      return done(err);
+      return done(new Error(messages.ERROR.GENERAL));
     }
 
     // Check if user exists
@@ -369,7 +372,7 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
     user.comparePassword(password, function(err, isMatch) {
       // An error occurred
       if (err) {
-        return done(err);
+        return done(messages.ERROR.GENERAL);
       }
 
       // Check if password matched
@@ -458,7 +461,7 @@ UserSchema.methods.updateContent = function(done) {
   mongoose.models.User.findById(this._id, function(err, user) {
     // An error occurred
     if (err) {
-      return done(err);
+      return done(new Error(messages.ERROR.GENERAL));
     }
 
     // Set up async calls
@@ -474,7 +477,7 @@ UserSchema.methods.updateContent = function(done) {
     async.parallel(calls, function(err, results) {
       // An error occurred
       if (err) {
-        return done(err);
+        return done(new Error(messages.ERROR.GENERAL));
       }
 
       var newUpdate = {
