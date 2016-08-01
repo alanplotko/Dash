@@ -787,7 +787,12 @@ describe('YouTube service', function() {
         result[2].toString().should.equal(
           (new Error(messages.STATUS.YOUTUBE.REFRESHED_TOKEN)).toString()
         );
-        done();
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.youtube.accessToken.should.equal('NewAccessToken');
+          done();
+        });
       });
     });
 
@@ -1131,5 +1136,1054 @@ describe('YouTube service', function() {
         done();
       });
     });
+  });
+
+  describe('Model method: saveYouTubeSubs', function() {
+    it('should catch errors in User.findById', function(done) {
+      var id;
+      var tasks = [];
+
+      // Get user id
+      var getId = function(callback) {
+        accountQuery.exec(function(err, user) {
+          sandbox.stub(User, 'findById').yields(new Error('MongoError'));
+          should.not.exist(err);
+          should.exist(user);
+          id = user._id;
+          callback(err, user._id);
+        });
+      };
+
+      tasks.push(getId);
+
+      // Test User.saveYouTubeSubs
+      var test = function(callback) {
+        User.saveYouTubeSubs(id, [], function(err) {
+          callback(null, err);
+        });
+      };
+
+      tasks.push(test);
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        result[0].should.equal(id);
+        result[1].toString().should.equal((new Error(messages.ERROR.GENERAL))
+          .toString());
+        done();
+      });
+    });
+
+    it('should return error on no user found', function(done) {
+      var id;
+      var tasks = [];
+
+      // Get user id
+      var getId = function(callback) {
+        accountQuery.exec(function(err, user) {
+          sandbox.stub(User, 'findById').yields(null, null);
+          should.not.exist(err);
+          should.exist(user);
+          id = user._id;
+          callback(err, user._id);
+        });
+      };
+
+      tasks.push(getId);
+
+      // Test User.saveYouTubeSubs
+      var test = function(callback) {
+        User.saveYouTubeSubs(id, [], function(result1, result2, result3) {
+          callback(null, result3); // Return error
+        });
+      };
+
+      tasks.push(test);
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        result[0].should.equal(id);
+        result[1].toString().should.equal((new Error(messages.ERROR.GENERAL))
+          .toString());
+        done();
+      });
+    });
+
+    it('should catch errors in user.save', function(done) {
+      var id;
+      var tasks = [];
+
+      // Get user id
+      var getId = function(callback) {
+        accountQuery.exec(function(err, user) {
+          sandbox.stub(user, 'save').yields(new Error('MongoError'));
+          sandbox.stub(User, 'findById').yields(null, user);
+          should.not.exist(err);
+          should.exist(user);
+          id = user._id;
+          callback(err, user._id);
+        });
+      };
+
+      tasks.push(getId);
+
+      // Test User.saveYouTubeSubs
+      var test = function(callback) {
+        User.saveYouTubeSubs(id, [], function(err) {
+          callback(null, err); // Return error
+        });
+      };
+
+      tasks.push(test);
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        result[0].should.equal(id);
+        result[1].toString().should.equal((new Error(messages.ERROR.GENERAL))
+          .toString());
+        done();
+      });
+    });
+
+    it('should return successfully on no new content', function(done) {
+      var id;
+      var tasks = [];
+
+      // Get user id
+      var getId = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          id = user._id;
+          callback(err, user._id);
+        });
+      };
+
+      tasks.push(getId);
+
+      // Test User.saveYouTubeSubs
+      var test = function(callback) {
+        User.saveYouTubeSubs(id, [], function(err, result) {
+          callback(err, result);
+        });
+      };
+
+      tasks.push(test);
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        result[0].should.equal(id);
+        should.exist(result[1]);
+        should.exist(result[1].youtube.subscriptions);
+        result[1].youtube.subscriptions.should.be.empty;
+        done();
+      });
+    });
+
+    it('should return successfully on new content', function(done) {
+      var id;
+      var tasks = [];
+
+      // Get user id
+      var getId = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          id = user._id;
+          callback(err, user._id);
+        });
+      };
+
+      tasks.push(getId);
+
+      // Test User.saveYouTubeSubs
+      var test = function(callback) {
+        User.saveYouTubeSubs(id, ['A;B;C'], function(err, result) {
+          callback(err, result);
+        });
+      };
+
+      tasks.push(test);
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        result[0].should.equal(id);
+        should.exist(result[1]);
+        should.exist(result[1].youtube.subscriptions);
+        result[1].youtube.subscriptions.should.have.lengthOf(1);
+        result[1].youtube.subscriptions[0].toObject()
+          .should.contain.all.keys({
+            subscriptionId: 'A',
+            name: 'B',
+            thumbnail: 'C'
+          });
+        done();
+      });
+    });
+  });
+
+  /**
+   * This also tests the helper function, getYouTubeUploads, and the document
+   * method, updateYouTube.
+   */
+  describe('Document method: refreshYouTube', function() {
+    it('should catch errors in User.findById', function(done) {
+      var tasks = [];
+
+      // Test user.refreshYouTube
+      var test = function(callback) {
+        accountQuery.exec(function(err, user) {
+          sandbox.stub(User, 'findById').yields(new Error('MongoError'));
+          should.not.exist(err);
+          should.exist(user);
+          user.refreshYouTube(function(err, result) {
+            callback(null, err);
+          });
+        });
+      };
+
+      tasks.push(test);
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        result[0].toString().should.equal((new Error(messages.ERROR.GENERAL))
+          .toString());
+        done();
+      });
+    });
+
+    it('should catch errors in async.parallel', function(done) {
+      var tasks = [];
+
+      // Test user.refreshYouTube
+      var test = function(callback) {
+        accountQuery.exec(function(err, user) {
+          sandbox.stub(async, 'parallel').yields(new Error('ParallelError'));
+          should.not.exist(err);
+          should.exist(user);
+          user.refreshYouTube(function(err, result) {
+            callback(null, err);
+          });
+        });
+      };
+
+      tasks.push(test);
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        result[0].toString().should.equal((new Error(messages.ERROR.GENERAL))
+          .toString());
+        done();
+      });
+    });
+
+    it('should return successfully on no new posts', function(done) {
+      var tasks = [];
+      sandbox.stub(request, 'get').yields(null, null, {});
+
+      // Add profileId
+      var addProfileId = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.youtube.profileId = 'ProfileId';
+          user.youtube.accessToken = 'AccessToken';
+          user.save().then(function(result) {
+            callback(null, result);
+          });
+        });
+      };
+
+      tasks.push(addProfileId);
+
+      // Test user.refreshYouTube
+      var test = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.refreshYouTube(callback);
+        });
+      };
+
+      tasks.push(test);
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        should.exist(result[0].youtube);
+        result[0].youtube.profileId.should.equal('ProfileId');
+        result[0].youtube.accessToken.should.equal('AccessToken');
+        should.not.exist(result[1]);
+        done();
+      });
+    });
+
+    it('should return errors if get request fails', function(done) {
+      var tasks = [];
+      sandbox.stub(request, 'get').yields(new Error('RequestError'));
+
+      // Add profileId
+      var addProfileId = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.youtube.profileId = 'ProfileId';
+          user.youtube.accessToken = 'AccessToken';
+          user.youtube.subscriptions.push({
+            subscriptionId: 'SubscriptionId',
+            name: 'Name',
+            thumbnail: 'Thumbnail'
+          });
+          user.save().then(function(result) {
+            callback(null, result);
+          });
+        });
+      };
+
+      tasks.push(addProfileId);
+
+      // Test user.refreshYouTube
+      var test = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.refreshYouTube(function(err, result) {
+            callback(null, err);
+          });
+        });
+      };
+
+      tasks.push(test);
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        should.exist(result[0].facebook);
+        result[0].youtube.profileId.should.equal('ProfileId');
+        result[0].youtube.accessToken.should.equal('AccessToken');
+        result[1].toString().should.equal((new Error(messages.ERROR.GENERAL))
+          .toString());
+        done();
+      });
+    });
+
+    it('should return error with expired access token and 400 code',
+      function(done) {
+        var tasks = [];
+        sandbox.stub(request, 'get').yields(null, null, {
+          error: {
+            code: 400
+          }
+        });
+
+        // Add profileId
+        var addProfileId = function(callback) {
+          accountQuery.exec(function(err, user) {
+            should.not.exist(err);
+            should.exist(user);
+            user.youtube.profileId = 'ProfileId';
+            user.youtube.accessToken = 'AccessToken';
+            user.youtube.subscriptions.push({
+              subscriptionId: 'SubscriptionId',
+              name: 'Name',
+              thumbnail: 'Thumbnail'
+            });
+            user.save().then(function(result) {
+              callback(null, result);
+            });
+          });
+        };
+
+        tasks.push(addProfileId);
+
+        // Test user.refreshYouTube
+        var test = function(callback) {
+          accountQuery.exec(function(err, user) {
+            should.not.exist(err);
+            should.exist(user);
+            user.refreshYouTube(function(err, result) {
+              callback(null, err);
+            });
+          });
+        };
+
+        tasks.push(test);
+
+        async.series(tasks, function(err, result) {
+          should.not.exist(err);
+          should.exist(result);
+          should.exist(result[0].youtube);
+          result[0].youtube.profileId.should.equal('ProfileId');
+          result[0].youtube.accessToken.should.equal('AccessToken');
+          result[1].should.equal('400-YouTube');
+          done();
+        });
+      });
+
+    it('should return error with expired access token and 403 code',
+      function(done) {
+        var tasks = [];
+        sandbox.stub(request, 'get').yields(null, null, {
+          error: {
+            code: 403
+          }
+        });
+
+        // Add profileId
+        var addProfileId = function(callback) {
+          accountQuery.exec(function(err, user) {
+            should.not.exist(err);
+            should.exist(user);
+            user.youtube.profileId = 'ProfileId';
+            user.youtube.accessToken = 'AccessToken';
+            user.youtube.subscriptions.push({
+              subscriptionId: 'SubscriptionId',
+              name: 'Name',
+              thumbnail: 'Thumbnail'
+            });
+            user.save().then(function(result) {
+              callback(null, result);
+            });
+          });
+        };
+
+        tasks.push(addProfileId);
+
+        // Test user.refreshYouTube
+        var test = function(callback) {
+          accountQuery.exec(function(err, user) {
+            should.not.exist(err);
+            should.exist(user);
+            user.refreshYouTube(function(err, result) {
+              callback(null, err);
+            });
+          });
+        };
+
+        tasks.push(test);
+
+        async.series(tasks, function(err, result) {
+          should.not.exist(err);
+          should.exist(result);
+          should.exist(result[0].youtube);
+          result[0].youtube.profileId.should.equal('ProfileId');
+          result[0].youtube.accessToken.should.equal('AccessToken');
+          result[1].should.equal('400-YouTube');
+          done();
+        });
+      });
+
+    it('should return successfully on body.data', function(done) {
+      var tasks = [];
+      var currentTime = Date.now();
+      sandbox.stub(request, 'get').yields(null, null, {
+        items: [
+          // Test: skip posts with no snippet property
+          {},
+          // Test: as previous, but with no snippet.type property
+          {snippet: {}},
+          // Test: as previous, but with snippet.type !== 'upload'
+          {snippet: {type: 'NotUpload'}},
+          // Test: max resolution thumbnail
+          {
+            snippet: {
+              title: 'Title1',
+              channelTitle: 'ChannelTitle',
+              publishedAt: currentTime,
+              channelId: 'ChannelId',
+              thumbnails: {maxres: {url: 'Thumbnail'}},
+              description: 'Description',
+              type: 'upload'
+            },
+            contentDetails: {
+              upload: {videoId: 'VideoId'}
+            }
+          },
+          // Test: as previous, but with standard resolution thumbnail
+          {
+            snippet: {
+              title: 'Title2',
+              channelTitle: 'ChannelTitle',
+              publishedAt: currentTime,
+              channelId: 'ChannelId',
+              thumbnails: {standard: {url: 'Thumbnail'}},
+              description: 'Description',
+              type: 'upload'
+            },
+            contentDetails: {
+              upload: {videoId: 'VideoId'}
+            }
+          },
+          // Test: as previous, but with hq thumbnail
+          {
+            snippet: {
+              title: 'Title3',
+              channelTitle: 'ChannelTitle',
+              publishedAt: currentTime,
+              channelId: 'ChannelId',
+              thumbnails: {high: {url: 'Thumbnail'}},
+              description: 'Description',
+              type: 'upload'
+            },
+            contentDetails: {
+              upload: {videoId: 'VideoId'}
+            }
+          },
+          // Test: as previous, but with long description
+          {
+            snippet: {
+              title: 'Title4',
+              channelTitle: 'ChannelTitle',
+              publishedAt: currentTime,
+              channelId: 'ChannelId',
+              thumbnails: {high: {url: 'Thumbnail'}},
+              /**
+               * A very long description to pass 200 words when split on spaces
+               * for the case where the description truncates to 200 words and
+               * a '...'
+               */
+              description: 'Description\nX X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X',
+              type: 'upload'
+            },
+            contentDetails: {
+              upload: {videoId: 'VideoId'}
+            }
+          },
+          // Test: as previous, but with no description
+          {
+            snippet: {
+              title: 'Title5',
+              channelTitle: 'ChannelTitle',
+              publishedAt: currentTime,
+              channelId: 'ChannelId',
+              thumbnails: {high: {url: 'Thumbnail'}},
+              type: 'upload'
+            },
+            contentDetails: {
+              upload: {videoId: 'VideoId'}
+            }
+          }
+        ]
+      });
+
+      // Add profileId
+      var addProfileId = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.youtube.profileId = 'ProfileId';
+          user.youtube.accessToken = 'AccessToken';
+          user.youtube.subscriptions.push({
+            subscriptionId: 'SubscriptionId',
+            name: 'Name',
+            thumbnail: 'Thumbnail'
+          });
+          user.save().then(function(result) {
+            callback(null, result);
+          });
+        });
+      };
+
+      tasks.push(addProfileId);
+
+      // Test user.refreshYouTube
+      var test = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.refreshYouTube(function(err, result) {
+            callback(err, result);
+          });
+        });
+      };
+
+      tasks.push(test);
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        should.exist(result[0].youtube);
+        result[0].youtube.profileId.should.equal('ProfileId');
+        result[0].youtube.accessToken.should.equal('AccessToken');
+
+        var matchingData = [
+          {
+            service: 'youtube',
+            title: 'Title1',
+            actionDescription: 'ChannelTitle uploaded a new video!',
+            content: 'Description',
+            timestamp: currentTime,
+            permalink: 'https://www.youtube.com/channel/ChannelId',
+            picture: undefined,
+            url: 'https://www.youtube.com/watch?v=VideoId',
+            postType: 'upload'
+          },
+          {
+            service: 'youtube',
+            title: 'Title2',
+            actionDescription: 'ChannelTitle uploaded a new video!',
+            content: 'Description',
+            timestamp: currentTime,
+            permalink: 'https://www.youtube.com/channel/ChannelId',
+            picture: undefined,
+            url: 'https://www.youtube.com/watch?v=VideoId',
+            postType: 'upload'
+          },
+          {
+            service: 'youtube',
+            title: 'Title3',
+            actionDescription: 'ChannelTitle uploaded a new video!',
+            content: 'Description',
+            timestamp: currentTime,
+            permalink: 'https://www.youtube.com/channel/ChannelId',
+            picture: undefined,
+            url: 'https://www.youtube.com/watch?v=VideoId',
+            postType: 'upload'
+          },
+          {
+            service: 'youtube',
+            title: 'Title4',
+            actionDescription: 'ChannelTitle uploaded a new video!',
+            content: 'Description<br /><br />X X X X X X X X X X X X X X X ' +
+              'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+              'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+              'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+              'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+              'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+              'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+              'X X X X X X X X X X...',
+            timestamp: currentTime,
+            permalink: 'https://www.youtube.com/channel/ChannelId',
+            picture: undefined,
+            url: 'https://www.youtube.com/watch?v=VideoId',
+            postType: 'upload'
+          },
+          {
+            service: 'youtube',
+            title: 'Title5',
+            actionDescription: 'ChannelTitle uploaded a new video!',
+            content: '',
+            timestamp: currentTime,
+            permalink: 'https://www.youtube.com/channel/ChannelId',
+            picture: undefined,
+            url: 'https://www.youtube.com/watch?v=VideoId',
+            postType: 'upload'
+          }
+        ];
+
+        should.exist(result[1]);
+        result[1].should.have.lengthOf(matchingData.length);
+        for (var i = 0; i < result[1].length; i++) {
+          result[1][i].should.have.all.keys(matchingData[i]);
+        }
+        done();
+      });
+    });
+
+    it('should traverse pages correctly', function(done) {
+      var tasks = [];
+      var currentTime = Date.now();
+
+      var callback = sandbox.stub(request, 'get');
+
+      var firstCall = {
+        nextPageToken: 'NextPageToken',
+        items: [
+          // Test: skip posts with no snippet property
+          {},
+          // Test: as previous, but with no snippet.type property
+          {snippet: {}},
+          // Test: as previous, but with snippet.type !== 'upload'
+          {snippet: {type: 'NotUpload'}},
+          // Test: max resolution thumbnail
+          {
+            snippet: {
+              title: 'Title1',
+              channelTitle: 'ChannelTitle',
+              publishedAt: currentTime,
+              channelId: 'ChannelId',
+              thumbnails: {maxres: {url: 'Thumbnail'}},
+              description: 'Description',
+              type: 'upload'
+            },
+            contentDetails: {
+              upload: {videoId: 'VideoId'}
+            }
+          },
+          // Test: as previous, but with standard resolution thumbnail
+          {
+            snippet: {
+              title: 'Title2',
+              channelTitle: 'ChannelTitle',
+              publishedAt: currentTime,
+              channelId: 'ChannelId',
+              thumbnails: {standard: {url: 'Thumbnail'}},
+              description: 'Description',
+              type: 'upload'
+            },
+            contentDetails: {
+              upload: {videoId: 'VideoId'}
+            }
+          },
+          // Test: as previous, but with hq thumbnail
+          {
+            snippet: {
+              title: 'Title3',
+              channelTitle: 'ChannelTitle',
+              publishedAt: currentTime,
+              channelId: 'ChannelId',
+              thumbnails: {high: {url: 'Thumbnail'}},
+              description: 'Description',
+              type: 'upload'
+            },
+            contentDetails: {
+              upload: {videoId: 'VideoId'}
+            }
+          },
+          // Test: as previous, but with long description
+          {
+            snippet: {
+              title: 'Title4',
+              channelTitle: 'ChannelTitle',
+              publishedAt: currentTime,
+              channelId: 'ChannelId',
+              thumbnails: {high: {url: 'Thumbnail'}},
+              /**
+               * A very long description to pass 200 words when split on spaces
+               * for the case where the description truncates to 200 words and
+               * a '...'
+               */
+              description: 'Description\nX X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X',
+              type: 'upload'
+            },
+            contentDetails: {
+              upload: {videoId: 'VideoId'}
+            }
+          },
+          // Test: as previous, but with no description
+          {
+            snippet: {
+              title: 'Title5',
+              channelTitle: 'ChannelTitle',
+              publishedAt: currentTime,
+              channelId: 'ChannelId',
+              thumbnails: {high: {url: 'Thumbnail'}},
+              type: 'upload'
+            },
+            contentDetails: {
+              upload: {videoId: 'VideoId'}
+            }
+          }
+        ]
+      };
+
+      var secondCall = {
+        items: [
+          // Test: skip posts with no snippet property
+          {},
+          // Test: as previous, but with no snippet.type property
+          {snippet: {}},
+          // Test: as previous, but with snippet.type !== 'upload'
+          {snippet: {type: 'NotUpload'}},
+          // Test: max resolution thumbnail
+          {
+            snippet: {
+              title: 'Title1',
+              channelTitle: 'ChannelTitle',
+              publishedAt: currentTime,
+              channelId: 'ChannelId',
+              thumbnails: {maxres: {url: 'Thumbnail'}},
+              description: 'Description',
+              type: 'upload'
+            },
+            contentDetails: {
+              upload: {videoId: 'VideoId'}
+            }
+          },
+          // Test: as previous, but with standard resolution thumbnail
+          {
+            snippet: {
+              title: 'Title2',
+              channelTitle: 'ChannelTitle',
+              publishedAt: currentTime,
+              channelId: 'ChannelId',
+              thumbnails: {standard: {url: 'Thumbnail'}},
+              description: 'Description',
+              type: 'upload'
+            },
+            contentDetails: {
+              upload: {videoId: 'VideoId'}
+            }
+          },
+          // Test: as previous, but with hq thumbnail
+          {
+            snippet: {
+              title: 'Title3',
+              channelTitle: 'ChannelTitle',
+              publishedAt: currentTime,
+              channelId: 'ChannelId',
+              thumbnails: {high: {url: 'Thumbnail'}},
+              description: 'Description',
+              type: 'upload'
+            },
+            contentDetails: {
+              upload: {videoId: 'VideoId'}
+            }
+          },
+          // Test: as previous, but with long description
+          {
+            snippet: {
+              title: 'Title4',
+              channelTitle: 'ChannelTitle',
+              publishedAt: currentTime,
+              channelId: 'ChannelId',
+              thumbnails: {high: {url: 'Thumbnail'}},
+              /**
+               * A very long description to pass 200 words when split on spaces
+               * for the case where the description truncates to 200 words and
+               * a '...'
+               */
+              description: 'Description\nX X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+                'X X X X X X X X X X X X X X X X',
+              type: 'upload'
+            },
+            contentDetails: {
+              upload: {videoId: 'VideoId'}
+            }
+          },
+          // Test: as previous, but with no description
+          {
+            snippet: {
+              title: 'Title5',
+              channelTitle: 'ChannelTitle',
+              publishedAt: currentTime,
+              channelId: 'ChannelId',
+              thumbnails: {high: {url: 'Thumbnail'}},
+              type: 'upload'
+            },
+            contentDetails: {
+              upload: {videoId: 'VideoId'}
+            }
+          }
+        ]
+      };
+
+      callback
+        .onCall(0).yields(null, null, firstCall)
+        .onCall(1).yields(null, null, secondCall);
+
+      // Add profileId
+      var addProfileId = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.youtube.profileId = 'ProfileId';
+          user.youtube.accessToken = 'AccessToken';
+          user.youtube.subscriptions.push({
+            subscriptionId: 'SubscriptionId',
+            name: 'Name',
+            thumbnail: 'Thumbnail'
+          });
+          user.save().then(function(result) {
+            callback(null, result);
+          });
+        });
+      };
+
+      tasks.push(addProfileId);
+
+      // Test user.refreshYouTube
+      var test = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.refreshYouTube(function(err, result) {
+            callback(err, result);
+          });
+        });
+      };
+
+      tasks.push(test);
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        should.exist(result[0].youtube);
+        result[0].youtube.profileId.should.equal('ProfileId');
+        result[0].youtube.accessToken.should.equal('AccessToken');
+
+        var matchingData = [
+          {
+            service: 'youtube',
+            title: 'Title1',
+            actionDescription: 'ChannelTitle uploaded a new video!',
+            content: 'Description',
+            timestamp: currentTime,
+            permalink: 'https://www.youtube.com/channel/ChannelId',
+            picture: undefined,
+            url: 'https://www.youtube.com/watch?v=VideoId',
+            postType: 'upload'
+          },
+          {
+            service: 'youtube',
+            title: 'Title2',
+            actionDescription: 'ChannelTitle uploaded a new video!',
+            content: 'Description',
+            timestamp: currentTime,
+            permalink: 'https://www.youtube.com/channel/ChannelId',
+            picture: undefined,
+            url: 'https://www.youtube.com/watch?v=VideoId',
+            postType: 'upload'
+          },
+          {
+            service: 'youtube',
+            title: 'Title3',
+            actionDescription: 'ChannelTitle uploaded a new video!',
+            content: 'Description',
+            timestamp: currentTime,
+            permalink: 'https://www.youtube.com/channel/ChannelId',
+            picture: undefined,
+            url: 'https://www.youtube.com/watch?v=VideoId',
+            postType: 'upload'
+          },
+          {
+            service: 'youtube',
+            title: 'Title4',
+            actionDescription: 'ChannelTitle uploaded a new video!',
+            content: 'Description<br /><br />X X X X X X X X X X X X X X X ' +
+              'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+              'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+              'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+              'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+              'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+              'X X X X X X X X X X X X X X X X X X X X X X X X X X X X X X ' +
+              'X X X X X X X X X X...',
+            timestamp: currentTime,
+            permalink: 'https://www.youtube.com/channel/ChannelId',
+            picture: undefined,
+            url: 'https://www.youtube.com/watch?v=VideoId',
+            postType: 'upload'
+          },
+          {
+            service: 'youtube',
+            title: 'Title5',
+            actionDescription: 'ChannelTitle uploaded a new video!',
+            content: '',
+            timestamp: currentTime,
+            permalink: 'https://www.youtube.com/channel/ChannelId',
+            picture: undefined,
+            url: 'https://www.youtube.com/watch?v=VideoId',
+            postType: 'upload'
+          }
+        ];
+
+        should.exist(result[1]);
+        result[1].should.have.lengthOf(matchingData.length * 2);
+        for (var i = 0; i < result[1].length; i++) {
+          result[1][i].should.have.all.keys(
+            matchingData[i % matchingData.length]
+          );
+        }
+        done();
+      });
+    });
+
+    it('should return successfully on no body.data', function(done) {
+      var tasks = [];
+      sandbox.stub(request, 'get').yields(null, null, {});
+
+      // Add profileId
+      var addProfileId = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.youtube.profileId = 'ProfileId';
+          user.youtube.accessToken = 'AccessToken';
+          user.youtube.subscriptions.push({
+            subscriptionId: 'SubscriptionId',
+            name: 'Name',
+            thumbnail: 'Thumbnail'
+          });
+          user.save().then(function(result) {
+            callback(null, result);
+          });
+        });
+      };
+
+      tasks.push(addProfileId);
+
+      // Test user.refreshYouTube
+      var test = function(callback) {
+        accountQuery.exec(function(err, user) {
+          should.not.exist(err);
+          should.exist(user);
+          user.refreshYouTube(function(err, result) {
+            callback(err, result);
+          });
+        });
+      };
+
+      tasks.push(test);
+
+      async.series(tasks, function(err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        should.exist(result[0].youtube);
+        result[0].youtube.profileId.should.equal('ProfileId');
+        result[0].youtube.accessToken.should.equal('AccessToken');
+        should.not.exist(result[1]);
+        done();
+      });
+    });
+
+    it('should return successfully if not connected to YouTube',
+      function(done) {
+        var tasks = [];
+
+        // Test user.refreshYouTube
+        var test = function(callback) {
+          accountQuery.exec(function(err, user) {
+            should.not.exist(err);
+            should.exist(user);
+            user.refreshYouTube(callback);
+          });
+        };
+
+        tasks.push(test);
+
+        async.series(tasks, function(err, result) {
+          should.not.exist(err);
+          should.exist(result);
+          should.not.exist(result[0]);
+          done();
+        });
+      });
   });
 });

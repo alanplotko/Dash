@@ -254,13 +254,16 @@ module.exports = function(UserSchema, messages) {
             picture = thumbnails.high.url;
           }
 
-          var videoDesc = element.snippet.description.replace('\n',
-            '<br /><br />');
-          videoDesc = videoDesc.split(/\s+/, 200);
-          if (videoDesc.length === 200) {
-            videoDesc = videoDesc.join(' ') + '...';
-          } else {
-            videoDesc = videoDesc.join(' ');
+          var videoDesc = '';
+          if (element.snippet.description) {
+            videoDesc = element.snippet.description.replace('\n',
+              '<br /><br />');
+            videoDesc = videoDesc.split(/\s+/, 200);
+            if (videoDesc.length === 200) {
+              videoDesc = videoDesc.join(' ') + '...';
+            } else {
+              videoDesc = videoDesc.join(' ');
+            }
           }
 
           content.push({
@@ -268,7 +271,7 @@ module.exports = function(UserSchema, messages) {
             title: element.snippet.title,
             actionDescription: element.snippet.channelTitle +
               ' uploaded a new video!',
-            content: videoDesc || '',
+            content: videoDesc,
             timestamp: element.snippet.publishedAt,
             permalink: permalink,
             picture: picture,
@@ -353,7 +356,7 @@ module.exports = function(UserSchema, messages) {
 
       async.parallel(calls, function(err, results) {
         if (err) {
-          return done(new Error(messages.ERROR.GENERAL));
+          return handlers.checkIfRefreshEligible(err, 'YouTube', done);
         }
 
         var newPosts = [];
