@@ -86,6 +86,69 @@ describe('Service handlers', function() {
    * Place all tests below. Ensure all branches and methods are covered.
    */
 
+  describe('Handler method: saveToUser', function() {
+    it('should catch errors in user.save', function(done) {
+      // Test handlers.saveToUser
+      var test = function(user, callback) {
+        handlers.saveToUser(user, user, function(err, result) {
+          should.exist(err);
+          err.toString().should.equal((new Error(messages.ERROR.GENERAL))
+            .toString());
+          should.not.exist(result);
+          callback();
+        });
+      };
+
+      accountQuery.exec(function(err, user) {
+        should.not.exist(err);
+        should.exist(user);
+        sandbox.stub(user, 'save').yields(new Error('MongoError'));
+        test(user, done);
+      });
+    });
+
+    it('should return successfully on save', function(done) {
+      // Test handlers.saveToUser
+      var test = function(user, callback) {
+        handlers.saveToUser(user, user, function(err, result) {
+          should.not.exist(err);
+          should.exist(result);
+          user.should.equal(result);
+          callback();
+        });
+      };
+
+      accountQuery.exec(function(err, user) {
+        should.not.exist(err);
+        should.exist(user);
+        test(user, done);
+      });
+    });
+  });
+
+  describe('Handler method: checkIfRefreshEligible', function() {
+    it('should correct identify eligible refreshes', function(done) {
+      handlers.checkIfRefreshEligible('400-ServiceName', 'ServiceName',
+        function(err, result) {
+          should.exist(err);
+          err.should.equal('400-ServiceName');
+          should.not.exist(result);
+          done();
+        });
+    });
+
+    it('should correct identify ineligible refreshes', function(done) {
+      handlers.checkIfRefreshEligible('IneligibleRefreshError', 'ServiceName',
+        function(err, result) {
+          should.exist(err);
+          err.toString().should.equal((new Error(messages.ERROR.GENERAL))
+            .toString());
+          should.not.exist(result);
+          done();
+        });
+    });
+  });
+
   describe('Handler method: processContent', function() {
     it('should catch errors', function(done) {
       var error = new Error(messages.ERROR.GENERAL);

@@ -31,13 +31,13 @@ var saveToUser = module.exports.saveToUser = function(user, returnObj, done) {
  * eligible or a general error if it is not. It will proceed past this method
  * only if it is eligible for a refresh; otherwise, it will return a general
  * error and thus exit the control flow for a refresh.
- * @param  {Object}   err         The error to check
- * @param  {string}   serviceName The name of the service associated with
- *                                the error
- * @param  {Function} done        The callback function to execute
- * @return {done}                 Execute the callback upon return with the
- *                                error and the object to return, if either
- *                                are present
+ * @param  {Object|string}    err         The error to check
+ * @param  {string}           serviceName The name of the service associated
+ *                                        with the error
+ * @param  {Function}           done      The callback function to execute
+ * @return {done}                         Execute the callback upon return with
+ *                                        the error and the object to return,
+ *                                        if either are present
  */
 module.exports.checkIfRefreshEligible = function(err, serviceName, done) {
   if (err === '400-' + serviceName) {
