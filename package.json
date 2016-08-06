@@ -55,7 +55,7 @@
     "istanbul": "^0.4.4",
     "mocha": "^3.0.0",
     "mocha-csslint": "^1.0.0",
-    "mocha-eslint": "^2.1.1",
+    "mocha-eslint": "^3.0.0",
     "sinon": "^1.17.5",
     "sinon-mongoose": "^1.2.1"
   }
