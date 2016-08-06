@@ -1,7 +1,7 @@
 // --------- Environment Setup ---------
-process.env.NODE_ENV = (process.argv[2].toUpperCase() === 'DEV' ||
-  process.argv[2].toUpperCase() === 'DEVELOPMENT') ? 'DEV' : 'PROD';
-var debug = (process.env.NODE_ENV.toUpperCase() === 'DEV');
+var debug = (process.argv[2] && (process.argv[2].toUpperCase() ===
+  'DEV' || process.argv[2].toUpperCase() === 'DEVELOPMENT'));
+process.env.NODE_ENV = 'DEV';
 var settings = require('./config/settings');
 settings.ENV = settings[process.env.NODE_ENV];
 var messages = require('./config/messages');

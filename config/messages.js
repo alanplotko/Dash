@@ -287,13 +287,10 @@ var messages = {
         'Email address verification complete! You may now login.',
 
       CHANGE_SUCCEEDED:
-        'Email address updated. Remember to verify your ' +
-        'email address! Logging out...',
+        'Email address updated. Reloading...',
 
       CHANGE_FAILED:
-        'An error occurred. Please check your inbox for ' +
-        'a verification email and request a resend if ' +
-        'necessary. Logging out...',
+        'Email address update failed. Please try again in a few minutes.',
 
       VERIFICATION_EXPIRED:
         'Incorrect verification token. You need to ' +

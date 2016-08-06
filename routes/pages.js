@@ -132,7 +132,7 @@ module.exports = function(app, passport, isLoggedIn) {
         messages.SETTINGS.DISPLAY_NAME.INVALID, false);
     }
     // Update user settings
-    return handlers.handleUserUpdate(settings, 'DISPLAY_NAME', req, res);
+    return handlers.handleUserUpdate(settings, 'display_name', req, res);
   });
 
   app.post('/settings/profile/avatar', isLoggedIn, function(req, res) {
@@ -148,7 +148,7 @@ module.exports = function(app, passport, isLoggedIn) {
     }
 
     // Update user settings
-    return handlers.handleUserUpdate(settings, 'AVATAR', req, res);
+    return handlers.handleUserUpdate(settings, 'avatar', req, res);
   });
 
   app.post('/settings/profile/avatar/reset', isLoggedIn, function(req, res) {
@@ -160,6 +160,7 @@ module.exports = function(app, passport, isLoggedIn) {
   app.post('/settings/account/email', isLoggedIn, function(req, res) {
     // Clean and verify form input
     var newEmail = validator.trim(req.body.email);
+    var settings = {};
 
     // Validate changes
     if (!validator.isEmail(newEmail) || newEmail.length === 0) {
@@ -167,12 +168,19 @@ module.exports = function(app, passport, isLoggedIn) {
         false);
     }
 
-    User.findOne({_id: req.user._id}, function(err, returnedUser) {
+    settings.email = newEmail;
+
+    User.findOne({email: newEmail}, function(err, existingUser) {
       if (err) {
         return handlers.handleResponse(res, 500, null, false);
       }
-      returnedUser.email = newEmail;
-      return handlers.handleEmailChange(returnedUser, newEmail, req, res);
+
+      if (existingUser) {
+        return handlers.handleResponse(res, 200, messages.SETTINGS.EMAIL.EXISTS,
+          false);
+      }
+
+      return handlers.handleUserUpdate(settings, 'email', req, res);
     });
   });
 
