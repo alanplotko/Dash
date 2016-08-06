@@ -3,6 +3,7 @@ function dismiss(batchId, postId, el) {
   var URL;
   if (batchId === 'all' && postId === null) {
     URL = '/dismiss/all';
+    $('.batch-heading, .pagination').fadeOut();
   } else {
     URL = '/dismiss/' + batchId + '/' + postId;
   }

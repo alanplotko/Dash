@@ -4,6 +4,8 @@
   "description": "Dash is a central dashboard for keeping you updated with the information you care about.",
   "main": "app.js",
   "scripts": {
+    "start": "nodemon app.js",
+    "dev": "nodemon app.js dev",
     "test": "istanbul cover _mocha -- -R spec --recursive"
   },
   "repository": {
