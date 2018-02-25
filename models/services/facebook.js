@@ -1,8 +1,8 @@
 // --------- Dependencies ---------
-var mongoose = require('mongoose');
-var request = require('request');
-var async = require('async');
-var handlers = require('./handlers');
+let mongoose = require('mongoose');
+let request = require('request');
+let async = require('async');
+let handlers = require('./handlers');
 
 module.exports = function(UserSchema, messages) {
   /**
@@ -29,10 +29,10 @@ module.exports = function(UserSchema, messages) {
         return done(new Error(messages.STATUS.FACEBOOK.NOT_CONNECTED));
       }
 
-      var appSecretProof = handlers.generateAppSecretProof(user.facebook
+      let appSecretProof = handlers.generateAppSecretProof(user.facebook
         .accessToken);
 
-      var url = 'https://graph.facebook.com/v2.5/' +
+      let url = 'https://graph.facebook.com/v2.5/' +
         user.facebook.profileId + '/permissions?access_token=' +
         user.facebook.accessToken + appSecretProof;
 
@@ -89,7 +89,7 @@ module.exports = function(UserSchema, messages) {
             return;
           }
 
-          var coverImage;
+          let coverImage;
           if (element.cover) {
             coverImage = element.cover.source;
           }
@@ -143,8 +143,8 @@ module.exports = function(UserSchema, messages) {
 
       if (body.data && body.data.length > 0) {
         body.data.forEach(function(element) {
-          var idInfo = element.id.split('_');
-          var permalink;
+          let idInfo = element.id.split('_');
+          let permalink;
 
           if (type === 'page') {
             permalink = 'https://www.facebook.com/' + idInfo[0] + '/posts/' +
@@ -196,8 +196,8 @@ module.exports = function(UserSchema, messages) {
     key: 'group',
     route: 'groups'
   }].forEach(function(type) {
-    var plural = type.key + 's';
-    var formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
+    let plural = type.key + 's';
+    let formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
 
     // --------- Setup: Facebook pages and groups ---------
 
@@ -219,10 +219,10 @@ module.exports = function(UserSchema, messages) {
           return done(null, null, new Error(messages.ERROR.GENERAL));
         }
 
-        var appSecretProof = handlers.generateAppSecretProof(user.facebook
+        let appSecretProof = handlers.generateAppSecretProof(user.facebook
           .accessToken);
 
-        var url = 'https://graph.facebook.com/v2.5/' + user.facebook.profileId +
+        let url = 'https://graph.facebook.com/v2.5/' + user.facebook.profileId +
           '/' + type.route + '?fields=cover,name,id,description,is_verified,' +
           'best_page,about&access_token=' + user.facebook.accessToken;
 
@@ -262,7 +262,7 @@ module.exports = function(UserSchema, messages) {
         user.facebook[plural] = [];
 
         content.forEach(function(item) {
-          var itemFormatted = {name: item.substring(item.indexOf(':') + 1)};
+          let itemFormatted = {name: item.substring(item.indexOf(':') + 1)};
           itemFormatted[type.key + 'Id'] = item.substring(0, item.indexOf(':'));
           user.facebook[plural].push(itemFormatted);
         });
@@ -282,17 +282,17 @@ module.exports = function(UserSchema, messages) {
    * @return {Object}       The calls after they have been populated
    */
   UserSchema.methods.updateFacebook = function(calls) {
-    var user = this;
+    let user = this;
 
     // Set up call for update time
     calls.facebookUpdateTime = function(callback) {
       callback(null, Date.now());
     };
 
-    var appSecretProof = handlers.generateAppSecretProof(user.facebook
+    let appSecretProof = handlers.generateAppSecretProof(user.facebook
       .accessToken);
 
-    var lastUpdateTime = handlers.getLastUpdateTime('Facebook', user);
+    let lastUpdateTime = handlers.getLastUpdateTime('Facebook', user);
 
     // Retrieve page and group posts
     [{
@@ -303,16 +303,16 @@ module.exports = function(UserSchema, messages) {
       key: 'group',
       route: 'feed'
     }].forEach(function(type) {
-      var plural = type.key + 's';
-      var prop = 'facebook' + plural.charAt(0).toUpperCase() + plural.slice(1);
+      let plural = type.key + 's';
+      let prop = 'facebook' + plural.charAt(0).toUpperCase() + plural.slice(1);
       calls[prop] = function(callback) {
-        var updates = {
+        let updates = {
           progress: 0,
           posts: []
         };
         if (user.facebook[plural].length > 0) {
           user.facebook[plural].forEach(function(item) {
-            var feedUrl = 'https://graph.facebook.com/v2.5/' +
+            let feedUrl = 'https://graph.facebook.com/v2.5/' +
               item[type.key + 'Id'] + '/' + type.route + '?fields=id,story,' +
               'message,link,full_picture,created_time&since=' + lastUpdateTime +
               '&access_token=' + user.facebook.accessToken;
@@ -344,7 +344,7 @@ module.exports = function(UserSchema, messages) {
       }
 
       // Set up async calls
-      var calls = {};
+      let calls = {};
 
       if (user.hasFacebook && user.facebook.acceptUpdates) {
         calls = user.updateFacebook(calls, user);
@@ -355,7 +355,7 @@ module.exports = function(UserSchema, messages) {
           return handlers.checkIfRefreshEligible(err, 'Facebook', done);
         }
 
-        var newPosts = [];
+        let newPosts = [];
 
         if (user.hasFacebook && user.facebook.acceptUpdates) {
           Array.prototype.push.apply(newPosts, results.facebookPages);

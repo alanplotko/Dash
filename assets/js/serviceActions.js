@@ -31,8 +31,8 @@ function toggleUpdates(service) {
 }
 
 function toggleModal(service, isEnable) {
-  var toggleOption = isEnable ? 'Enable' : 'Disable';
-  var description = isEnable ? 'Enabling will include ' + service + ' in' +
+  let toggleOption = isEnable ? 'Enable' : 'Disable';
+  let description = isEnable ? 'Enabling will include ' + service + ' in' +
     'future updates. You can always return here to disable updates for this' +
     'service.' : 'Disabling will exclude ' + service + ' from future ' +
     'updates. You can always return here to enable updates for this ' +

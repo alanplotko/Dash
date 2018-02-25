@@ -1,9 +1,9 @@
 // --------- Dependencies ---------
-var User = require.main.require('./models/user');
-var validator = require('validator');
+let User = require.main.require('./models/user');
+let validator = require('validator');
 require.main.require('./config/custom-validation')(validator);
-var messages = require.main.require('./config/messages');
-var handlers = require.main.require('./routes/handlers');
+let messages = require.main.require('./config/messages');
+let handlers = require.main.require('./routes/handlers');
 
 module.exports = function(app, passport, isLoggedIn) {
   // --------- Front Page ---------
@@ -20,8 +20,8 @@ module.exports = function(app, passport, isLoggedIn) {
   });
 
   app.post('/reset/:service', isLoggedIn, function(req, res) {
-    var serviceName = req.params.service;
-    var serviceNameLower = serviceName.toLowerCase();
+    let serviceName = req.params.service;
+    let serviceNameLower = serviceName.toLowerCase();
 
     User.findById(req.user._id, function(err, user) {
       if (err) {
@@ -58,8 +58,8 @@ module.exports = function(app, passport, isLoggedIn) {
   });
 
   app.post('/refresh/:service', isLoggedIn, function(req, res) {
-    var serviceName = req.params.service;
-    var method = (serviceName.toLowerCase() === 'facebook') ? 'Facebook' :
+    let serviceName = req.params.service;
+    let method = (serviceName.toLowerCase() === 'facebook') ? 'Facebook' :
       'YouTube';
     req.user['refresh' + method](function(err, posts) {
       return handlers.handlePostRefresh(serviceName.toUpperCase(), err,
@@ -68,8 +68,8 @@ module.exports = function(app, passport, isLoggedIn) {
   });
 
   app.post('/toggleUpdates/:service', isLoggedIn, function(req, res) {
-    var serviceName = req.params.service;
-    var method = (serviceName === 'Facebook') ? 'Facebook' : 'YouTube';
+    let serviceName = req.params.service;
+    let method = (serviceName === 'Facebook') ? 'Facebook' : 'YouTube';
     req.user['toggle' + method](function(err, result) {
       return handlers.handlePostUpdate(result, result, err, result, req, res);
     });
@@ -95,7 +95,7 @@ module.exports = function(app, passport, isLoggedIn) {
         return res.sendStatus(500);
       }
 
-      var batch = user.batches.id(req.params.batchId);
+      let batch = user.batches.id(req.params.batchId);
       if (batch) {
         batch.posts.id(req.params.postId).remove();
         if (batch.posts.length === 0) {
@@ -121,8 +121,8 @@ module.exports = function(app, passport, isLoggedIn) {
   });
 
   app.post('/settings/profile/display_name', isLoggedIn, function(req, res) {
-    var displayName = validator.trim(req.body.displayName);
-    var settings = {};
+    let displayName = validator.trim(req.body.displayName);
+    let settings = {};
 
     // Validate changes
     if (validator.isValidDisplayName(displayName)) {
@@ -136,8 +136,8 @@ module.exports = function(app, passport, isLoggedIn) {
   });
 
   app.post('/settings/profile/avatar', isLoggedIn, function(req, res) {
-    var avatarUrl = validator.trim(req.body.avatar);
-    var settings = {};
+    let avatarUrl = validator.trim(req.body.avatar);
+    let settings = {};
 
     // Validate changes
     if (validator.isValidAvatar(avatarUrl)) {
@@ -159,8 +159,8 @@ module.exports = function(app, passport, isLoggedIn) {
 
   app.post('/settings/account/email', isLoggedIn, function(req, res) {
     // Clean and verify form input
-    var newEmail = validator.trim(req.body.email);
-    var settings = {};
+    let newEmail = validator.trim(req.body.email);
+    let settings = {};
 
     // Validate changes
     if (!validator.isEmail(newEmail) || newEmail.length === 0) {
@@ -185,10 +185,10 @@ module.exports = function(app, passport, isLoggedIn) {
   });
 
   app.post('/settings/account/password', isLoggedIn, function(req, res) {
-    var currentPass = validator.trim(req.body.currentPass);
-    var newPass = validator.trim(req.body.newPass);
-    var newPassConfirm = validator.trim(req.body.newPassConfirm);
-    var settings = {};
+    let currentPass = validator.trim(req.body.currentPass);
+    let newPass = validator.trim(req.body.newPass);
+    let newPassConfirm = validator.trim(req.body.newPassConfirm);
+    let settings = {};
 
     // Validate changes
     if (newPass !== newPassConfirm) {
@@ -220,7 +220,7 @@ module.exports = function(app, passport, isLoggedIn) {
   });
 
   app.post('/settings/account/delete', isLoggedIn, function(req, res) {
-    var connected = req.user.facebook.profileId !== undefined ||
+    let connected = req.user.facebook.profileId !== undefined ||
       req.user.youtube.profileId !== undefined;
 
     if (connected) {

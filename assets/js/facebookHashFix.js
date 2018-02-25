@@ -10,7 +10,7 @@ $(document).ready(function() {
         .replaceState('', document.title, window.location.pathname);
     }
     // Prevent scrolling by storing the page's current scroll offset
-    var scroll = {
+    let scroll = {
       top: document.body.scrollTop,
       left: document.body.scrollLeft
     };

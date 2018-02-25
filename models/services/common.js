@@ -1,5 +1,5 @@
 // --------- Dependencies ---------
-var mongoose = require('mongoose');
+let mongoose = require('mongoose');
 
 /**
  * Saves the update for the user into the database or returns a general error
@@ -91,7 +91,7 @@ module.exports = function(UserSchema, messages) {
           return done(new Error(messages.ERROR.GENERAL));
         }
 
-        var message = messages.STATUS[serviceName.toUpperCase()].NOT_CONFIGURED;
+        let message = messages.STATUS[serviceName.toUpperCase()].NOT_CONFIGURED;
         if (user['has' + serviceName]) {
           message = user[serviceName.toLowerCase()].acceptUpdates ?
             messages.STATUS[serviceName.toUpperCase()].UPDATES_DISABLED :

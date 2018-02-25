@@ -2,17 +2,20 @@
     "extends": "google",
     "rules": {
         // Ignore regular expressions
-        "max-len": [1, 80, 2, {
+        "max-len": [1, 100, 2, {
             ignoreComments: true,
             ignoreUrls: true,
             ignorePattern: "\\/\\^.*?(\\{(\\d+)?,?\\s*(\\d+)?\\})?\\$\\/"
-        }]
+        }],
+        "comma-dangle": "off",
+        "no-multi-spaces": "off"
     },
     "env": {
       "browser": true,
       "jquery": true,
       "mocha": true,
       "mongo": true,
-      "node": true
+      "node": true,
+      "es6": true
     }
 }

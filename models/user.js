@@ -1,19 +1,19 @@
 // --------- Dependencies ---------
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
-var async = require('async');
+let mongoose = require('mongoose');
+let Schema = mongoose.Schema;
+let async = require('async');
 require('./post');
 require('./post_collection');
-var PostCollection = mongoose.model('PostCollection');
-var PostCollectionSchema = PostCollection.schema;
-var passportLocalMongoose = require('passport-local-mongoose');
-var bcrypt = require('bcrypt');
-var crypto = require('crypto');
-var settings = require('../config/settings');
-var messages = require('../config/messages');
+let PostCollection = mongoose.model('PostCollection');
+let PostCollectionSchema = PostCollection.schema;
+let passportLocalMongoose = require('passport-local-mongoose');
+let bcrypt = require('bcrypt');
+let crypto = require('crypto');
+let settings = require('../config/settings');
+let messages = require('../config/messages');
 
 // --------- User Fields ---------
-var UserSchema = new Schema({
+let UserSchema = new Schema({
 
   // Username/Email
   email: {
@@ -200,7 +200,7 @@ UserSchema.virtual('isLocked').get(function() {
  * @param  {Function} next Pass control to the next matching route
  */
 UserSchema.pre('save', function(next) {
-  var user = this;
+  let user = this;
 
   // Check if the provided email address already exists
   mongoose.models.User.findOne({email: user.email}, function(err, user) {
@@ -258,7 +258,7 @@ UserSchema.methods.comparePassword = function(candidatePassword, done) {
  * @return {Function}       Update the login count and run the callback
  */
 UserSchema.methods.incLoginAttempts = function(done) {
-  var update;
+  let update;
   // If previous lock has expired, restart at 1
   if (this.lockUntil && this.lockUntil < Date.now()) {
     update = {
@@ -293,7 +293,7 @@ UserSchema.methods.incLoginAttempts = function(done) {
 /**
  * Expose enum on model to provide internal reference.
  */
-var reasons = UserSchema.statics.failedLogin = {
+let reasons = UserSchema.statics.failedLogin = {
   NOT_FOUND: 0,
   PASSWORD_INCORRECT: 1,
   MAX_ATTEMPTS: 2
@@ -383,7 +383,7 @@ UserSchema.statics.authenticateUser = function(email, password, done) {
         }
 
         // Reset attempts and lock duration
-        var updates = {
+        let updates = {
           $set: {
             loginAttempts: 0
           },
@@ -427,9 +427,9 @@ UserSchema.statics.updateUser = function(id, settings, done) {
  * @return {Function}       Update the user information and run the callback
  */
 UserSchema.statics.resetAvatar = function(id, email, done) {
-  var settings = {};
-  var gravatar = crypto.createHash('md5').update(email).digest('hex');
-  var avatarUrl = 'https://gravatar.com/avatar/' + gravatar;
+  let settings = {};
+  let gravatar = crypto.createHash('md5').update(email).digest('hex');
+  let avatarUrl = 'https://gravatar.com/avatar/' + gravatar;
   settings.avatar = avatarUrl;
 
   return mongoose.models.User.updateUser(id, settings, done);
@@ -465,7 +465,7 @@ UserSchema.methods.updateContent = function(done) {
     }
 
     // Set up async calls
-    var calls = {};
+    let calls = {};
 
     if (user.hasFacebook && user.facebook.acceptUpdates) {
       calls = user.updateFacebook(calls, user);
@@ -480,7 +480,7 @@ UserSchema.methods.updateContent = function(done) {
         return done(new Error(messages.ERROR.GENERAL));
       }
 
-      var newUpdate = {
+      let newUpdate = {
         posts: [],
         description: 'A new update!'
       };

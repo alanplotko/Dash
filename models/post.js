@@ -1,9 +1,9 @@
 // --------- Dependencies ---------
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
+let mongoose = require('mongoose');
+let Schema = mongoose.Schema;
 
 // Define post fields
-var PostSchema = new Schema({
+let PostSchema = new Schema({
 
   // Service Name
   service: {

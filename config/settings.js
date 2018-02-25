@@ -1,5 +1,5 @@
 // Define variables for development and production environments
-var settings = {
+let settings = {
   ACCOUNT: {
     SALT_WORK_FACTOR: 10,
     MAX_LOGIN_ATTEMPTS: 5,
@@ -16,7 +16,7 @@ var settings = {
     }
   },
   DEV: {
-    MONGO_URI: 'mongodb://dashbot:dash@127.0.0.1:27017/dash_test',
+    MONGO_URI: 'mongodb://127.0.0.1:27017/dash_test',
     URL: 'http://localhost:3000',
     EMAIL_SETTINGS: {
       HOST: process.env.DASH_EMAIL_HOST,

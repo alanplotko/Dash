@@ -1,8 +1,8 @@
 // --------- Dependencies ---------
-var messages = require.main.require('./config/messages');
+let messages = require.main.require('./config/messages');
 
 // Define common route configurations used across Dash
-var routes = {
+let routes = {
   SETUP: [
     {
       NAME: 'Facebook',

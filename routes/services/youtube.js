@@ -1,14 +1,14 @@
 // --------- Dependencies ---------
-var User = require.main.require('./models/user');
-var validator = require('validator');
+let User = require.main.require('./models/user');
+let validator = require('validator');
 require.main.require('./config/custom-validation')(validator);
-var handlers = require.main.require('./routes/services/handlers');
+let handlers = require.main.require('./routes/services/handlers');
 
 module.exports = function(app, passport, isLoggedIn) {
   app.get('/setup/youtube/subscriptions', isLoggedIn, function(req, res) {
     User.setUpYouTubeSubs(req.user._id, function(err, allContent,
         existingContent) {
-      var settings = {
+      let settings = {
         name: 'YouTube',
         error: 'Error: Refreshed Access Token',
         singular: 'subscription'

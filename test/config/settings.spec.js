@@ -1,14 +1,14 @@
-var chai = require('chai');
-var should = chai.should();
-var settings = require('../../config/settings');
-var mongoose = require('mongoose');
+let chai = require('chai');
+let should = chai.should();
+let settings = require('../../config/settings');
+let mongoose = require('mongoose');
 mongoose.Promise = require('bluebird');
 
 // Define expected environment based on whether the test is running in Travis
 settings.ENV = settings[process.env.NODE_ENV];
 
 // Define required keys for each environment property
-var envProps = [
+let envProps = [
   'MONGO_URI',
   'URL',
   'EMAIL_SETTINGS',
@@ -17,9 +17,9 @@ var envProps = [
 ];
 
 // Define required keys for other properties
-var serviceProps = ['CLIENT_ID', 'CLIENT_SECRET'];      // Services
-var emailProps = ['HOST', 'PORT', 'AUTH', 'SECURE'];    // Email Setup
-var formatProps = ['FROM', 'SUBJECT', 'HTML', 'TEXT'];  // Email Formatting
+let serviceProps = ['CLIENT_ID', 'CLIENT_SECRET'];      // Services
+let emailProps = ['HOST', 'PORT', 'AUTH', 'SECURE'];    // Email Setup
+let formatProps = ['FROM', 'SUBJECT', 'HTML', 'TEXT'];  // Email Formatting
 
 /**
  * Test for whether required settings are defined
@@ -37,7 +37,7 @@ describe('Dash settings', function() {
   });
 
   it('should have all required service details defined', function(done) {
-    for (var key in settings.SERVICES) {
+    for (let key in settings.SERVICES) {
       if (settings.SERVICES.hasOwnProperty(key)) {
         settings.SERVICES[key].should.contain.all.keys(serviceProps);
       }
@@ -80,6 +80,7 @@ describe('Dash database', function() {
 
   it('should connect successfully', function(done) {
     mongoose.connect(settings.ENV.MONGO_URI, function(err) {
+      console.log(err);
       should.not.exist(err);
       mongoose.connection.close(done);
     });

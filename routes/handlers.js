@@ -1,15 +1,15 @@
 // --------- Dependencies ---------
-var User = require.main.require('./models/user');
-var messages = require.main.require('./config/messages');
+let User = require.main.require('./models/user');
+let messages = require.main.require('./config/messages');
 
 // Number of post items per page
-var ITEMS_PER_PAGE = module.exports.ITEMS_PER_PAGE = 10;
+let ITEMS_PER_PAGE = module.exports.ITEMS_PER_PAGE = 10;
 
 // Number of pages shown in the pagination
-var NUM_PAGES_SHOWN = module.exports.NUM_PAGES_SHOWN = 5;
+let NUM_PAGES_SHOWN = module.exports.NUM_PAGES_SHOWN = 5;
 
 // Number of pages shown before current page
-var PAGE_CENTER = module.exports.PAGE_CENTER = 2;
+let PAGE_CENTER = module.exports.PAGE_CENTER = 2;
 
 /**
  * Send a general error back to the user.
@@ -22,7 +22,7 @@ var PAGE_CENTER = module.exports.PAGE_CENTER = 2;
  * @return {res}                  Send a message back to the user that indicates
  *                                the status of the completed process
  */
-var handleResponse = module.exports.handleResponse = function(res, code,
+let handleResponse = module.exports.handleResponse = function(res, code,
     message, refresh) {
   return res.status(code).send({
     message: message || messages.ERROR.GENERAL,
@@ -38,9 +38,9 @@ var handleResponse = module.exports.handleResponse = function(res, code,
  *                              across services
  * @return {Object}             The details needed for setting up pagination
  */
-var handlePagination = module.exports.handlePagination = function(batches,
+let handlePagination = module.exports.handlePagination = function(batches,
     currentPage, totalPosts) {
-  var results = {
+  let results = {
     batches: batches,
     currentPage: currentPage,
     numPages: Math.ceil(totalPosts / ITEMS_PER_PAGE),
@@ -48,8 +48,8 @@ var handlePagination = module.exports.handlePagination = function(batches,
     endPage: null
   };
   if (totalPosts > 0) {
-    var postCount = ITEMS_PER_PAGE;
-    var skipCount = ITEMS_PER_PAGE * (results.currentPage - 1);
+    let postCount = ITEMS_PER_PAGE;
+    let skipCount = ITEMS_PER_PAGE * (results.currentPage - 1);
     batches.reverse().forEach(function(batch) {
       batch.posts.slice().forEach(function(post, idx, obj) {
         if (skipCount > 0) {
@@ -89,13 +89,13 @@ var handlePagination = module.exports.handlePagination = function(batches,
  * @return {res}          Redirect the user to the correct page and template
  */
 module.exports.handleDashboardSetup = function(req, res) {
-  var totalPosts = 0;
+  let totalPosts = 0;
   req.user.batches.forEach(function(batch) {
     totalPosts += batch.posts.length;
   });
-  var numPages = Math.ceil(totalPosts / ITEMS_PER_PAGE);
+  let numPages = Math.ceil(totalPosts / ITEMS_PER_PAGE);
 
-  var currentPage = req.params.page ? parseInt(req.params.page, 10) : null;
+  let currentPage = req.params.page ? parseInt(req.params.page, 10) : null;
   if (currentPage !== null && (currentPage === 1 || currentPage <= 0 ||
       currentPage > numPages)) {
     return res.redirect('/dashboard');
@@ -105,7 +105,7 @@ module.exports.handleDashboardSetup = function(req, res) {
     currentPage = 1;
   }
 
-  var results = handlePagination(req.user.batches, currentPage, totalPosts,
+  let results = handlePagination(req.user.batches, currentPage, totalPosts,
     numPages);
 
   res.render('dashboard', {
@@ -162,7 +162,7 @@ module.exports.handlePostRefresh = function(serviceName, err, errorMessage,
  * @param  {Object} res            The response
  * @return {res}                   Send the user back a status message
  */
-var handlePostUpdate = module.exports.handlePostUpdate =
+let handlePostUpdate = module.exports.handlePostUpdate =
   function(successMessage, failureMessage, err, updateSuccess, req, res) {
     if (err) {
       return handleResponse(res, 500, null, false);
@@ -197,8 +197,8 @@ module.exports.handlePostReset = function(success, failure, method, req, res) {
  */
 module.exports.handleUserUpdate = function(settings, field, req, res) {
   User.updateUser(req.user._id, settings, function(err, updateSuccess) {
-    var success = messages.SETTINGS[field.toUpperCase()].CHANGE_SUCCEEDED;
-    var failure = messages.SETTINGS[field.toUpperCase()].CHANGE_FAILED;
+    let success = messages.SETTINGS[field.toUpperCase()].CHANGE_SUCCEEDED;
+    let failure = messages.SETTINGS[field.toUpperCase()].CHANGE_FAILED;
     return handlePostUpdate(success, failure, err, updateSuccess, req, res);
   });
 };
@@ -212,7 +212,7 @@ module.exports.handleUserUpdate = function(settings, field, req, res) {
  * @param  {Object} res            The response
  * @return {res}                   Send the user back a status message
  */
-var handlePostSave = module.exports.handlePostSave = function(successMessage,
+let handlePostSave = module.exports.handlePostSave = function(successMessage,
     err, req, res) {
   // An error occurred
   if (err) {
@@ -244,7 +244,7 @@ module.exports.handlePasswordChange = function(currentPass, newPass, req, res) {
       }
       user.password = newPass;
       user.save(function(err) {
-        var success = messages.SETTINGS.PASSWORD.CHANGE_SUCCEEDED;
+        let success = messages.SETTINGS.PASSWORD.CHANGE_SUCCEEDED;
         return handlePostSave(success, err, req, res);
       });
     } else {

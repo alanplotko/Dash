@@ -1,29 +1,29 @@
 /* eslint-disable no-unused-expressions, no-loop-func */
 
 // Set up testing libraries
-var common = require('../common/setup.js');
-var chai = require('chai');
-var should = chai.should();
-var chaiAsPromised = require('chai-as-promised');
+let common = require('../common/setup.js');
+let chai = require('chai');
+let should = chai.should();
+let chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
-var sinon = require('sinon');
+let sinon = require('sinon');
 require('sinon-mongoose');
-var sandbox;
+let sandbox;
 
 // Set up mongoose
-var mongoose = require('mongoose');
+let mongoose = require('mongoose');
 mongoose.Promise = require('bluebird');
 
 // Set up user model test dependencies
-var User = require('../../models/user');
-var config = require('../../config/settings');
-var messages = require('../../config/messages');
-var async = require('async');
-var bcrypt = require('bcrypt');
+let User = require('../../models/user');
+let config = require('../../config/settings');
+let messages = require('../../config/messages');
+let async = require('async');
+let bcrypt = require('bcrypt');
 
 // Set up dummy account
-var dummyDetails = common.dummyDetails;
-var accountQuery = common.accountQuery;
+let dummyDetails = common.dummyDetails;
+let accountQuery = common.accountQuery;
 
 describe('Dash user model', function() {
   /**
@@ -86,7 +86,7 @@ describe('Dash user model', function() {
 
   describe('Model method: completeOperation', function() {
     it('catches errors', function(done) {
-      var callback = function(err, onSuccess, extra) {
+      let callback = function(err, onSuccess, extra) {
         should.exist(err);
         err.toString().should.equal((new Error(messages.ERROR.GENERAL))
           .toString());
@@ -99,7 +99,7 @@ describe('Dash user model', function() {
     });
 
     it('can return on success with extra parameter', function(done) {
-      var callback = function(err, onSuccess, extra) {
+      let callback = function(err, onSuccess, extra) {
         should.not.exist(err);
         onSuccess.should.be.true;
         extra.should.be.true;
@@ -109,7 +109,7 @@ describe('Dash user model', function() {
     });
 
     it('can return on success without extra parameter', function(done) {
-      var callback = function(err, onSuccess, extra) {
+      let callback = function(err, onSuccess, extra) {
         should.not.exist(err);
         should.exist(onSuccess);
         onSuccess.should.be.true;
@@ -170,21 +170,21 @@ describe('Dash user model', function() {
     });
 
     it('should catch errors in bcrypt.genSalt', function(done) {
-      var user = new User(dummyDetails);
+      let user = new User(dummyDetails);
       user.email = 'ErrorTest@Dash';
       sandbox.stub(bcrypt, 'genSalt').yields(new Error('SaltError'));
       user.save().should.be.rejectedWith(messages.ERROR.GENERAL).notify(done);
     });
 
     it('should catch errors in bcrypt.hash', function(done) {
-      var user = new User(dummyDetails);
+      let user = new User(dummyDetails);
       user.email = 'ErrorTest@Dash';
       sandbox.stub(bcrypt, 'hash').yields(new Error('SaltError'));
       user.save().should.be.rejectedWith(messages.ERROR.GENERAL).notify(done);
     });
 
     it('should successfully hash password', function(done) {
-      var user = new User(dummyDetails);
+      let user = new User(dummyDetails);
       user.email = 'HashTest@Dash';
       user.save().should.be.fulfilled.then(function() {
         user.password.should.not.equal(dummyDetails.password);
@@ -237,10 +237,10 @@ describe('Dash user model', function() {
 
   describe('Document method: incLoginAttempts', function() {
     it('should reset login attempts on detecting expired lock', function(done) {
-      var date = Date.now();
+      let date = Date.now();
 
       // Create lock
-      var createLock = function(callback) {
+      let createLock = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -255,7 +255,7 @@ describe('Dash user model', function() {
       };
 
       // Test counter reset
-      var testReset = function(callback) {
+      let testReset = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -293,7 +293,7 @@ describe('Dash user model', function() {
 
     it('should lock account if max login attempts reached', function(done) {
       // Increments the user's login attempts
-      var task = function(callback) {
+      let task = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -310,7 +310,7 @@ describe('Dash user model', function() {
         user.loginAttempts.should.equal(0);
         async.series([task, task, task, task, task], function(err, result) {
           should.not.exist(err);
-          for (var i = 0; i < 5; i++) {
+          for (let i = 0; i < 5; i++) {
             result[i].should.equal(i + 1);
           }
           accountQuery.exec(function(err, user) {
@@ -327,14 +327,14 @@ describe('Dash user model', function() {
   describe('Model method: failAuthentication', function() {
     it('should successfully increment login attempts', function(done) {
       // Calls failAuthentication to increment login attempts
-      var failAuth = function(callback) {
+      let failAuth = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
           user.loginAttempts.should.equal(0);
-          var reasons = User.failedLogin;
-          var keys = Object.keys(User.failedLogin);
-          var randomReason = keys[Math.floor(Math.random() * keys.length)];
+          let reasons = User.failedLogin;
+          let keys = Object.keys(User.failedLogin);
+          let randomReason = keys[Math.floor(Math.random() * keys.length)];
           User.failAuthentication(user, reasons[randomReason], callback);
         });
       };
@@ -397,7 +397,7 @@ describe('Dash user model', function() {
 
   describe('Model method: authenticateUser', function() {
     it('should catch errors in User.findOne', function(done) {
-      var mongoError = new Error('MongoError');
+      let mongoError = new Error('MongoError');
       sandbox.stub(User, 'findOne').yields(mongoError);
       User.authenticateUser(dummyDetails.email, 'invalidPassword', function(err,
           retrievedUser, reason) {
@@ -422,7 +422,7 @@ describe('Dash user model', function() {
 
     it('should fail authentication if user locked out', function(done) {
       // Increments the user's login attempts
-      var task = function(callback) {
+      let task = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -434,7 +434,7 @@ describe('Dash user model', function() {
       };
 
       // Checks for whether the user is locked
-      var checkLock = function(callback) {
+      let checkLock = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -457,7 +457,7 @@ describe('Dash user model', function() {
         async.series([task, task, task, task, task, checkLock], function(err,
             result) {
           should.not.exist(err);
-          for (var i = 0; i < 5; i++) {
+          for (let i = 0; i < 5; i++) {
             result[i].should.equal(i + 1);
           }
           should.not.exist(result[5].err);
@@ -501,10 +501,10 @@ describe('Dash user model', function() {
       });
 
     it('should unlock user when lock expires', function(done) {
-      var date = Date.now();
+      let date = Date.now();
 
       // Create expired lock
-      var createExpiredLock = function(callback) {
+      let createExpiredLock = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -524,7 +524,7 @@ describe('Dash user model', function() {
       };
 
       // Checks for whether the user is locked
-      var checkLock = function(callback) {
+      let checkLock = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -574,7 +574,7 @@ describe('Dash user model', function() {
   describe('Model method: updateUser', function() {
     it('should properly update the user', function(done) {
       // Update the user's display name
-      var updateUser = function(callback) {
+      let updateUser = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -602,11 +602,11 @@ describe('Dash user model', function() {
     });
 
     it('should catch errors in User.update', function(done) {
-      var mongoError = new Error('MongoError');
+      let mongoError = new Error('MongoError');
       sandbox.stub(User, 'update').yields(mongoError);
 
       // Update the user's display name
-      var updateUser = function(callback) {
+      let updateUser = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -641,7 +641,7 @@ describe('Dash user model', function() {
   describe('Model method: resetAvatar', function() {
     it('should reset the user\'s avatar', function(done) {
       // Change the user's avatar
-      var changeAvatar = function(callback) {
+      let changeAvatar = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -654,7 +654,7 @@ describe('Dash user model', function() {
       };
 
       // Check if avatar was changed to 'NewAvatar'
-      var checkAvatar = function(callback) {
+      let checkAvatar = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -686,7 +686,7 @@ describe('Dash user model', function() {
   describe('Model method: deleteUser', function() {
     it('should delete a valid user', function(done) {
       // Delete user account
-      var deleteUser = function(callback) {
+      let deleteUser = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -713,10 +713,10 @@ describe('Dash user model', function() {
     });
 
     it('should not delete a user using an invalid id', function(done) {
-      var ObjectId = mongoose.Types.ObjectId;
+      let ObjectId = mongoose.Types.ObjectId;
 
       // Delete user account
-      var deleteUser = function(callback) {
+      let deleteUser = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -743,11 +743,11 @@ describe('Dash user model', function() {
     });
 
     it('should catch errors in User.findByIdAndRemove', function(done) {
-      var mongoError = new Error('MongoError');
+      let mongoError = new Error('MongoError');
       sandbox.stub(User, 'findByIdAndRemove').yields(mongoError);
 
       // Delete user account
-      var deleteUser = function(callback) {
+      let deleteUser = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -779,7 +779,7 @@ describe('Dash user model', function() {
 
   describe('Document method: updateContent', function() {
     it('should catch errors in User.findById', function(done) {
-      var mongoError = new Error('MongoError');
+      let mongoError = new Error('MongoError');
       sandbox.stub(User, 'findById').yields(mongoError);
       accountQuery.exec(function(err, user) {
         should.not.exist(err);
@@ -798,19 +798,19 @@ describe('Dash user model', function() {
     it('should return from an update with no services when no calls exist',
       function(done) {
         // Add services to user account
-        var addServices = function(callback) {
+        let addServices = function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
             should.exist(user);
-            var update = {$set: {}};
+            let update = {$set: {}};
             [{facebook: 'Facebook'}, {youtube: 'YouTube'}].forEach(
               function(service) {
-                var key = Object.keys(service)[0];
+                let key = Object.keys(service)[0];
                 update.$set[key] = {};
                 update.$set[key].profileId = 'ProfileId';
                 update.$set[key].acceptUpdates = true;
                 update.$set[key].accessToken = 'AccessToken';
-                var methodName = 'update' + service[key];
+                let methodName = 'update' + service[key];
                 sandbox.stub(user, methodName).yields({});
               });
             User.findByIdAndUpdate(user._id, update, {new: true},
@@ -841,19 +841,19 @@ describe('Dash user model', function() {
     it('should catch errors in user.save on no new posts',
       function(done) {
         // Add services to user account
-        var addServices = function(callback) {
+        let addServices = function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
             should.exist(user);
-            var update = {$set: {}};
+            let update = {$set: {}};
             [{facebook: 'Facebook'}, {youtube: 'YouTube'}].forEach(
               function(service) {
-                var key = Object.keys(service)[0];
+                let key = Object.keys(service)[0];
                 update.$set[key] = {};
                 update.$set[key].profileId = 'ProfileId';
                 update.$set[key].acceptUpdates = true;
                 update.$set[key].accessToken = 'AccessToken';
-                var methodName = 'update' + service[key];
+                let methodName = 'update' + service[key];
                 sandbox.stub(user, methodName).yields({});
               });
             User.findByIdAndUpdate(user._id, update, {new: true},
@@ -887,19 +887,19 @@ describe('Dash user model', function() {
 
     it('should catch errors in async.parallel', function(done) {
       // Add services to user account
-      var addServices = function(callback) {
+      let addServices = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
-          var update = {$set: {}};
+          let update = {$set: {}};
           [{facebook: 'Facebook'}, {youtube: 'YouTube'}].forEach(
             function(service) {
-              var key = Object.keys(service)[0];
+              let key = Object.keys(service)[0];
               update.$set[key] = {};
               update.$set[key].profileId = 'ProfileId';
               update.$set[key].acceptUpdates = true;
               update.$set[key].accessToken = 'AccessToken';
-              var methodName = 'update' + service[key];
+              let methodName = 'update' + service[key];
               sandbox.stub(user, methodName).yields({});
             });
           User.findByIdAndUpdate(user._id, update, {new: true},
@@ -932,18 +932,18 @@ describe('Dash user model', function() {
 
     it('should successfully retrieve activity', function(done) {
       // Choose a random number of posts
-      var numPosts = Math.floor(Math.random() * 10) + 1;
+      let numPosts = Math.floor(Math.random() * 10) + 1;
 
       // Generate a random date to use for the dummy posts' timestamps
-      var randomDate = function(start, end) {
+      let randomDate = function(start, end) {
         return new Date(start.getTime() + Math.random() *
           (end.getTime() - start.getTime()));
       };
 
       // Generate dummy posts to attach to the calls
-      var generateRandomPosts = function() {
-        var dummyPosts = [];
-        for (var i = 0; i < numPosts; i++) {
+      let generateRandomPosts = function() {
+        let dummyPosts = [];
+        for (let i = 0; i < numPosts; i++) {
           dummyPosts.push({
             service: 'Service',
             title: 'Update',
@@ -960,13 +960,13 @@ describe('Dash user model', function() {
       };
 
       // Define function for calls
-      var callbackFunc = function(callback) {
-        var dummyPosts = generateRandomPosts();
+      let callbackFunc = function(callback) {
+        let dummyPosts = generateRandomPosts();
         callback(null, dummyPosts);
       };
 
       // Define services
-      var services = [{
+      let services = [{
         facebook: {
           formatted: 'Facebook',
           calls: {facebookPages: callbackFunc, facebookGroups: callbackFunc}
@@ -979,14 +979,14 @@ describe('Dash user model', function() {
       }];
 
       // Add services to user account
-      var addServices = function(callback) {
+      let addServices = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
-          var update = {$set: {}};
+          let update = {$set: {}};
 
           services.forEach(function(service) {
-            var key = Object.keys(service)[0];
+            let key = Object.keys(service)[0];
             update.$set[key] = {};
             update.$set[key].profileId = 'ProfileId';
             update.$set[key].acceptUpdates = true;
@@ -1010,9 +1010,9 @@ describe('Dash user model', function() {
           should.not.exist(err);
           should.exist(user);
           services.forEach(function(service) {
-            var key = Object.keys(service)[0];
-            var methodName = 'update' + service[key].formatted;
-            sandbox.stub(user, methodName, function() {
+            let key = Object.keys(service)[0];
+            let methodName = 'update' + service[key].formatted;
+            sandbox.stub(user, methodName).callsFake(function() {
               return service[key].calls;
             });
           });
@@ -1021,11 +1021,11 @@ describe('Dash user model', function() {
             should.not.exist(err);
             should.exist(onSuccess);
             onSuccess.posts.should.have.lengthOf(numPosts);
-            var prevTimestamp = onSuccess.posts[0].timestamp;
+            let prevTimestamp = onSuccess.posts[0].timestamp;
 
             // Verify that the posts are sorted by date
             if (onSuccess.posts.length > 1) {
-              for (var i = 1; i < onSuccess.posts.length; i++) {
+              for (let i = 1; i < onSuccess.posts.length; i++) {
                 onSuccess.posts[i].timestamp.should.be.above(prevTimestamp);
                 prevTimestamp = onSuccess.posts[i].timestamp;
               }

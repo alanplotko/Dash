@@ -63,7 +63,7 @@ block content
                 if startPage > 1
                   li.disabled.hide-on-small-only
                     a.page(href='javascript:void(0)') ...
-                - var count = startPage
+                - let count = startPage
                   while count <= endPage
                     li(class=currentPage === count ? 'active' : 'waves-effect hide-on-small-only')
                       a.page(href='/dashboard/'+count) #{count}
