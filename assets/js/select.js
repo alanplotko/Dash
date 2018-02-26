@@ -1,6 +1,6 @@
 $(document).ready(function() {
-  var numItems = $('#setupForm .card').find('.card-action :checkbox').length;
-  var numChecked = $('#setupForm .card')
+  let numItems = $('#setupForm .card').find('.card-action :checkbox').length;
+  let numChecked = $('#setupForm .card')
     .find('.card-action :checkbox:checked')
     .length;
 
@@ -9,7 +9,7 @@ $(document).ready(function() {
   }
 
   $('#selectAll').change(function() {
-    var checkedStatus = this.checked;
+    let checkedStatus = this.checked;
     if (checkedStatus) {
       $('#setupForm .card')
         .find('.card-action :checkbox')

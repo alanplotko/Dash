@@ -1,6 +1,6 @@
 function dismiss(batchId, postId, el) {
   // Build URL for dismissing a single post or all posts
-  var URL;
+  let URL;
   if (batchId === 'all' && postId === null) {
     URL = '/dismiss/all';
     $('.batch-heading, .pagination').fadeOut();
@@ -11,7 +11,7 @@ function dismiss(batchId, postId, el) {
   // Send ids to begin dismissal
   $.post(URL, function(data) {
     // Add fade out animation for removed post(s)
-    var post = $(el).closest('div.row');
+    let post = $(el).closest('div.row');
     $.when(post.fadeOut()).then(function() {
       post.remove().delay(1000);
       // If dismissing all posts, refresh the page to repaginate
@@ -55,10 +55,10 @@ function refresh() {
 }
 
 $(document).ready(function() {
-  var update = function() {
-    var times = $('.card p.timestamp').toArray();
+  let update = function() {
+    let times = $('.card p.timestamp').toArray();
     times.forEach(function(time) {
-      var htmlContent = moment(
+      let htmlContent = moment(
         new Date($(time).attr('data-timestamp')).toISOString()
       ).fromNow();
       $(time).hide().html(htmlContent).fadeIn(1000);

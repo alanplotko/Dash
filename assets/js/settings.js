@@ -39,7 +39,7 @@ $(document).ready(function() {
   });
 
   $.validator.addMethod('notEqualTo', function(value, element, param) {
-    var notEqual = true;
+    let notEqual = true;
     value = $.trim(value);
     for (i = 0; i < param.length; i++) {
       if (value === $.trim($(param[i]).val())) {

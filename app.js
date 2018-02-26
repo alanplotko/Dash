@@ -1,22 +1,22 @@
 // --------- Environment Setup ---------
-var debug = (process.argv[2] && (process.argv[2].toUpperCase() ===
+let debug = (process.argv[2] && (process.argv[2].toUpperCase() ===
   'DEV' || process.argv[2].toUpperCase() === 'DEVELOPMENT'));
 process.env.NODE_ENV = 'DEV';
-var settings = require('./config/settings');
+let settings = require('./config/settings');
 settings.ENV = settings[process.env.NODE_ENV];
-var messages = require('./config/messages');
+let messages = require('./config/messages');
 
 // --------- Dependencies ---------
-var express = require('express');
-var app = express();
-var path = require('path');
-var bodyParser = require('body-parser');
-var session = require('express-session');
-var MongoStore = require('connect-mongo')(session);
-var cookieParser = require('cookie-parser');
-var passport = require('passport');
-var flash = require('connect-flash');
-var mongoose = require('mongoose');
+let express = require('express');
+let app = express();
+let path = require('path');
+let bodyParser = require('body-parser');
+let session = require('express-session');
+let MongoStore = require('connect-mongo')(session);
+let cookieParser = require('cookie-parser');
+let passport = require('passport');
+let flash = require('connect-flash');
+let mongoose = require('mongoose');
 mongoose.Promise = require('bluebird');
 require('express-mongoose');
 
@@ -74,9 +74,9 @@ app.use(function(req, res, next) {
     res.locals.displayName = req.user.displayName;
 
     // Set up greeting message
-    var date = new Date();
-    var hour = date.getHours();
-    var greeting = 'Hi';
+    let date = new Date();
+    let hour = date.getHours();
+    let greeting = 'Hi';
 
     if (hour < 12) {
       greeting = 'Good morning';
@@ -160,11 +160,11 @@ app.use(function(err, req, res, next) {
 });
 
 // Run App
-var server = app.listen(3000, function() {
+let server = app.listen(3000, function() {
   if (debug) {
-    var host = (server.address().address === '::') ? 'localhost' :
+    let host = (server.address().address === '::') ? 'localhost' :
     server.address().address;
-    var port = server.address().port;
+    let port = server.address().port;
     console.log('Listening on %s:%s', host, port);
   }
 });

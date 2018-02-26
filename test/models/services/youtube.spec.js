@@ -1,30 +1,30 @@
 /* eslint-disable no-unused-expressions, no-loop-func */
 
 // Set up testing libraries
-var common = require('../../common/setup.js');
-var chai = require('chai');
-var should = chai.should();
-var chaiAsPromised = require('chai-as-promised');
+let common = require('../../common/setup.js');
+let chai = require('chai');
+let should = chai.should();
+let chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
-var sinon = require('sinon');
+let sinon = require('sinon');
 require('sinon-mongoose');
-var sandbox;
+let sandbox;
 
 // Set up mongoose
-var mongoose = require('mongoose');
+let mongoose = require('mongoose');
 mongoose.Promise = require('bluebird');
 
 // Set up user model test dependencies
-var User = require('../../../models/user');
-var config = require('../../../config/settings');
-var async = require('async');
-var request = require('request');
-var messages = require('../../../config/messages');
-var refresh = require('passport-oauth2-refresh');
+let User = require('../../../models/user');
+let config = require('../../../config/settings');
+let async = require('async');
+let request = require('request');
+let messages = require('../../../config/messages');
+let refresh = require('passport-oauth2-refresh');
 
 // Set up dummy account
-var dummyDetails = common.dummyDetails;
-var accountQuery = common.accountQuery;
+let dummyDetails = common.dummyDetails;
+let accountQuery = common.accountQuery;
 
 describe('YouTube service', function() {
   /**
@@ -87,11 +87,11 @@ describe('YouTube service', function() {
 
   describe('Model method: removeYouTube', function() {
     it('should catch errors in User.findById', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           sandbox.stub(User, 'findById').yields(new Error('MongoError'));
           should.not.exist(err);
@@ -104,7 +104,7 @@ describe('YouTube service', function() {
       tasks.push(getId);
 
       // Test User.removeYouTube
-      var test = function(callback) {
+      let test = function(callback) {
         User.removeYouTube(id, function(err) {
           callback(null, err);
         });
@@ -123,11 +123,11 @@ describe('YouTube service', function() {
     });
 
     it('should return error on no user found', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           sandbox.stub(User, 'findById').yields(null, null);
           should.not.exist(err);
@@ -140,7 +140,7 @@ describe('YouTube service', function() {
       tasks.push(getId);
 
       // Test User.removeYouTube
-      var test = function(callback) {
+      let test = function(callback) {
         User.removeYouTube(id, function(err) {
           callback(null, err);
         });
@@ -159,11 +159,11 @@ describe('YouTube service', function() {
     });
 
     it('should return error if not connected to YouTube', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -175,7 +175,7 @@ describe('YouTube service', function() {
       tasks.push(getId);
 
       // Test User.removeYouTube
-      var test = function(callback) {
+      let test = function(callback) {
         User.removeYouTube(id, function(err) {
           callback(null, err);
         });
@@ -195,12 +195,12 @@ describe('YouTube service', function() {
     });
 
     it('should return error if get request fails', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
       sandbox.stub(request, 'get').yields(new Error('RequestError'));
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -212,7 +212,7 @@ describe('YouTube service', function() {
       tasks.push(getId);
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -227,7 +227,7 @@ describe('YouTube service', function() {
       tasks.push(addProfileId);
 
       // Test User.removeYouTube
-      var test = function(callback) {
+      let test = function(callback) {
         User.removeYouTube(id, function(err) {
           callback(null, err);
         });
@@ -249,8 +249,8 @@ describe('YouTube service', function() {
     });
 
     it('should return error with expired access token', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
       sandbox.stub(request, 'get').yields(null, {
         statusCode: 400
       }, {
@@ -258,7 +258,7 @@ describe('YouTube service', function() {
       });
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -270,7 +270,7 @@ describe('YouTube service', function() {
       tasks.push(getId);
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -285,7 +285,7 @@ describe('YouTube service', function() {
       tasks.push(addProfileId);
 
       // Test User.removeYouTube
-      var test = function(callback) {
+      let test = function(callback) {
         User.removeYouTube(id, function(err) {
           callback(null, err);
         });
@@ -306,14 +306,14 @@ describe('YouTube service', function() {
     });
 
     it('should return successfully on res.statusCode = 200', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
       sandbox.stub(request, 'get').yields(null, {
         statusCode: 200
       }, null);
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -325,7 +325,7 @@ describe('YouTube service', function() {
       tasks.push(getId);
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -340,7 +340,7 @@ describe('YouTube service', function() {
       tasks.push(addProfileId);
 
       // Test User.removeYouTube
-      var test = function(callback) {
+      let test = function(callback) {
         User.removeYouTube(id, callback);
       };
 
@@ -360,12 +360,12 @@ describe('YouTube service', function() {
     });
 
     it('should return an error on no res.statusCode property', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
       sandbox.stub(request, 'get').yields(null, {}, null);
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -377,7 +377,7 @@ describe('YouTube service', function() {
       tasks.push(getId);
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -392,7 +392,7 @@ describe('YouTube service', function() {
       tasks.push(addProfileId);
 
       // Test User.removeYouTube
-      var test = function(callback) {
+      let test = function(callback) {
         User.removeYouTube(id, function(err) {
           callback(null, err);
         });
@@ -419,11 +419,11 @@ describe('YouTube service', function() {
    */
   describe('Model method: setUpYouTubeSubs', function() {
     it('should catch errors in User.findById', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           sandbox.stub(User, 'findById').yields(new Error('MongoError'));
           should.not.exist(err);
@@ -436,7 +436,7 @@ describe('YouTube service', function() {
       tasks.push(getId);
 
       // Test User.setUpYouTubeSubs
-      var test = function(callback) {
+      let test = function(callback) {
         User.setUpYouTubeSubs(id, function(err) {
           callback(null, err);
         });
@@ -455,11 +455,11 @@ describe('YouTube service', function() {
     });
 
     it('should return error on no user found', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           sandbox.stub(User, 'findById').yields(null, null);
           should.not.exist(err);
@@ -472,7 +472,7 @@ describe('YouTube service', function() {
       tasks.push(getId);
 
       // Test User.setUpYouTubeSubs
-      var test = function(callback) {
+      let test = function(callback) {
         User.setUpYouTubeSubs(id, function(result1, result2, result3) {
           callback(null, result3); // Return error
         });
@@ -491,12 +491,12 @@ describe('YouTube service', function() {
     });
 
     it('should return error if get request fails', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
       sandbox.stub(request, 'get').yields(new Error('RequestError'));
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -508,7 +508,7 @@ describe('YouTube service', function() {
       tasks.push(getId);
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -523,7 +523,7 @@ describe('YouTube service', function() {
       tasks.push(addProfileId);
 
       // Test User.setUpYouTubeSubs
-      var test = function(callback) {
+      let test = function(callback) {
         User.setUpYouTubeSubs(id, function(err) {
           callback(null, err); // Return error
         });
@@ -546,8 +546,8 @@ describe('YouTube service', function() {
 
     it('should return error with expired access token and 401 code',
       function(done) {
-        var id;
-        var tasks = [];
+        let id;
+        let tasks = [];
         sandbox.stub(request, 'get').yields(null, null, {
           error: {
             code: 401,
@@ -558,7 +558,7 @@ describe('YouTube service', function() {
           .yields(new Error('RequestNewAccessTokenError'));
 
         // Get user id
-        var getId = function(callback) {
+        let getId = function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
             should.exist(user);
@@ -570,7 +570,7 @@ describe('YouTube service', function() {
         tasks.push(getId);
 
         // Add profileId
-        var addProfileId = function(callback) {
+        let addProfileId = function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
             should.exist(user);
@@ -585,7 +585,7 @@ describe('YouTube service', function() {
         tasks.push(addProfileId);
 
         // Test User.setUpYouTubeSubs
-        var test = function(callback) {
+        let test = function(callback) {
           User.setUpYouTubeSubs(id, function(err) {
             callback(null, err); // Return error
           });
@@ -608,8 +608,8 @@ describe('YouTube service', function() {
 
     it('should return error with expired access token and 403 code',
       function(done) {
-        var id;
-        var tasks = [];
+        let id;
+        let tasks = [];
         sandbox.stub(request, 'get').yields(null, null, {
           error: {
             code: 403
@@ -619,7 +619,7 @@ describe('YouTube service', function() {
           .yields(new Error('RequestNewAccessTokenError'));
 
         // Get user id
-        var getId = function(callback) {
+        let getId = function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
             should.exist(user);
@@ -631,7 +631,7 @@ describe('YouTube service', function() {
         tasks.push(getId);
 
         // Add profileId
-        var addProfileId = function(callback) {
+        let addProfileId = function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
             should.exist(user);
@@ -646,7 +646,7 @@ describe('YouTube service', function() {
         tasks.push(addProfileId);
 
         // Test User.setUpYouTubeSubs
-        var test = function(callback) {
+        let test = function(callback) {
           User.setUpYouTubeSubs(id, function(err) {
             callback(null, err); // Return error
           });
@@ -669,8 +669,8 @@ describe('YouTube service', function() {
 
     it('should catch errors in user.save on refresh access token',
       function(done) {
-        var id;
-        var tasks = [];
+        let id;
+        let tasks = [];
         sandbox.stub(request, 'get').yields(null, null, {
           error: {
             code: 403
@@ -680,7 +680,7 @@ describe('YouTube service', function() {
           'NewAccessToken');
 
         // Get user id
-        var getId = function(callback) {
+        let getId = function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
             should.exist(user);
@@ -694,7 +694,7 @@ describe('YouTube service', function() {
         tasks.push(getId);
 
         // Add profileId
-        var addProfileId = function(callback) {
+        let addProfileId = function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
             should.exist(user);
@@ -709,7 +709,7 @@ describe('YouTube service', function() {
         tasks.push(addProfileId);
 
         // Test User.setUpYouTubeSubs
-        var test = function(callback) {
+        let test = function(callback) {
           User.setUpYouTubeSubs(id, function(err) {
             callback(null, err); // Return error
           });
@@ -731,8 +731,8 @@ describe('YouTube service', function() {
       });
 
     it('should refresh access token on expired access token', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
       sandbox.stub(request, 'get').yields(null, null, {
         error: {
           code: 403
@@ -742,7 +742,7 @@ describe('YouTube service', function() {
         'NewAccessToken');
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -754,7 +754,7 @@ describe('YouTube service', function() {
       tasks.push(getId);
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -769,7 +769,7 @@ describe('YouTube service', function() {
       tasks.push(addProfileId);
 
       // Test User.setUpYouTubeSubs
-      var test = function(callback) {
+      let test = function(callback) {
         User.setUpYouTubeSubs(id, function(err) {
           callback(null, err); // Return error
         });
@@ -797,8 +797,8 @@ describe('YouTube service', function() {
     });
 
     it('should return successfully on body.items', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
       sandbox.stub(request, 'get').yields(null, null, {
         items: [
           // Test: has title, channel id, hq thumbnail, and description
@@ -837,7 +837,7 @@ describe('YouTube service', function() {
       });
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -849,7 +849,7 @@ describe('YouTube service', function() {
       tasks.push(getId);
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -864,7 +864,7 @@ describe('YouTube service', function() {
       tasks.push(addProfileId);
 
       // Test User.setUpYouTubeSubs
-      var test = function(callback) {
+      let test = function(callback) {
         User.setUpYouTubeSubs(id, function(err, content, type) {
           callback(err, {content: content, type: type});
         });
@@ -908,12 +908,12 @@ describe('YouTube service', function() {
     });
 
     it('should traverse pages correctly', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
-      var callback = sandbox.stub(request, 'get');
+      let callback = sandbox.stub(request, 'get');
 
-      var firstCall = {
+      let firstCall = {
         nextPageToken: 'NextPageToken',
         items: [
           // Test: has title, channel id, hq thumbnail, and description
@@ -951,7 +951,7 @@ describe('YouTube service', function() {
         ]
       };
 
-      var secondCall = {
+      let secondCall = {
         items: [
           // Test: has title, channel id, hq thumbnail, and description
           {
@@ -993,7 +993,7 @@ describe('YouTube service', function() {
         .onCall(1).yields(null, null, secondCall);
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1005,7 +1005,7 @@ describe('YouTube service', function() {
       tasks.push(getId);
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1020,7 +1020,7 @@ describe('YouTube service', function() {
       tasks.push(addProfileId);
 
       // Test User.setUpYouTubeSubs
-      var test = function(callback) {
+      let test = function(callback) {
         User.setUpYouTubeSubs(id, function(err, content, type) {
           callback(err, {content: content, type: type});
         });
@@ -1083,12 +1083,12 @@ describe('YouTube service', function() {
     });
 
     it('should return successfully on no body.items', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
       sandbox.stub(request, 'get').yields(null, null, {items: []});
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1100,7 +1100,7 @@ describe('YouTube service', function() {
       tasks.push(getId);
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1115,7 +1115,7 @@ describe('YouTube service', function() {
       tasks.push(addProfileId);
 
       // Test User.setUpYouTubeSubs
-      var test = function(callback) {
+      let test = function(callback) {
         User.setUpYouTubeSubs(id, function(err, content, type) {
           callback(err, {content: content, type: type});
         });
@@ -1140,11 +1140,11 @@ describe('YouTube service', function() {
 
   describe('Model method: saveYouTubeSubs', function() {
     it('should catch errors in User.findById', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           sandbox.stub(User, 'findById').yields(new Error('MongoError'));
           should.not.exist(err);
@@ -1157,7 +1157,7 @@ describe('YouTube service', function() {
       tasks.push(getId);
 
       // Test User.saveYouTubeSubs
-      var test = function(callback) {
+      let test = function(callback) {
         User.saveYouTubeSubs(id, [], function(err) {
           callback(null, err);
         });
@@ -1176,11 +1176,11 @@ describe('YouTube service', function() {
     });
 
     it('should return error on no user found', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           sandbox.stub(User, 'findById').yields(null, null);
           should.not.exist(err);
@@ -1193,7 +1193,7 @@ describe('YouTube service', function() {
       tasks.push(getId);
 
       // Test User.saveYouTubeSubs
-      var test = function(callback) {
+      let test = function(callback) {
         User.saveYouTubeSubs(id, [], function(result1, result2, result3) {
           callback(null, result3); // Return error
         });
@@ -1212,11 +1212,11 @@ describe('YouTube service', function() {
     });
 
     it('should catch errors in user.save', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           sandbox.stub(user, 'save').yields(new Error('MongoError'));
           sandbox.stub(User, 'findById').yields(null, user);
@@ -1230,7 +1230,7 @@ describe('YouTube service', function() {
       tasks.push(getId);
 
       // Test User.saveYouTubeSubs
-      var test = function(callback) {
+      let test = function(callback) {
         User.saveYouTubeSubs(id, [], function(err) {
           callback(null, err); // Return error
         });
@@ -1249,11 +1249,11 @@ describe('YouTube service', function() {
     });
 
     it('should return successfully on no new content', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1265,7 +1265,7 @@ describe('YouTube service', function() {
       tasks.push(getId);
 
       // Test User.saveYouTubeSubs
-      var test = function(callback) {
+      let test = function(callback) {
         User.saveYouTubeSubs(id, [], function(err, result) {
           callback(err, result);
         });
@@ -1285,11 +1285,11 @@ describe('YouTube service', function() {
     });
 
     it('should return successfully on new content', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1301,7 +1301,7 @@ describe('YouTube service', function() {
       tasks.push(getId);
 
       // Test User.saveYouTubeSubs
-      var test = function(callback) {
+      let test = function(callback) {
         User.saveYouTubeSubs(id, ['A;B;C'], function(err, result) {
           callback(err, result);
         });
@@ -1333,10 +1333,10 @@ describe('YouTube service', function() {
    */
   describe('Document method: refreshYouTube', function() {
     it('should catch errors in User.findById', function(done) {
-      var tasks = [];
+      let tasks = [];
 
       // Test user.refreshYouTube
-      var test = function(callback) {
+      let test = function(callback) {
         accountQuery.exec(function(err, user) {
           sandbox.stub(User, 'findById').yields(new Error('MongoError'));
           should.not.exist(err);
@@ -1359,10 +1359,10 @@ describe('YouTube service', function() {
     });
 
     it('should catch errors in async.parallel', function(done) {
-      var tasks = [];
+      let tasks = [];
 
       // Test user.refreshYouTube
-      var test = function(callback) {
+      let test = function(callback) {
         accountQuery.exec(function(err, user) {
           sandbox.stub(async, 'parallel').yields(new Error('ParallelError'));
           should.not.exist(err);
@@ -1385,11 +1385,11 @@ describe('YouTube service', function() {
     });
 
     it('should return successfully on no new posts', function(done) {
-      var tasks = [];
+      let tasks = [];
       sandbox.stub(request, 'get').yields(null, null, {});
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1404,7 +1404,7 @@ describe('YouTube service', function() {
       tasks.push(addProfileId);
 
       // Test user.refreshYouTube
-      var test = function(callback) {
+      let test = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1426,11 +1426,11 @@ describe('YouTube service', function() {
     });
 
     it('should return errors if get request fails', function(done) {
-      var tasks = [];
+      let tasks = [];
       sandbox.stub(request, 'get').yields(new Error('RequestError'));
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1450,7 +1450,7 @@ describe('YouTube service', function() {
       tasks.push(addProfileId);
 
       // Test user.refreshYouTube
-      var test = function(callback) {
+      let test = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1476,7 +1476,7 @@ describe('YouTube service', function() {
 
     it('should return error with expired access token and 400 code',
       function(done) {
-        var tasks = [];
+        let tasks = [];
         sandbox.stub(request, 'get').yields(null, null, {
           error: {
             code: 400
@@ -1484,7 +1484,7 @@ describe('YouTube service', function() {
         });
 
         // Add profileId
-        var addProfileId = function(callback) {
+        let addProfileId = function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
             should.exist(user);
@@ -1504,7 +1504,7 @@ describe('YouTube service', function() {
         tasks.push(addProfileId);
 
         // Test user.refreshYouTube
-        var test = function(callback) {
+        let test = function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
             should.exist(user);
@@ -1529,7 +1529,7 @@ describe('YouTube service', function() {
 
     it('should return error with expired access token and 403 code',
       function(done) {
-        var tasks = [];
+        let tasks = [];
         sandbox.stub(request, 'get').yields(null, null, {
           error: {
             code: 403
@@ -1537,7 +1537,7 @@ describe('YouTube service', function() {
         });
 
         // Add profileId
-        var addProfileId = function(callback) {
+        let addProfileId = function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
             should.exist(user);
@@ -1557,7 +1557,7 @@ describe('YouTube service', function() {
         tasks.push(addProfileId);
 
         // Test user.refreshYouTube
-        var test = function(callback) {
+        let test = function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
             should.exist(user);
@@ -1581,8 +1581,8 @@ describe('YouTube service', function() {
       });
 
     it('should return successfully on body.data', function(done) {
-      var tasks = [];
-      var currentTime = Date.now();
+      let tasks = [];
+      let currentTime = Date.now();
       sandbox.stub(request, 'get').yields(null, null, {
         items: [
           // Test: skip posts with no snippet property
@@ -1681,7 +1681,7 @@ describe('YouTube service', function() {
       });
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1701,7 +1701,7 @@ describe('YouTube service', function() {
       tasks.push(addProfileId);
 
       // Test user.refreshYouTube
-      var test = function(callback) {
+      let test = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1720,7 +1720,7 @@ describe('YouTube service', function() {
         result[0].youtube.profileId.should.equal('ProfileId');
         result[0].youtube.accessToken.should.equal('AccessToken');
 
-        var matchingData = [
+        let matchingData = [
           {
             service: 'youtube',
             title: 'Title1',
@@ -1787,7 +1787,7 @@ describe('YouTube service', function() {
 
         should.exist(result[1]);
         result[1].should.have.lengthOf(matchingData.length);
-        for (var i = 0; i < result[1].length; i++) {
+        for (let i = 0; i < result[1].length; i++) {
           result[1][i].should.have.all.keys(matchingData[i]);
         }
         done();
@@ -1795,12 +1795,12 @@ describe('YouTube service', function() {
     });
 
     it('should traverse pages correctly', function(done) {
-      var tasks = [];
-      var currentTime = Date.now();
+      let tasks = [];
+      let currentTime = Date.now();
 
-      var callback = sandbox.stub(request, 'get');
+      let callback = sandbox.stub(request, 'get');
 
-      var firstCall = {
+      let firstCall = {
         nextPageToken: 'NextPageToken',
         items: [
           // Test: skip posts with no snippet property
@@ -1898,7 +1898,7 @@ describe('YouTube service', function() {
         ]
       };
 
-      var secondCall = {
+      let secondCall = {
         items: [
           // Test: skip posts with no snippet property
           {},
@@ -2000,7 +2000,7 @@ describe('YouTube service', function() {
         .onCall(1).yields(null, null, secondCall);
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -2020,7 +2020,7 @@ describe('YouTube service', function() {
       tasks.push(addProfileId);
 
       // Test user.refreshYouTube
-      var test = function(callback) {
+      let test = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -2039,7 +2039,7 @@ describe('YouTube service', function() {
         result[0].youtube.profileId.should.equal('ProfileId');
         result[0].youtube.accessToken.should.equal('AccessToken');
 
-        var matchingData = [
+        let matchingData = [
           {
             service: 'youtube',
             title: 'Title1',
@@ -2106,7 +2106,7 @@ describe('YouTube service', function() {
 
         should.exist(result[1]);
         result[1].should.have.lengthOf(matchingData.length * 2);
-        for (var i = 0; i < result[1].length; i++) {
+        for (let i = 0; i < result[1].length; i++) {
           result[1][i].should.have.all.keys(
             matchingData[i % matchingData.length]
           );
@@ -2116,11 +2116,11 @@ describe('YouTube service', function() {
     });
 
     it('should return successfully on no body.data', function(done) {
-      var tasks = [];
+      let tasks = [];
       sandbox.stub(request, 'get').yields(null, null, {});
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -2140,7 +2140,7 @@ describe('YouTube service', function() {
       tasks.push(addProfileId);
 
       // Test user.refreshYouTube
-      var test = function(callback) {
+      let test = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -2165,10 +2165,10 @@ describe('YouTube service', function() {
 
     it('should return successfully if not connected to YouTube',
       function(done) {
-        var tasks = [];
+        let tasks = [];
 
         // Test user.refreshYouTube
-        var test = function(callback) {
+        let test = function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
             should.exist(user);

@@ -1,10 +1,10 @@
 // --------- Dependencies ---------
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
-var PostSchema = mongoose.model('Post').schema;
+let mongoose = require('mongoose');
+let Schema = mongoose.Schema;
+let PostSchema = mongoose.model('Post').schema;
 
 // Define post fields
-var PostCollectionSchema = new Schema({
+let PostCollectionSchema = new Schema({
 
   // Posts in the current collection
   posts: [PostSchema],

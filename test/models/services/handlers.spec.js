@@ -1,31 +1,31 @@
 /* eslint-disable no-unused-expressions, no-loop-func */
 
 // Set up testing libraries
-var common = require('../../common/setup.js');
-var chai = require('chai');
-var should = chai.should();
-var chaiAsPromised = require('chai-as-promised');
+let common = require('../../common/setup.js');
+let chai = require('chai');
+let should = chai.should();
+let chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
-var sinon = require('sinon');
+let sinon = require('sinon');
 require('sinon-mongoose');
-var sandbox;
+let sandbox;
 
 // Set up mongoose
-var mongoose = require('mongoose');
+let mongoose = require('mongoose');
 mongoose.Promise = require('bluebird');
 
 // Set up user model test dependencies
-var User = require('../../../models/user');
-var config = require('../../../config/settings');
-var async = require('async');
-var messages = require('../../../config/messages');
-var moment = require('moment');
-var handlers = require('../../../models/services/handlers');
+let User = require('../../../models/user');
+let config = require('../../../config/settings');
+let async = require('async');
+let messages = require('../../../config/messages');
+let moment = require('moment');
+let handlers = require('../../../models/services/handlers');
 
 // Set up dummy account
-var dummyDetails = common.dummyDetails;
-var accountQuery = common.accountQuery;
-var services = ['Facebook', 'YouTube'];
+let dummyDetails = common.dummyDetails;
+let accountQuery = common.accountQuery;
+let services = ['Facebook', 'YouTube'];
 
 describe('Service handlers', function() {
   /**
@@ -89,7 +89,7 @@ describe('Service handlers', function() {
   describe('Handler method: saveToUser', function() {
     it('should catch errors in user.save', function(done) {
       // Test handlers.saveToUser
-      var test = function(user, callback) {
+      let test = function(user, callback) {
         handlers.saveToUser(user, user, function(err, result) {
           should.exist(err);
           err.toString().should.equal((new Error(messages.ERROR.GENERAL))
@@ -109,7 +109,7 @@ describe('Service handlers', function() {
 
     it('should return successfully on save', function(done) {
       // Test handlers.saveToUser
-      var test = function(user, callback) {
+      let test = function(user, callback) {
         handlers.saveToUser(user, user, function(err, result) {
           should.not.exist(err);
           should.exist(result);
@@ -151,7 +151,7 @@ describe('Service handlers', function() {
 
   describe('Handler method: processContent', function() {
     it('should catch errors', function(done) {
-      var error = new Error(messages.ERROR.GENERAL);
+      let error = new Error(messages.ERROR.GENERAL);
       handlers.processContent(error, [], {}, 0, function(err, result) {
         should.exist(err);
         err.should.equal(error);
@@ -161,10 +161,10 @@ describe('Service handlers', function() {
     });
 
     it('should return posts upon reaching expected post count', function(done) {
-      var update = {posts: [], progress: 0};
-      var postCount = Math.floor(Math.random() * 10) + 5;
-      var currentCount = postCount - 1;
-      for (var i = 0; i < currentCount; i++) {
+      let update = {posts: [], progress: 0};
+      let postCount = Math.floor(Math.random() * 10) + 5;
+      let currentCount = postCount - 1;
+      for (let i = 0; i < currentCount; i++) {
         update.posts.push({});
       }
       update.progress = currentCount;
@@ -179,14 +179,14 @@ describe('Service handlers', function() {
 
     it('should return current status if expected post count not reached',
       function(done) {
-        var update = {posts: [], progress: 0};
-        var postCount = Math.floor(Math.random() * 10) + 5;
-        var currentCount = postCount - 2;
-        for (var i = 0; i < currentCount; i++) {
+        let update = {posts: [], progress: 0};
+        let postCount = Math.floor(Math.random() * 10) + 5;
+        let currentCount = postCount - 2;
+        for (let i = 0; i < currentCount; i++) {
           update.posts.push({});
         }
         update.progress = currentCount;
-        var result = handlers.processContent(null, [{}], update, postCount,
+        let result = handlers.processContent(null, [{}], update, postCount,
           function() {});
         should.exist(result);
         result.posts.should.have.lengthOf(currentCount + 1);
@@ -197,7 +197,7 @@ describe('Service handlers', function() {
 
   describe('Handler method: generateAppSecretProof', function() {
     it('should correctly format proof', function(done) {
-      var actualProof = handlers.generateAppSecretProof('AccessToken');
+      let actualProof = handlers.generateAppSecretProof('AccessToken');
       should.exist(actualProof);
       actualProof.should.contain('&appsecret_proof=');
       done();
@@ -206,18 +206,18 @@ describe('Service handlers', function() {
 
   describe('Handler method: completeRefresh', function() {
     it('should catch errors in user.save on new posts', function(done) {
-      var tasks = [];
-      var samplePosts = [{SamplePostKey: 'SamplePostValue'}];
+      let tasks = [];
+      let samplePosts = [{SamplePostKey: 'SamplePostValue'}];
 
       // Execute the test and run the callback with the error as the result
-      var executeTest = function(serviceName, samplePosts, user, callback) {
+      let executeTest = function(serviceName, samplePosts, user, callback) {
         handlers.completeRefresh(serviceName, samplePosts, user, function(err) {
           callback(null, err);
         });
       };
 
       // Generate runner to test function by service name
-      var testRunner = function(serviceName) {
+      let testRunner = function(serviceName) {
         return function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
@@ -235,9 +235,9 @@ describe('Service handlers', function() {
 
       async.series(tasks, function(err, result) {
         should.not.exist(err);
-        var error = new Error(messages.ERROR.GENERAL);
+        let error = new Error(messages.ERROR.GENERAL);
         should.exist(result);
-        for (var i = 0; i < result.length; i++) {
+        for (let i = 0; i < result.length; i++) {
           result[i].toString().should.equal(error.toString());
         }
         done();
@@ -245,11 +245,11 @@ describe('Service handlers', function() {
     });
 
     it('should save new content on new posts', function(done) {
-      var tasks = [];
-      var samplePosts = [{SamplePostKey: 'SamplePostValue'}];
+      let tasks = [];
+      let samplePosts = [{SamplePostKey: 'SamplePostValue'}];
 
       // Generate test function by service name
-      var test = function(serviceName) {
+      let test = function(serviceName) {
         return function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
@@ -273,7 +273,7 @@ describe('Service handlers', function() {
           should.exist(user);
           should.exist(user.batches);
           user.batches.should.have.lengthOf(services.length);
-          for (var i = 0; i < services.length; i++) {
+          for (let i = 0; i < services.length; i++) {
             should.exist(user.batches[i]);
             user.batches[i].should.have.property('posts');
             user.batches[i].should.have.property('description');
@@ -288,11 +288,11 @@ describe('Service handlers', function() {
     });
 
     it('should catch errors in user.save for no new posts', function(done) {
-      var tasks = [];
-      var samplePosts = [];
+      let tasks = [];
+      let samplePosts = [];
 
       // Generate test function by service name
-      var test = function(serviceName) {
+      let test = function(serviceName) {
         return function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
@@ -313,9 +313,9 @@ describe('Service handlers', function() {
 
       async.series(tasks, function(err, result) {
         should.not.exist(err);
-        var error = new Error(messages.ERROR.GENERAL);
+        let error = new Error(messages.ERROR.GENERAL);
         should.exist(result);
-        for (var i = 0; i < result.length; i++) {
+        for (let i = 0; i < result.length; i++) {
           result[i].toString().should.equal(error.toString());
         }
         done();
@@ -323,11 +323,11 @@ describe('Service handlers', function() {
     });
 
     it('should save new update time on no new posts', function(done) {
-      var tasks = [];
-      var samplePosts = [];
+      let tasks = [];
+      let samplePosts = [];
 
       // Generate test function by service name
-      var test = function(serviceName) {
+      let test = function(serviceName) {
         return function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
@@ -345,7 +345,7 @@ describe('Service handlers', function() {
       async.series(tasks, function(err, result) {
         should.not.exist(err);
         should.exist(result);
-        for (var i = 0; i < services.length; i++) {
+        for (let i = 0; i < services.length; i++) {
           should.not.exist(result[i]);
         }
         accountQuery.exec(function(err, user) {
@@ -361,10 +361,10 @@ describe('Service handlers', function() {
 
   describe('Handler method: processDeauthorization', function() {
     it('should catch errors in user.save', function(done) {
-      var tasks = [];
+      let tasks = [];
 
       // Generate test function by service name
-      var test = function(serviceName) {
+      let test = function(serviceName) {
         return function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
@@ -384,9 +384,9 @@ describe('Service handlers', function() {
 
       async.series(tasks, function(err, result) {
         should.not.exist(err);
-        var error = new Error(messages.ERROR.GENERAL);
+        let error = new Error(messages.ERROR.GENERAL);
         should.exist(result);
-        for (var i = 0; i < result.length; i++) {
+        for (let i = 0; i < result.length; i++) {
           result[i].toString().should.equal(error.toString());
         }
         done();
@@ -394,10 +394,10 @@ describe('Service handlers', function() {
     });
 
     it('should successfully remove services', function(done) {
-      var tasks = [];
+      let tasks = [];
 
       // Generate test function by service name
-      var test = function(serviceName) {
+      let test = function(serviceName) {
         return function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
@@ -417,7 +417,7 @@ describe('Service handlers', function() {
         should.exist(result);
 
         // Check whether each service was deleted in each operation
-        for (var i = 0; i < result.length; i++) {
+        for (let i = 0; i < result.length; i++) {
           result[i].toObject().should.not.have.keys(services[i].toLowerCase());
         }
 
@@ -428,17 +428,17 @@ describe('Service handlers', function() {
 
   describe('Handler method: getLastUpdateTime', function() {
     it('should return lastUpdateTime if available', function(done) {
-      var userDoc;
-      var tasks = [];
-      var NUM_DAYS_BACK = -5;
+      let userDoc;
+      let tasks = [];
+      let NUM_DAYS_BACK = -5;
 
       // Add lastUpdateTime
-      var addLastUpdateTime = function(callback) {
+      let addLastUpdateTime = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
-          var daysBack = moment().add(NUM_DAYS_BACK, 'days').toDate();
-          for (var i = 0; i < services.length; i++) {
+          let daysBack = moment().add(NUM_DAYS_BACK, 'days').toDate();
+          for (let i = 0; i < services.length; i++) {
             user.lastUpdateTime[services[i].toLowerCase()] = daysBack;
           }
           userDoc = user;
@@ -449,7 +449,7 @@ describe('Service handlers', function() {
       tasks.push(addLastUpdateTime);
 
       // Save user changes
-      var saveUser = function(callback) {
+      let saveUser = function(callback) {
         Promise.resolve(userDoc.save()).then(function(doc) {
           userDoc = doc;
           callback(null, doc);
@@ -459,7 +459,7 @@ describe('Service handlers', function() {
       tasks.push(saveUser);
 
       // Generate test function by service name
-      var test = function(serviceName) {
+      let test = function(serviceName) {
         return function(callback) {
           callback(null, handlers.getLastUpdateTime(serviceName, userDoc));
         };
@@ -477,7 +477,7 @@ describe('Service handlers', function() {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
-          for (var j = 0; j < services.length; j++) {
+          for (let j = 0; j < services.length; j++) {
             should.exist(result[j + 2]);
             result[j + 2].toString().should
               .equal(user.lastUpdateTime[services[j].toLowerCase()].toString());
@@ -488,11 +488,11 @@ describe('Service handlers', function() {
     });
 
     it('should return yesterday if lastUpdateTime unavailable', function(done) {
-      var userDoc;
-      var tasks = [];
+      let userDoc;
+      let tasks = [];
 
       // Get user
-      var getUser = function(callback) {
+      let getUser = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -514,10 +514,10 @@ describe('Service handlers', function() {
         should.not.exist(err);
         should.exist(result);
         should.exist(result[0]);
-        var yesterday = moment().add(-1, 'days').toDate();
-        for (var i = 0; i < services.length; i++) {
+        let yesterday = moment().add(-1, 'days').toDate();
+        for (let i = 0; i < services.length; i++) {
           should.exist(result[i + 1]);
-          var diff = yesterday - result[i + 1];
+          let diff = yesterday - result[i + 1];
           // Acceptable range due to processing time in between
           diff.should.be.below(20);
         }
@@ -528,8 +528,8 @@ describe('Service handlers', function() {
 
   describe('Handler method: sortPosts', function() {
     it('should correctly sort posts', function(done) {
-      var yesterday = {timestamp: Date.now() - 86400000};
-      var today = {timestamp: Date.now()};
+      let yesterday = {timestamp: Date.now() - 86400000};
+      let today = {timestamp: Date.now()};
       handlers.sortPosts(yesterday, today).should.be.below(0);
       handlers.sortPosts(today, yesterday).should.be.above(0);
       handlers.sortPosts(today, today).should.equal(0);

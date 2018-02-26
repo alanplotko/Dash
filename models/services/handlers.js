@@ -1,8 +1,8 @@
 // --------- Dependencies ---------
-var moment = require('moment');
-var crypto = require('crypto');
-var messages = require('../../config/messages');
-var settings = require('../../config/settings');
+let moment = require('moment');
+let crypto = require('crypto');
+let messages = require('../../config/messages');
+let settings = require('../../config/settings');
 
 /**
  * Saves the items to the user document successfully or returns a general error.
@@ -13,7 +13,7 @@ var settings = require('../../config/settings');
  *                                error and the object to return, if either
  *                                are present
  */
-var saveToUser = module.exports.saveToUser = function(user, returnObj, done) {
+let saveToUser = module.exports.saveToUser = function(user, returnObj, done) {
   return user.save(function(err) {
     // An error occurred
     if (err) {
@@ -96,7 +96,7 @@ module.exports.generateAppSecretProof = function(token) {
  */
 module.exports.completeRefresh = function(serviceName, newPosts, user, done) {
   if (newPosts.length > 0) {
-    var newUpdate = {
+    let newUpdate = {
       posts: newPosts,
       description: 'Checking in with ' + serviceName + ' for updates!'
     };

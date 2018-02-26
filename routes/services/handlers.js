@@ -1,10 +1,10 @@
 // --------- Dependencies ---------
-var messages = require.main.require('./config/messages');
+let messages = require.main.require('./config/messages');
 
 /**
  * Enums for use with storing a key-value pair in the user's session.
  */
-var ENUMS = module.exports.ENUMS = {
+let ENUMS = module.exports.ENUMS = {
   REFRESH_TOKEN: {key: 'refreshAccessToken', value: true},
   AUTH: {key: 'reauth', value: false},
   REAUTH: {key: 'reauth', value: true}
@@ -82,7 +82,7 @@ module.exports.handlePostRemoveError = function(serviceName, err, errorMessage,
  * @param  {Object} req            The current request
  * @param  {Object} res            The response
  */
-var handlePostSetupError = module.exports.handlePostSetupError =
+let handlePostSetupError = module.exports.handlePostSetupError =
   function(serviceName, err, errorMessage, req, res) {
     // Get new access token if current token was deemed invalid
     if (err.toString() === errorMessage) {
@@ -119,13 +119,13 @@ module.exports.retrieveActivity = function(settings, err, allContent,
   } else if (Object.keys(allContent).length > 0) {
     // Fill in checkboxes for existing content
     if (existingContent.length > 0) {
-      var ids = [];
+      let ids = [];
 
       existingContent.forEach(function(item) {
         ids.push(item[settings.id]);
       });
 
-      for (var key in allContent) {
+      for (let key in allContent) {
         if (ids.indexOf(allContent[key].id) > -1) {
           allContent[key].checked = true;
         } else {

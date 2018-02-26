@@ -1,9 +1,9 @@
 // --------- Dependencies ---------
-var mongoose = require('mongoose');
-var request = require('request');
-var refresh = require('passport-oauth2-refresh');
-var async = require('async');
-var handlers = require('./handlers');
+let mongoose = require('mongoose');
+let request = require('request');
+let refresh = require('passport-oauth2-refresh');
+let async = require('async');
+let handlers = require('./handlers');
 
 module.exports = function(UserSchema, messages) {
   /**
@@ -30,7 +30,7 @@ module.exports = function(UserSchema, messages) {
         return done(new Error(messages.STATUS.YOUTUBE.NOT_CONNECTED));
       }
 
-      var url = 'https://accounts.google.com/o/oauth2/revoke?token=' +
+      let url = 'https://accounts.google.com/o/oauth2/revoke?token=' +
         user.youtube.accessToken;
 
       request.get({url: url, json: true}, function(err, res, body) {
@@ -82,7 +82,7 @@ module.exports = function(UserSchema, messages) {
 
       if (body.items && body.items.length > 0) {
         body.items.forEach(function(element) {
-          var thumbnail = '';
+          let thumbnail = '';
           if (element.snippet.thumbnails) {
             if (element.snippet.thumbnails.high) {
               thumbnail = element.snippet.thumbnails.high.url;
@@ -131,7 +131,7 @@ module.exports = function(UserSchema, messages) {
         return done(null, null, new Error(messages.ERROR.GENERAL));
       }
 
-      var url = 'https://www.googleapis.com/youtube/v3/subscriptions?' +
+      let url = 'https://www.googleapis.com/youtube/v3/subscriptions?' +
         'part=snippet&maxResults=50&mine=true&order=alphabetical&' +
         'access_token=' + user.youtube.accessToken;
 
@@ -191,7 +191,7 @@ module.exports = function(UserSchema, messages) {
 
       user.youtube.subscriptions = [];
       subscriptions.forEach(function(sub) {
-        var info = sub.split(';');
+        let info = sub.split(';');
         user.youtube.subscriptions.push({
           subscriptionId: info[0],
           name: info[1],
@@ -239,13 +239,13 @@ module.exports = function(UserSchema, messages) {
             return;
           }
 
-          var url = 'https://www.youtube.com/watch?v=' +
+          let url = 'https://www.youtube.com/watch?v=' +
             element.contentDetails.upload.videoId;
-          var permalink = 'https://www.youtube.com/channel/' +
+          let permalink = 'https://www.youtube.com/channel/' +
             element.snippet.channelId;
 
-          var picture = '';
-          var thumbnails = element.snippet.thumbnails;
+          let picture = '';
+          let thumbnails = element.snippet.thumbnails;
           if (thumbnails.maxres) {
             picture = thumbnails.maxres.url;
           } else if (thumbnails.standard) {
@@ -254,7 +254,7 @@ module.exports = function(UserSchema, messages) {
             picture = thumbnails.high.url;
           }
 
-          var videoDesc = '';
+          let videoDesc = '';
           if (element.snippet.description) {
             videoDesc = element.snippet.description.replace('\n',
               '<br /><br />');
@@ -300,24 +300,24 @@ module.exports = function(UserSchema, messages) {
    * @return {Object}       The calls after they have been populated
    */
   UserSchema.methods.updateYouTube = function(calls) {
-    var user = this;
+    let user = this;
 
     // Set up call for update time
     calls.youtubeUpdateTime = function(callback) {
       callback(null, Date.now());
     };
 
-    var lastUpdateTime = handlers.getLastUpdateTime('YouTube', user);
+    let lastUpdateTime = handlers.getLastUpdateTime('YouTube', user);
 
     // Retrieve video posts
     calls.youtubeVideos = function(callback) {
-      var updates = {
+      let updates = {
         progress: 0,
         posts: []
       };
       if (user.youtube.subscriptions.length > 0) {
         user.youtube.subscriptions.forEach(function(account) {
-          var feedUrl = 'https://www.googleapis.com/youtube/v3/activities' +
+          let feedUrl = 'https://www.googleapis.com/youtube/v3/activities' +
             '?part=snippet%2CcontentDetails&channelId=' +
             account.subscriptionId + '&maxResults=50&publishedAfter=' +
             lastUpdateTime.toISOString() + '&access_token=' +
@@ -348,7 +348,7 @@ module.exports = function(UserSchema, messages) {
         return done(new Error(messages.ERROR.GENERAL));
       }
 
-      var calls = {};
+      let calls = {};
 
       if (user.hasYouTube && user.youtube.acceptUpdates) {
         calls = user.updateYouTube(calls, user);
@@ -359,7 +359,7 @@ module.exports = function(UserSchema, messages) {
           return handlers.checkIfRefreshEligible(err, 'YouTube', done);
         }
 
-        var newPosts = [];
+        let newPosts = [];
 
         if (user.hasYouTube && user.youtube.acceptUpdates) {
           Array.prototype.push.apply(newPosts, results.youtubeVideos);

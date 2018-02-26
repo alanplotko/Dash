@@ -1,29 +1,29 @@
 /* eslint-disable no-unused-expressions, no-loop-func */
 
 // Set up testing libraries
-var common = require('../../common/setup.js');
-var chai = require('chai');
-var should = chai.should();
-var chaiAsPromised = require('chai-as-promised');
+let common = require('../../common/setup.js');
+let chai = require('chai');
+let should = chai.should();
+let chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
-var sinon = require('sinon');
+let sinon = require('sinon');
 require('sinon-mongoose');
-var sandbox;
+let sandbox;
 
 // Set up mongoose
-var mongoose = require('mongoose');
+let mongoose = require('mongoose');
 mongoose.Promise = require('bluebird');
 
 // Set up user model test dependencies
-var User = require('../../../models/user');
-var config = require('../../../config/settings');
-var messages = require('../../../config/messages');
-var async = require('async');
+let User = require('../../../models/user');
+let config = require('../../../config/settings');
+let messages = require('../../../config/messages');
+let async = require('async');
 
 // Set up dummy account
-var dummyDetails = common.dummyDetails;
-var accountQuery = common.accountQuery;
-var services = ['Facebook', 'YouTube'];
+let dummyDetails = common.dummyDetails;
+let accountQuery = common.accountQuery;
+let services = ['Facebook', 'YouTube'];
 
 describe('Common service methods', function() {
   /**
@@ -89,11 +89,11 @@ describe('Common service methods', function() {
      * Successful save tested in model method add[Service].
      */
     it('should catch errors in user.save', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           sandbox.stub(user, 'save').yields(new Error('MongoError'));
           sandbox.stub(User, 'findById').yields(null, user);
@@ -119,7 +119,7 @@ describe('Common service methods', function() {
 
       async.series(tasks, function(err, result) {
         should.exist(err);
-        var error = new Error(messages.ERROR.GENERAL);
+        let error = new Error(messages.ERROR.GENERAL);
         err.toString().should.equal(error.toString());
         should.exist(result);
         result[0].should.equal(id);
@@ -132,11 +132,11 @@ describe('Common service methods', function() {
   describe('Model method: add[Service]', function() {
     it('should catch errors in User.findById', function(done) {
       sandbox.stub(User, 'findById').yields(new Error('MongoError'));
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -161,8 +161,8 @@ describe('Common service methods', function() {
         should.exist(result);
         result.should.have.lengthOf(services.length + 1);
         result[0].should.equal(id);
-        var error = new Error(messages.ERROR.GENERAL);
-        for (var i = 0; i < services.length; i++) {
+        let error = new Error(messages.ERROR.GENERAL);
+        for (let i = 0; i < services.length; i++) {
           should.exist(result[i + 1]);
           result[i + 1].toString().should.equal(error.toString());
         }
@@ -171,8 +171,8 @@ describe('Common service methods', function() {
     });
 
     it('should return a general error on an invalid user id', function(done) {
-      var id = 'InvalidId';
-      var tasks = [];
+      let id = 'InvalidId';
+      let tasks = [];
       sandbox.stub(User, 'findById').yields(null, null);
 
       services.forEach(function(serviceName) {
@@ -187,8 +187,8 @@ describe('Common service methods', function() {
         should.not.exist(err);
         should.exist(result);
         result.should.have.lengthOf(services.length);
-        var error = new Error(messages.ERROR.GENERAL);
-        for (var i = 0; i < services.length; i++) {
+        let error = new Error(messages.ERROR.GENERAL);
+        for (let i = 0; i < services.length; i++) {
           should.exist(result[i]);
           result[i].toString().should.equal(error.toString());
         }
@@ -197,11 +197,11 @@ describe('Common service methods', function() {
     });
 
     it('should return a missing permissions error on reauth', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -228,8 +228,8 @@ describe('Common service methods', function() {
         should.exist(result);
         result.should.have.lengthOf(services.length + 1);
         result[0].should.equal(id);
-        for (var i = 0; i < services.length; i++) {
-          var error = messages.STATUS[services[i].toUpperCase()]
+        for (let i = 0; i < services.length; i++) {
+          let error = messages.STATUS[services[i].toUpperCase()]
             .MISSING_PERMISSIONS;
           should.exist(result[i + 1]);
           result[i + 1].toString().should.equal(error.toString());
@@ -239,12 +239,12 @@ describe('Common service methods', function() {
     });
 
     it('should catch errors in user.save', function(done) {
-      var id;
-      var tasks = [];
-      var mongoError = new Error('MongoError');
+      let id;
+      let tasks = [];
+      let mongoError = new Error('MongoError');
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           sandbox.stub(user, 'save').yields(mongoError);
           sandbox.stub(User, 'findById').yields(null, user);
@@ -274,8 +274,8 @@ describe('Common service methods', function() {
         should.exist(result);
         result.should.have.lengthOf(services.length + 1);
         result[0].should.equal(id);
-        var error = new Error(messages.ERROR.GENERAL);
-        for (var j = 0; j < services.length; j++) {
+        let error = new Error(messages.ERROR.GENERAL);
+        for (let j = 0; j < services.length; j++) {
           should.exist(result[j + 1]);
           result[j + 1].toString().should.equal(error.toString());
         }
@@ -291,11 +291,11 @@ describe('Common service methods', function() {
     });
 
     it('should return on refreshing access token', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -323,8 +323,8 @@ describe('Common service methods', function() {
         should.exist(result);
         result.should.have.lengthOf(services.length + 1);
         result[0].should.equal(id);
-        for (var j = 0; j < services.length; j++) {
-          var error = messages.STATUS[services[j].toUpperCase()].RENEWED;
+        for (let j = 0; j < services.length; j++) {
+          let error = messages.STATUS[services[j].toUpperCase()].RENEWED;
           should.exist(result[j + 1]);
           result[j + 1].toString().should.equal(error.toString());
         }
@@ -342,11 +342,11 @@ describe('Common service methods', function() {
     });
 
     it('should return on being already connected to a service', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -356,7 +356,7 @@ describe('Common service methods', function() {
       };
 
       // Add services to user
-      var addServices = function(callback) {
+      let addServices = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -385,8 +385,8 @@ describe('Common service methods', function() {
         result.should.have.lengthOf(services.length + 2);
         result[0].should.equal(id);
         should.not.exist(result[1]);
-        for (var j = 0; j < services.length; j++) {
-          var error = new Error(
+        for (let j = 0; j < services.length; j++) {
+          let error = new Error(
             messages.STATUS[services[j].toUpperCase()].ALREADY_CONNECTED
           );
           should.exist(result[j + 2]);
@@ -397,11 +397,11 @@ describe('Common service methods', function() {
     });
 
     it('should return on successfully adding a service', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -430,7 +430,7 @@ describe('Common service methods', function() {
         should.exist(result);
         result.should.have.lengthOf(services.length + 1);
         result[0].should.equal(id);
-        for (var j = 0; j < services.length; j++) {
+        for (let j = 0; j < services.length; j++) {
           should.exist(result[j + 1]);
 
           should.exist(result[j + 1][services[j].toLowerCase()].profileId);
@@ -452,11 +452,11 @@ describe('Common service methods', function() {
 
   describe('Document method: toggle[Service]', function() {
     it('should catch errors in User.findById', function(done) {
-      var tasks = [];
+      let tasks = [];
       sandbox.stub(User, 'findById').yields(new Error('MongoError'));
 
       // Generate test function by service name
-      var test = function(serviceName) {
+      let test = function(serviceName) {
         return function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
@@ -473,7 +473,7 @@ describe('Common service methods', function() {
 
       async.series(tasks, function(err, result) {
         should.exist(err);
-        var error = new Error(messages.ERROR.GENERAL);
+        let error = new Error(messages.ERROR.GENERAL);
         err.toString().should.equal(error.toString());
         should.exist(result);
         result.should.have.lengthOf(1);
@@ -483,10 +483,10 @@ describe('Common service methods', function() {
     });
 
     it('should return correct message for missing service', function(done) {
-      var tasks = [];
+      let tasks = [];
 
       // Generate test function by service name
-      var test = function(serviceName) {
+      let test = function(serviceName) {
         return function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
@@ -505,7 +505,7 @@ describe('Common service methods', function() {
         should.not.exist(err);
         should.exist(result);
         result.should.have.lengthOf(2);
-        for (var i = 0; i < result.length; i++) {
+        for (let i = 0; i < result.length; i++) {
           should.exist(result[i]);
           result[i].should
             .equal(messages.STATUS[services[i].toUpperCase()].NOT_CONFIGURED);
@@ -515,11 +515,11 @@ describe('Common service methods', function() {
     });
 
     it('should return correct message for existing service', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -544,7 +544,7 @@ describe('Common service methods', function() {
       });
 
       // Generate test function by service name
-      var test = function(serviceName) {
+      let test = function(serviceName) {
         return function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
@@ -592,11 +592,11 @@ describe('Common service methods', function() {
         result.should.have.lengthOf((services.length * 5) + 1);
         should.exist(result[0]);
         result[0].should.equal(id);
-        for (var i = 1; i < result.length; i++) {
+        for (let i = 1; i < result.length; i++) {
           should.exist(result[i]);
         }
 
-        var j;
+        let j;
         // Check whether toggle messages are correct
         for (j = 0; j < services.length; j++) {
           result[j + services.length + 1].should

@@ -1,9 +1,9 @@
 /* eslint-disable no-unused-vars */
 
 // Set up dummy account and query
-var crypto = require('crypto');
-var email = 'Dashbot@Dash';
-var gravatar = crypto.createHash('md5').update(email).digest('hex');
+let crypto = require('crypto');
+let email = 'Dashbot@Dash';
+let gravatar = crypto.createHash('md5').update(email).digest('hex');
 module.exports.dummyDetails = {
   email: email,
   displayName: 'Dashbot',
@@ -11,7 +11,7 @@ module.exports.dummyDetails = {
   password: 'DashRocks'
 };
 
-var User = require('../../models/user');
+let User = require('../../models/user');
 module.exports.accountQuery = User.findOne({email: email});
 
 // Set up environment defaults

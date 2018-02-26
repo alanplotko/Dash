@@ -1,5 +1,5 @@
 // Define messages used across Dash
-var messages = {
+let messages = {
 
   /**
    * Define error messages for mainly services and authentication

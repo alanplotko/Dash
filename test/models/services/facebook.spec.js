@@ -1,30 +1,30 @@
 /* eslint-disable no-unused-expressions, no-loop-func */
 
 // Set up testing libraries
-var common = require('../../common/setup.js');
-var chai = require('chai');
-var should = chai.should();
-var chaiAsPromised = require('chai-as-promised');
+let common = require('../../common/setup.js');
+let chai = require('chai');
+let should = chai.should();
+let chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
-var sinon = require('sinon');
+let sinon = require('sinon');
 require('sinon-mongoose');
-var sandbox;
+let sandbox;
 
 // Set up mongoose
-var mongoose = require('mongoose');
+let mongoose = require('mongoose');
 mongoose.Promise = require('bluebird');
 
 // Set up user model test dependencies
-var User = require('../../../models/user');
-var config = require('../../../config/settings');
-var async = require('async');
-var request = require('request');
-var messages = require('../../../config/messages');
+let User = require('../../../models/user');
+let config = require('../../../config/settings');
+let async = require('async');
+let request = require('request');
+let messages = require('../../../config/messages');
 
 // Set up dummy account
-var dummyDetails = common.dummyDetails;
-var accountQuery = common.accountQuery;
-var contentTypes = [
+let dummyDetails = common.dummyDetails;
+let accountQuery = common.accountQuery;
+let contentTypes = [
   {key: 'page', route: 'likes'},
   {key: 'group', route: 'groups'}
 ];
@@ -90,11 +90,11 @@ describe('Facebook service', function() {
 
   describe('Model method: removeFacebook', function() {
     it('should catch errors in User.findById', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           sandbox.stub(User, 'findById').yields(new Error('MongoError'));
           should.not.exist(err);
@@ -107,7 +107,7 @@ describe('Facebook service', function() {
       tasks.push(getId);
 
       // Test User.removeFacebook
-      var test = function(callback) {
+      let test = function(callback) {
         User.removeFacebook(id, function(err) {
           callback(null, err);
         });
@@ -126,11 +126,11 @@ describe('Facebook service', function() {
     });
 
     it('should return error on no user found', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           sandbox.stub(User, 'findById').yields(null, null);
           should.not.exist(err);
@@ -143,7 +143,7 @@ describe('Facebook service', function() {
       tasks.push(getId);
 
       // Test User.removeFacebook
-      var test = function(callback) {
+      let test = function(callback) {
         User.removeFacebook(id, function(err) {
           callback(null, err);
         });
@@ -162,11 +162,11 @@ describe('Facebook service', function() {
     });
 
     it('should return error if not connected to Facebook', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -178,7 +178,7 @@ describe('Facebook service', function() {
       tasks.push(getId);
 
       // Test User.removeFacebook
-      var test = function(callback) {
+      let test = function(callback) {
         User.removeFacebook(id, function(err) {
           callback(null, err);
         });
@@ -198,12 +198,12 @@ describe('Facebook service', function() {
     });
 
     it('should return error if delete request fails', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
       sandbox.stub(request, 'del').yields(new Error('RequestError'));
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -215,7 +215,7 @@ describe('Facebook service', function() {
       tasks.push(getId);
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -230,7 +230,7 @@ describe('Facebook service', function() {
       tasks.push(addProfileId);
 
       // Test User.removeFacebook
-      var test = function(callback) {
+      let test = function(callback) {
         User.removeFacebook(id, function(err) {
           callback(null, err);
         });
@@ -252,8 +252,8 @@ describe('Facebook service', function() {
     });
 
     it('should return error with expired access token', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
       sandbox.stub(request, 'del').yields(null, null, {
         error: {
           code: 190
@@ -261,7 +261,7 @@ describe('Facebook service', function() {
       });
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -273,7 +273,7 @@ describe('Facebook service', function() {
       tasks.push(getId);
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -288,7 +288,7 @@ describe('Facebook service', function() {
       tasks.push(addProfileId);
 
       // Test User.removeFacebook
-      var test = function(callback) {
+      let test = function(callback) {
         User.removeFacebook(id, function(err) {
           callback(null, err);
         });
@@ -309,14 +309,14 @@ describe('Facebook service', function() {
     });
 
     it('should return successfully on body.success', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
       sandbox.stub(request, 'del').yields(null, null, {
         success: {}
       });
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -328,7 +328,7 @@ describe('Facebook service', function() {
       tasks.push(getId);
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -343,7 +343,7 @@ describe('Facebook service', function() {
       tasks.push(addProfileId);
 
       // Test User.removeFacebook
-      var test = function(callback) {
+      let test = function(callback) {
         User.removeFacebook(id, callback);
       };
 
@@ -363,12 +363,12 @@ describe('Facebook service', function() {
     });
 
     it('should return an error on no success property', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
       sandbox.stub(request, 'del').yields(null, null, {});
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -380,7 +380,7 @@ describe('Facebook service', function() {
       tasks.push(getId);
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -395,7 +395,7 @@ describe('Facebook service', function() {
       tasks.push(addProfileId);
 
       // Test User.removeFacebook
-      var test = function(callback) {
+      let test = function(callback) {
         User.removeFacebook(id, function(err) {
           callback(null, err);
         });
@@ -422,11 +422,11 @@ describe('Facebook service', function() {
    */
   describe('Model method: setUpFacebook[ContentType]', function() {
     it('should catch errors in User.findById', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           sandbox.stub(User, 'findById').yields(new Error('MongoError'));
           should.not.exist(err);
@@ -439,7 +439,7 @@ describe('Facebook service', function() {
       tasks.push(getId);
 
       // Generate test for each content type
-      var test = function(formatted) {
+      let test = function(formatted) {
         return function(callback) {
           User['setUpFacebook' + formatted](id, function(err) {
             callback(null, err);
@@ -448,8 +448,8 @@ describe('Facebook service', function() {
       };
 
       contentTypes.forEach(function(type) {
-        var plural = type.key + 's';
-        var formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
+        let plural = type.key + 's';
+        let formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
         tasks.push(test(formatted));
       });
 
@@ -457,7 +457,7 @@ describe('Facebook service', function() {
         should.not.exist(err);
         should.exist(result);
         result[0].should.equal(id);
-        for (var i = 0; i < contentTypes.length; i++) {
+        for (let i = 0; i < contentTypes.length; i++) {
           result[i + 1].toString().should.equal(
             (new Error(messages.ERROR.GENERAL)).toString()
           );
@@ -467,11 +467,11 @@ describe('Facebook service', function() {
     });
 
     it('should return error on no user found', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           sandbox.stub(User, 'findById').yields(null, null);
           should.not.exist(err);
@@ -484,7 +484,7 @@ describe('Facebook service', function() {
       tasks.push(getId);
 
       // Generate test for each content type
-      var test = function(formatted) {
+      let test = function(formatted) {
         return function(callback) {
           User['setUpFacebook' + formatted](id, function(result1, result2,
               result3) {
@@ -494,8 +494,8 @@ describe('Facebook service', function() {
       };
 
       contentTypes.forEach(function(type) {
-        var plural = type.key + 's';
-        var formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
+        let plural = type.key + 's';
+        let formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
         tasks.push(test(formatted));
       });
 
@@ -503,7 +503,7 @@ describe('Facebook service', function() {
         should.not.exist(err);
         should.exist(result);
         result[0].should.equal(id);
-        for (var i = 0; i < contentTypes.length; i++) {
+        for (let i = 0; i < contentTypes.length; i++) {
           result[i + 1].toString().should.equal(
             (new Error(messages.ERROR.GENERAL)).toString()
           );
@@ -513,12 +513,12 @@ describe('Facebook service', function() {
     });
 
     it('should return error if get request fails', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
       sandbox.stub(request, 'get').yields(new Error('RequestError'));
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -530,7 +530,7 @@ describe('Facebook service', function() {
       tasks.push(getId);
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -545,7 +545,7 @@ describe('Facebook service', function() {
       tasks.push(addProfileId);
 
       // Generate test for each content type
-      var test = function(formatted) {
+      let test = function(formatted) {
         return function(callback) {
           User['setUpFacebook' + formatted](id, function(err) {
             callback(null, err);
@@ -554,8 +554,8 @@ describe('Facebook service', function() {
       };
 
       contentTypes.forEach(function(type) {
-        var plural = type.key + 's';
-        var formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
+        let plural = type.key + 's';
+        let formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
         tasks.push(test(formatted));
       });
 
@@ -566,7 +566,7 @@ describe('Facebook service', function() {
         should.exist(result[1].facebook);
         result[1].facebook.profileId.should.equal('ProfileId');
         result[1].facebook.accessToken.should.equal('AccessToken');
-        for (var i = 0; i < contentTypes.length; i++) {
+        for (let i = 0; i < contentTypes.length; i++) {
           result[i + 2].toString().should.equal(
             (new Error(messages.ERROR.GENERAL)).toString()
           );
@@ -576,8 +576,8 @@ describe('Facebook service', function() {
     });
 
     it('should return error with expired access token', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
       sandbox.stub(request, 'get').yields(null, null, {
         error: {
           code: 190
@@ -585,7 +585,7 @@ describe('Facebook service', function() {
       });
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -597,7 +597,7 @@ describe('Facebook service', function() {
       tasks.push(getId);
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -612,7 +612,7 @@ describe('Facebook service', function() {
       tasks.push(addProfileId);
 
       // Generate test for each content type
-      var test = function(formatted) {
+      let test = function(formatted) {
         return function(callback) {
           User['setUpFacebook' + formatted](id, function(err) {
             callback(null, err);
@@ -621,8 +621,8 @@ describe('Facebook service', function() {
       };
 
       contentTypes.forEach(function(type) {
-        var plural = type.key + 's';
-        var formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
+        let plural = type.key + 's';
+        let formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
         tasks.push(test(formatted));
       });
 
@@ -633,7 +633,7 @@ describe('Facebook service', function() {
         should.exist(result[1].facebook);
         result[1].facebook.profileId.should.equal('ProfileId');
         result[1].facebook.accessToken.should.equal('AccessToken');
-        for (var i = 0; i < contentTypes.length; i++) {
+        for (let i = 0; i < contentTypes.length; i++) {
           result[i + 2].should.equal('400-Facebook');
         }
         done();
@@ -641,8 +641,8 @@ describe('Facebook service', function() {
     });
 
     it('should return successfully on body.data', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
       sandbox.stub(request, 'get').yields(null, null, {
         data: [
           // Non-Facebook page test
@@ -680,7 +680,7 @@ describe('Facebook service', function() {
       });
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -692,7 +692,7 @@ describe('Facebook service', function() {
       tasks.push(getId);
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -707,7 +707,7 @@ describe('Facebook service', function() {
       tasks.push(addProfileId);
 
       // Generate test for each content type
-      var test = function(formatted) {
+      let test = function(formatted) {
         return function(callback) {
           User['setUpFacebook' + formatted](id, function(err, content, type) {
             callback(err, content);
@@ -716,8 +716,8 @@ describe('Facebook service', function() {
       };
 
       contentTypes.forEach(function(type) {
-        var plural = type.key + 's';
-        var formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
+        let plural = type.key + 's';
+        let formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
         tasks.push(test(formatted));
       });
 
@@ -728,7 +728,7 @@ describe('Facebook service', function() {
         should.exist(result[1].facebook);
         result[1].facebook.profileId.should.equal('ProfileId');
         result[1].facebook.accessToken.should.equal('AccessToken');
-        for (var i = 0; i < contentTypes.length; i++) {
+        for (let i = 0; i < contentTypes.length; i++) {
           should.exist(result[i + 2]);
           result[i + 2].should.have.all.keys({
             Name1: {
@@ -759,12 +759,12 @@ describe('Facebook service', function() {
     });
 
     it('should traverse pages correctly', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
-      var callback = sandbox.stub(request, 'get');
+      let callback = sandbox.stub(request, 'get');
 
-      var firstCall = {
+      let firstCall = {
         paging: {next: 'Next'},
         data: [
           // Non-Facebook page test
@@ -801,7 +801,7 @@ describe('Facebook service', function() {
         ]
       };
 
-      var secondCall = {
+      let secondCall = {
         data: [
           // Non-Facebook page test
           {link: 'Link'},
@@ -844,7 +844,7 @@ describe('Facebook service', function() {
         .onCall(3).yields(null, null, secondCall);
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -856,7 +856,7 @@ describe('Facebook service', function() {
       tasks.push(getId);
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -871,7 +871,7 @@ describe('Facebook service', function() {
       tasks.push(addProfileId);
 
       // Generate test for each content type
-      var test = function(formatted) {
+      let test = function(formatted) {
         return function(callback) {
           User['setUpFacebook' + formatted](id, function(err, result, type) {
             callback(err, result);
@@ -880,8 +880,8 @@ describe('Facebook service', function() {
       };
 
       contentTypes.forEach(function(type) {
-        var plural = type.key + 's';
-        var formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
+        let plural = type.key + 's';
+        let formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
         tasks.push(test(formatted));
       });
 
@@ -892,7 +892,7 @@ describe('Facebook service', function() {
         should.exist(result[1].facebook);
         result[1].facebook.profileId.should.equal('ProfileId');
         result[1].facebook.accessToken.should.equal('AccessToken');
-        for (var i = 0; i < contentTypes.length; i++) {
+        for (let i = 0; i < contentTypes.length; i++) {
           should.exist(result[i + 2]);
           result[i + 2].should.have.all.keys({
             Name1: {
@@ -944,12 +944,12 @@ describe('Facebook service', function() {
     });
 
     it('should return successfully on no body.data', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
       sandbox.stub(request, 'get').yields(null, null, {});
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -961,7 +961,7 @@ describe('Facebook service', function() {
       tasks.push(getId);
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -976,7 +976,7 @@ describe('Facebook service', function() {
       tasks.push(addProfileId);
 
       // Generate test for each content type
-      var test = function(formatted) {
+      let test = function(formatted) {
         return function(callback) {
           User['setUpFacebook' + formatted](id, function(err, content, type) {
             callback(err, content);
@@ -985,8 +985,8 @@ describe('Facebook service', function() {
       };
 
       contentTypes.forEach(function(type) {
-        var plural = type.key + 's';
-        var formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
+        let plural = type.key + 's';
+        let formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
         tasks.push(test(formatted));
       });
 
@@ -997,7 +997,7 @@ describe('Facebook service', function() {
         should.exist(result[1].facebook);
         result[1].facebook.profileId.should.equal('ProfileId');
         result[1].facebook.accessToken.should.equal('AccessToken');
-        for (var i = 0; i < contentTypes.length; i++) {
+        for (let i = 0; i < contentTypes.length; i++) {
           should.exist(result[i + 2]);
           result[i + 2].should.be.an('object').that.is.empty;
         }
@@ -1008,11 +1008,11 @@ describe('Facebook service', function() {
 
   describe('Model method: saveFacebook[ContentType]', function() {
     it('should catch errors in User.findById', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           sandbox.stub(User, 'findById').yields(new Error('MongoError'));
           should.not.exist(err);
@@ -1025,7 +1025,7 @@ describe('Facebook service', function() {
       tasks.push(getId);
 
       // Generate test for each content type
-      var test = function(formatted) {
+      let test = function(formatted) {
         return function(callback) {
           User['saveFacebook' + formatted](id, [], function(err) {
             callback(null, err);
@@ -1034,8 +1034,8 @@ describe('Facebook service', function() {
       };
 
       contentTypes.forEach(function(type) {
-        var plural = type.key + 's';
-        var formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
+        let plural = type.key + 's';
+        let formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
         tasks.push(test(formatted));
       });
 
@@ -1043,7 +1043,7 @@ describe('Facebook service', function() {
         should.not.exist(err);
         should.exist(result);
         result[0].should.equal(id);
-        for (var i = 0; i < contentTypes.length; i++) {
+        for (let i = 0; i < contentTypes.length; i++) {
           result[i + 1].toString().should.equal(
             (new Error(messages.ERROR.GENERAL)).toString()
           );
@@ -1053,11 +1053,11 @@ describe('Facebook service', function() {
     });
 
     it('should return error on no user found', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           sandbox.stub(User, 'findById').yields(null, null);
           should.not.exist(err);
@@ -1070,7 +1070,7 @@ describe('Facebook service', function() {
       tasks.push(getId);
 
       // Generate test for each content type
-      var test = function(formatted) {
+      let test = function(formatted) {
         return function(callback) {
           User['saveFacebook' + formatted](id, [], function(result1, result2,
               result3) {
@@ -1080,8 +1080,8 @@ describe('Facebook service', function() {
       };
 
       contentTypes.forEach(function(type) {
-        var plural = type.key + 's';
-        var formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
+        let plural = type.key + 's';
+        let formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
         tasks.push(test(formatted));
       });
 
@@ -1089,7 +1089,7 @@ describe('Facebook service', function() {
         should.not.exist(err);
         should.exist(result);
         result[0].should.equal(id);
-        for (var i = 0; i < contentTypes.length; i++) {
+        for (let i = 0; i < contentTypes.length; i++) {
           result[i + 1].toString().should.equal(
             (new Error(messages.ERROR.GENERAL)).toString()
           );
@@ -1099,11 +1099,11 @@ describe('Facebook service', function() {
     });
 
     it('should catch errors in user.save', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           sandbox.stub(user, 'save').yields(new Error('MongoError'));
           sandbox.stub(User, 'findById').yields(null, user);
@@ -1117,7 +1117,7 @@ describe('Facebook service', function() {
       tasks.push(getId);
 
       // Generate test for each content type
-      var test = function(formatted) {
+      let test = function(formatted) {
         return function(callback) {
           User['saveFacebook' + formatted](id, [], function(err) {
             callback(null, err); // Return error
@@ -1126,8 +1126,8 @@ describe('Facebook service', function() {
       };
 
       contentTypes.forEach(function(type) {
-        var plural = type.key + 's';
-        var formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
+        let plural = type.key + 's';
+        let formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
         tasks.push(test(formatted));
       });
 
@@ -1135,7 +1135,7 @@ describe('Facebook service', function() {
         should.not.exist(err);
         should.exist(result);
         result[0].should.equal(id);
-        for (var i = 0; i < contentTypes.length; i++) {
+        for (let i = 0; i < contentTypes.length; i++) {
           result[i + 1].toString().should.equal(
             (new Error(messages.ERROR.GENERAL)).toString()
           );
@@ -1145,11 +1145,11 @@ describe('Facebook service', function() {
     });
 
     it('should return successfully on no new content', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1161,7 +1161,7 @@ describe('Facebook service', function() {
       tasks.push(getId);
 
       // Generate test for each content type
-      var test = function(formatted) {
+      let test = function(formatted) {
         return function(callback) {
           User['saveFacebook' + formatted](id, [], function(err, result) {
             callback(err, result);
@@ -1170,8 +1170,8 @@ describe('Facebook service', function() {
       };
 
       contentTypes.forEach(function(type) {
-        var plural = type.key + 's';
-        var formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
+        let plural = type.key + 's';
+        let formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
         tasks.push(test(formatted));
       });
 
@@ -1179,7 +1179,7 @@ describe('Facebook service', function() {
         should.not.exist(err);
         should.exist(result);
         result[0].should.equal(id);
-        for (var i = 0; i < contentTypes.length; i++) {
+        for (let i = 0; i < contentTypes.length; i++) {
           should.exist(result[i + 1]);
           should.exist(result[i + 1].facebook[contentTypes[i].key + 's']);
           result[i + 1].facebook[contentTypes[i].key + 's'].should.be.empty;
@@ -1189,11 +1189,11 @@ describe('Facebook service', function() {
     });
 
     it('should return successfully on new content', function(done) {
-      var id;
-      var tasks = [];
+      let id;
+      let tasks = [];
 
       // Get user id
-      var getId = function(callback) {
+      let getId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1205,7 +1205,7 @@ describe('Facebook service', function() {
       tasks.push(getId);
 
       // Generate test for each content type
-      var test = function(formatted) {
+      let test = function(formatted) {
         return function(callback) {
           User['saveFacebook' + formatted](id, ['A:B'], function(err, result) {
             callback(err, result);
@@ -1214,8 +1214,8 @@ describe('Facebook service', function() {
       };
 
       contentTypes.forEach(function(type) {
-        var plural = type.key + 's';
-        var formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
+        let plural = type.key + 's';
+        let formatted = plural.charAt(0).toUpperCase() + plural.slice(1);
         tasks.push(test(formatted));
       });
 
@@ -1223,7 +1223,7 @@ describe('Facebook service', function() {
         should.not.exist(err);
         should.exist(result);
         result[0].should.equal(id);
-        for (var i = 0; i < contentTypes.length; i++) {
+        for (let i = 0; i < contentTypes.length; i++) {
           should.exist(result[i + 1]);
           should.exist(result[i + 1].facebook[contentTypes[i].key + 's']);
           result[i + 1].facebook[contentTypes[i].key + 's']
@@ -1253,10 +1253,10 @@ describe('Facebook service', function() {
    */
   describe('Document method: refreshFacebook', function() {
     it('should catch errors in User.findById', function(done) {
-      var tasks = [];
+      let tasks = [];
 
       // Test user.refreshFacebook
-      var test = function(callback) {
+      let test = function(callback) {
         accountQuery.exec(function(err, user) {
           sandbox.stub(User, 'findById').yields(new Error('MongoError'));
           should.not.exist(err);
@@ -1279,10 +1279,10 @@ describe('Facebook service', function() {
     });
 
     it('should catch errors in async.parallel', function(done) {
-      var tasks = [];
+      let tasks = [];
 
       // Test user.refreshFacebook
-      var test = function(callback) {
+      let test = function(callback) {
         accountQuery.exec(function(err, user) {
           sandbox.stub(async, 'parallel').yields(new Error('ParallelError'));
           should.not.exist(err);
@@ -1305,7 +1305,7 @@ describe('Facebook service', function() {
     });
 
     it('should return successfully on no new posts', function(done) {
-      var tasks = [];
+      let tasks = [];
       sandbox.stub(request, 'get').yields(null, null, {
         data: [
           // Non-Facebook page test
@@ -1343,7 +1343,7 @@ describe('Facebook service', function() {
       });
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1358,7 +1358,7 @@ describe('Facebook service', function() {
       tasks.push(addProfileId);
 
       // Test user.refreshFacebook
-      var test = function(callback) {
+      let test = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1380,17 +1380,17 @@ describe('Facebook service', function() {
     });
 
     it('should return errors if get request fails', function(done) {
-      var tasks = [];
+      let tasks = [];
       sandbox.stub(request, 'get').yields(new Error('RequestError'));
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
           user.facebook.profileId = 'ProfileId';
           user.facebook.accessToken = 'AccessToken';
-          for (var i = 0; i < contentTypes.length; i++) {
+          for (let i = 0; i < contentTypes.length; i++) {
             if (contentTypes[i] === 'group') {
               user.facebook[contentTypes[i].key + 's'][i] = {
                 groupId: 'GroupId',
@@ -1412,7 +1412,7 @@ describe('Facebook service', function() {
       tasks.push(addProfileId);
 
       // Test user.refreshFacebook
-      var test = function(callback) {
+      let test = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1437,7 +1437,7 @@ describe('Facebook service', function() {
     });
 
     it('should return error with expired access token', function(done) {
-      var tasks = [];
+      let tasks = [];
       sandbox.stub(request, 'get').yields(null, null, {
         error: {
           code: 190
@@ -1445,7 +1445,7 @@ describe('Facebook service', function() {
       });
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1473,7 +1473,7 @@ describe('Facebook service', function() {
       tasks.push(addProfileId);
 
       // Test user.refreshFacebook
-      var test = function(callback) {
+      let test = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1497,8 +1497,8 @@ describe('Facebook service', function() {
     });
 
     it('should return successfully on body.data', function(done) {
-      var tasks = [];
-      var currentTime = Date.now();
+      let tasks = [];
+      let currentTime = Date.now();
       sandbox.stub(request, 'get').yields(null, null, {
         data: [
           // Test: skip posts with no message property
@@ -1533,7 +1533,7 @@ describe('Facebook service', function() {
       });
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1561,7 +1561,7 @@ describe('Facebook service', function() {
       tasks.push(addProfileId);
 
       // Test user.refreshFacebook
-      var test = function(callback) {
+      let test = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1580,7 +1580,7 @@ describe('Facebook service', function() {
         result[0].facebook.profileId.should.equal('ProfileId');
         result[0].facebook.accessToken.should.equal('AccessToken');
 
-        var matchingData = [
+        let matchingData = [
           {
             service: 'facebook',
             title: 'Name',
@@ -1651,7 +1651,7 @@ describe('Facebook service', function() {
 
         should.exist(result[1]);
         result[1].should.have.lengthOf(matchingData.length);
-        for (var i = 0; i < result[1].length; i++) {
+        for (let i = 0; i < result[1].length; i++) {
           result[1][i].should.have.all.keys(matchingData[i]);
         }
         done();
@@ -1659,12 +1659,12 @@ describe('Facebook service', function() {
     });
 
     it('should traverse pages correctly', function(done) {
-      var tasks = [];
-      var currentTime = Date.now();
+      let tasks = [];
+      let currentTime = Date.now();
 
-      var callback = sandbox.stub(request, 'get');
+      let callback = sandbox.stub(request, 'get');
 
-      var firstCall = {
+      let firstCall = {
         paging: {next: 'Next'},
         data: [
           // Test: skip posts with no message property
@@ -1698,7 +1698,7 @@ describe('Facebook service', function() {
         ]
       };
 
-      var secondCall = {
+      let secondCall = {
         data: [
           // Test: skip posts with no message property
           {
@@ -1738,7 +1738,7 @@ describe('Facebook service', function() {
         .onCall(3).yields(null, null, secondCall);
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1766,7 +1766,7 @@ describe('Facebook service', function() {
       tasks.push(addProfileId);
 
       // Test user.refreshFacebook
-      var test = function(callback) {
+      let test = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1785,7 +1785,7 @@ describe('Facebook service', function() {
         result[0].facebook.profileId.should.equal('ProfileId');
         result[0].facebook.accessToken.should.equal('AccessToken');
 
-        var matchingData = [
+        let matchingData = [
           {
             service: 'facebook',
             title: 'Name',
@@ -1856,7 +1856,7 @@ describe('Facebook service', function() {
 
         should.exist(result[1]);
         result[1].should.have.lengthOf(matchingData.length * 2);
-        for (var i = 0; i < result[1].length; i++) {
+        for (let i = 0; i < result[1].length; i++) {
           result[1][i].should.have.all.keys(
             matchingData[i % matchingData.length]
           );
@@ -1866,11 +1866,11 @@ describe('Facebook service', function() {
     });
 
     it('should return successfully on no body.data', function(done) {
-      var tasks = [];
+      let tasks = [];
       sandbox.stub(request, 'get').yields(null, null, {});
 
       // Add profileId
-      var addProfileId = function(callback) {
+      let addProfileId = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1898,7 +1898,7 @@ describe('Facebook service', function() {
       tasks.push(addProfileId);
 
       // Test user.refreshFacebook
-      var test = function(callback) {
+      let test = function(callback) {
         accountQuery.exec(function(err, user) {
           should.not.exist(err);
           should.exist(user);
@@ -1923,10 +1923,10 @@ describe('Facebook service', function() {
 
     it('should return successfully if not connected to Facebook',
       function(done) {
-        var tasks = [];
+        let tasks = [];
 
         // Test user.refreshFacebook
-        var test = function(callback) {
+        let test = function(callback) {
           accountQuery.exec(function(err, user) {
             should.not.exist(err);
             should.exist(user);

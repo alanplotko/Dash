@@ -1,17 +1,17 @@
 // --------- Environment Setup ---------
-var settings = require.main.require('./config/settings');
+let settings = require.main.require('./config/settings');
 settings.ENV = settings[process.env.NODE_ENV];
-var messages = require.main.require('./config/messages');
+let messages = require.main.require('./config/messages');
 
 // --------- Dependencies ---------
-var LocalStrategy = require('passport-local').Strategy;
-var FacebookStrategy = require('passport-facebook').Strategy;
-var YoutubeV3Strategy = require('passport-youtube-v3').Strategy;
-var refresh = require('passport-oauth2-refresh');
-var User = require.main.require('./models/user');
-var validator = require('validator');
+let LocalStrategy = require('passport-local').Strategy;
+let FacebookStrategy = require('passport-facebook').Strategy;
+let YoutubeV3Strategy = require('passport-youtube-v3').Strategy;
+let refresh = require('passport-oauth2-refresh');
+let User = require.main.require('./models/user');
+let validator = require('validator');
 require.main.require('./config/custom-validation')(validator);
-var crypto = require('crypto');
+let crypto = require('crypto');
 
 module.exports = function(passport) {
   /**
@@ -28,7 +28,7 @@ module.exports = function(passport) {
     passReqToCallback: true
   }, function(req, emailAddress, password, done) {
     // Clean and verify form input
-    var email = validator.trim(emailAddress);
+    let email = validator.trim(emailAddress);
 
     if (!validator.isEmail(email) || email.length === 0 ||
         password.length === 0) {
@@ -51,7 +51,7 @@ module.exports = function(passport) {
 
       // Login failed
       if (reason !== null) {
-        var reasons = User.failedLogin;
+        let reasons = User.failedLogin;
 
         switch (reason) {
           case reasons.NOT_FOUND:
@@ -81,9 +81,9 @@ module.exports = function(passport) {
     passReqToCallback: true
   }, function(req, emailAddress, password, done) {
     // Clean and verify form input
-    var email = validator.trim(emailAddress);
-    var gravatar = crypto.createHash('md5').update(email).digest('hex');
-    var displayName = validator.trim(req.body.displayName);
+    let email = validator.trim(emailAddress);
+    let gravatar = crypto.createHash('md5').update(email).digest('hex');
+    let displayName = validator.trim(req.body.displayName);
     if (displayName.length === 0) {
       displayName = email.split('@')[0];
     }
@@ -112,7 +112,7 @@ module.exports = function(passport) {
       }
       // If validation passes, proceed to register user
       process.nextTick(function() {
-        var newUser = new User({
+        let newUser = new User({
           email: email,
           displayName: displayName,
           password: password,
@@ -135,7 +135,7 @@ module.exports = function(passport) {
   }));
 
   // Define Facebook strategy for passport
-  var fbStrategy = new FacebookStrategy({
+  let fbStrategy = new FacebookStrategy({
     clientID: settings.SERVICES.FACEBOOK.CLIENT_ID,
     clientSecret: settings.SERVICES.FACEBOOK.CLIENT_SECRET,
     callbackURL: settings.ENV.URL + '/services/auth/facebook/callback',
@@ -143,7 +143,7 @@ module.exports = function(passport) {
     passReqToCallback: true
   }, function(req, accessToken, refreshToken, profile, done) {
     // Set up service
-    var service = {
+    let service = {
       profileId: profile.id,
       accessToken: accessToken,
       refreshToken: refreshToken,
@@ -171,14 +171,14 @@ module.exports = function(passport) {
   refresh.use(fbStrategy);
 
   // Define YouTube strategy for passport
-  var ytStrategy = new YoutubeV3Strategy({
+  let ytStrategy = new YoutubeV3Strategy({
     clientID: settings.SERVICES.YOUTUBE.CLIENT_ID,
     clientSecret: settings.SERVICES.YOUTUBE.CLIENT_SECRET,
     callbackURL: settings.ENV.URL + '/services/auth/youtube/callback',
     passReqToCallback: true
   }, function(req, accessToken, refreshToken, profile, done) {
     // Set up service
-    var service = {
+    let service = {
       profileId: profile.id,
       accessToken: accessToken,
       refreshToken: refreshToken,
